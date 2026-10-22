@@ -302,7 +302,8 @@ true;
 - **Goal:** BoardBar, BoardPill, and `useBoards` mount/select/reload/focus.
 - **Files:** `src/components/workspace/{BoardBar,BoardPill}.tsx`, `src/features/workspace/useBoards.ts`, tests.
 - **Depends on:** T-002, T-005, T-008.
-- **Acceptance:** first launch selects LinkedIn (sort 0). Selecting persists `activeBoardId`, and a relaunch keeps it. Re-tapping the active pill loads its base URL. Focus reload picks up Settings changes. A deleted active board → first board. Pill roles and labels per doc.
+- **Acceptance:**
+  - [x] first launch selects LinkedIn (sort 0). Selecting persists `activeBoardId`, and a relaunch keeps it. Re-tapping the active pill loads its base URL. Focus reload picks up Settings changes. A deleted active board → first board. Pill roles and labels per doc.
 - **Verify:** `npm run verify && npx jest src/components/workspace src/features/workspace`
 
 ### T-024 PortalWebView base and `isHttpUrl`
