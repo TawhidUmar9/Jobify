@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { SCRAPE_PAGE_JS } from '../../../bridge/scrapePageScript';
 import type { WebViewHandle } from '../../../components/workspace/PortalWebView';
 import { createFakeDb } from '../../../../tests/helpers/fakeDb';
+import { insertApplication } from '../../../db/repositories/applicationsRepo';
 import { analyzeJob, createProvider } from '../../../services/ai/aiClient';
 import { clearAiConfig, saveAiConfig } from '../../../services/ai/config';
 import { setApiKey } from '../../../services/secrets';
@@ -30,6 +31,16 @@ jest.mock('expo-router', () => {
   };
 });
 
+const mockShow = jest.fn();
+
+jest.mock('../../../components/ui/Snackbar', () => ({
+  useSnackbar: () => ({ show: (...args: unknown[]) => mockShow(...args) }),
+}));
+
+jest.mock('../../../db/repositories/applicationsRepo', () => ({
+  insertApplication: jest.fn(),
+}));
+
 jest.mock('../../../services/ai/aiClient', () => ({
   createProvider: jest.fn(),
   analyzeJob: jest.fn(),
@@ -37,6 +48,7 @@ jest.mock('../../../services/ai/aiClient', () => ({
 
 const createProviderMock = createProvider as jest.Mock;
 const analyzeJobMock = analyzeJob as jest.Mock;
+const insertApplicationMock = insertApplication as jest.Mock;
 
 const board: JobBoard = {
   id: 1,
@@ -87,6 +99,8 @@ describe('useWorkspaceController', () => {
     mockPush.mockClear();
     createProviderMock.mockReset();
     analyzeJobMock.mockReset();
+    insertApplicationMock.mockReset();
+    mockShow.mockClear();
     await clearAiConfig();
   });
 
@@ -244,5 +258,62 @@ describe('useWorkspaceController', () => {
     });
     await waitFor(() => expect(view.result.current.state.phase).toBe('idle'));
     expect(view.result.current.state.session).toBeNull();
+  });
+
+  it('logs the application and reports duplicate or database errors', async () => {
+    await saveAiConfig({ provider: 'gemini', model: 'gemini-3.8-flash', baseUrl: 'https://generativelanguage.googleapis.com' });
+    await setApiKey('test-key');
+    createProviderMock.mockReturnValue({ kind: 'gemini' });
+    analyzeJobMock.mockResolvedValue({ ok: true, value: analysis });
+    mockDb.queue('getFirstAsync', { data_json: JSON.stringify({ fullName: 'Alex Rahman' }) });
+    const { result } = await mount();
+    await waitFor(() => expect(result.current.aiMissing).toBe(false));
+    result.current.webViewRef.current = handle();
+    await act(async () => {
+      result.current.onAnalyzePress();
+      result.current.onBridgeMessage(pageMessage(200));
+    });
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+
+    insertApplicationMock.mockResolvedValue({ ok: false, error: 'DUPLICATE' });
+    await act(async () => {
+      await result.current.logApplication();
+    });
+    expect(mockShow).toHaveBeenCalledWith('Already in Tracker');
+    expect(result.current.state.loggedApplicationId).toBeNull();
+
+    mockShow.mockClear();
+    insertApplicationMock.mockResolvedValue({ ok: false, error: 'DB_ERROR' });
+    await act(async () => {
+      await result.current.logApplication();
+    });
+    expect(mockShow).toHaveBeenCalledWith('Could not save. Try again.');
+
+    mockShow.mockClear();
+    insertApplicationMock.mockResolvedValue({ ok: true, value: { id: 4 } });
+    await act(async () => {
+      await result.current.logApplication();
+    });
+    expect(insertApplicationMock).toHaveBeenLastCalledWith(
+      mockDb.db,
+      expect.objectContaining({
+        companyName: 'Acme Cloud',
+        roleTitle: 'Backend engineer',
+        boardName: 'LinkedIn',
+        jobUrl: 'https://example.com/job',
+        resumeId: null,
+        resumeLabel: '',
+        status: 'APPLIED',
+      }),
+    );
+    expect(mockShow).toHaveBeenCalledWith('Logged to Tracker');
+    expect(Haptics.notificationAsync).toHaveBeenCalledWith(Haptics.NotificationFeedbackType.Success);
+    expect(result.current.state.loggedApplicationId).toBe(4);
+
+    insertApplicationMock.mockClear();
+    await act(async () => {
+      await result.current.logApplication();
+    });
+    expect(insertApplicationMock).not.toHaveBeenCalled();
   });
 });

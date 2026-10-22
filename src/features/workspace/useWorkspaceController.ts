@@ -6,7 +6,9 @@ import { useCallback, useEffect, useReducer, useRef, useState, type RefObject } 
 import { parseBridgeMessage, SCRAPE_LIMITS, type PageScrapedMessage } from '../../bridge/messages';
 import { SCRAPE_PAGE_JS } from '../../bridge/scrapePageScript';
 import type { WebViewHandle } from '../../components/workspace/PortalWebView';
+import { useSnackbar } from '../../components/ui/Snackbar';
 import { listAnswers } from '../../db/repositories/answersRepo';
+import { insertApplication } from '../../db/repositories/applicationsRepo';
 import { getPreferences, getProfile } from '../../db/repositories/profileRepo';
 import { listResumes } from '../../db/repositories/resumesRepo';
 import { analyzeJob, createProvider } from '../../services/ai/aiClient';
@@ -85,10 +87,13 @@ export interface WorkspaceController {
  * - contextKey change: abort, clear timers, CONTEXT_CHANGED. Unmount: abort and clear timers.
  */
 export function useWorkspaceController(params: WorkspaceControllerParams): WorkspaceController {
-  // TODO(T-030): log. TODO(T-033): fill + saveAnswer. TODO(T-034): tailor + copyText. TODO(T-036): stage.
+  // TODO(T-033): fill + saveAnswer. TODO(T-034): tailor + copyText. TODO(T-036): stage.
   const db = useSQLiteContext();
+  const { show } = useSnackbar();
   const [state, dispatch] = useReducer(workspaceReducer, initialWorkspaceState);
   const [aiMissing, setAiMissing] = useState(true);
+  const [logging, setLogging] = useState(false);
+  const [recommendedResume, setRecommendedResume] = useState<Resume | null>(null);
   const webViewRef = useRef<WebViewHandle | null>(null);
   const stateRef = useRef(state);
   const providerRef = useRef<AiProvider | null>(null);
@@ -131,6 +136,7 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     if (seenContext.current === params.contextKey) return;
     seenContext.current = params.contextKey;
     stopInFlight();
+    setRecommendedResume(null);
     dispatch({ type: 'CONTEXT_CHANGED' });
   }, [params.contextKey, stopInFlight]);
 
@@ -159,6 +165,7 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         return;
       }
+      setRecommendedResume(resumes.find((resume) => resume.id === result.value.recommendedResumeId) ?? null);
       dispatch({
         type: 'ANALYSIS_SUCCEEDED',
         session: {
@@ -175,6 +182,7 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
 
   const reanalyze = useCallback(() => {
     stopInFlight();
+    setRecommendedResume(null);
     dispatch({ type: 'ANALYZE_REQUESTED' });
     stateRef.current = {
       phase: 'scraping',
@@ -232,6 +240,37 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     reanalyze();
   }, [aiMissing, params.currentUrl, reanalyze]);
 
+  const logApplication = useCallback(async () => {
+    const current = stateRef.current;
+    if (logging || current.loggedApplicationId !== null) return;
+    if ((current.phase !== 'ready' && current.phase !== 'filling') || current.session === null) return;
+    const session = current.session;
+    const tailored = current.tailor.status === 'ready' ? current.tailor.result : null;
+    setLogging(true);
+    const saved = await insertApplication(db, {
+      companyName: session.analysis.companyName,
+      roleTitle: session.analysis.roleTitle,
+      boardName: session.boardName,
+      jobUrl: session.sourceUrl,
+      resumeId: recommendedResume?.id ?? null,
+      resumeLabel: recommendedResume?.label ?? '',
+      matchScore: session.analysis.matchScore,
+      eligibility: session.analysis.eligibility,
+      redFlags: session.analysis.redFlags,
+      coverNote: tailored?.coverNote ?? null,
+      coldDm: tailored?.coldDm ?? null,
+      status: 'APPLIED',
+    });
+    setLogging(false);
+    if (!saved.ok) {
+      show(saved.error === 'DUPLICATE' ? 'Already in Tracker' : 'Could not save. Try again.');
+      return;
+    }
+    dispatch({ type: 'APPLICATION_LOGGED', applicationId: saved.value.id });
+    show('Logged to Tracker');
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [db, logging, recommendedResume, show]);
+
   const closeSheet = useCallback(() => {
     stopInFlight();
     dispatch({ type: 'SHEET_CLOSED' });
@@ -243,10 +282,10 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     state,
     webViewRef,
     isOnSourcePage: params.currentUrl === state.session?.sourceUrl,
-    recommendedResume: null,
+    recommendedResume,
     aiMissing,
     staging: false,
-    logging: false,
+    logging,
     stagingExplainerVisible: false,
     onStagingExplainerContinue: noop,
     onStagingExplainerCancel: noop,
@@ -256,7 +295,7 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     autoFill: noop,
     tailor: noop,
     saveAnswer: asyncNoop,
-    logApplication: asyncNoop,
+    logApplication,
     stageRecommendedResume: asyncNoop,
     copyText: asyncNoop,
     closeSheet,

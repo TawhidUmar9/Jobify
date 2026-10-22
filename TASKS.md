@@ -367,7 +367,8 @@ true;
 - **Goal:** `logApplication` + CopilotActions layout (Log wired; Auto-fill and Stage CV still no-ops) + sheet footer.
 - **Files:** `useWorkspaceController.ts`, `CopilotActions.tsx`, `CopilotSheet.tsx`, tests.
 - **Depends on:** T-010, T-029.
-- **Acceptance:** column mapping per ARCHITECTURE §7.3. Snackbars for ok/duplicate/error. Button → "Logged" (disabled). Haptics success.
+- **Acceptance:**
+  - [x] column mapping per ARCHITECTURE §7.3. Snackbars for ok/duplicate/error. Button → "Logged" (disabled). Haptics success.
 - **Verify:** `npm run verify && npx jest src/features/workspace src/components/copilot`
 
 ### T-031 Tracker list and follow-ups

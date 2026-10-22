@@ -1,7 +1,9 @@
 import SheetModule, {
   BottomSheetBackdrop,
+  BottomSheetFooter,
   BottomSheetScrollView,
   type BottomSheetBackdropProps,
+  type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet';
 import { RefreshCw, X } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, type ComponentType, type ReactNode, type Ref } from 'react';
@@ -16,6 +18,7 @@ import type { FieldMapping, Resume } from '../../types/domain';
 import { Button } from '../ui/Button';
 import { IconButton } from '../ui/IconButton';
 import { StateView } from '../ui/StateView';
+import { CopilotActions } from './CopilotActions';
 import { EligibilityBadge } from './EligibilityBadge';
 import { FieldMappingList } from './FieldMappingList';
 import { MatchCard } from './MatchCard';
@@ -58,6 +61,7 @@ type SheetComponent = ComponentType<{
   onClose?: () => void;
   backdropComponent?: (props: BottomSheetBackdropProps) => ReactNode;
   onAnimate?: (fromIndex: number, toIndex: number) => void;
+  footerComponent?: (props: BottomSheetFooterProps) => ReactNode;
   children?: ReactNode;
 }>;
 
@@ -120,7 +124,6 @@ function errorCopy(error: WorkspaceError): {
  *     TailorCard, FieldMappingList, stale notice when !isOnSourcePage; CopilotActions in BottomSheetFooter.
  */
 export function CopilotSheet(props: CopilotSheetProps) {
-  // TODO(T-029): result cards. TODO(T-030): actions footer.
   const { colors } = useTheme();
   const sheetRef = useRef<SheetHandle | null>(null);
   const snapPoints = useMemo(() => ['50%', '92%'], []);
@@ -135,6 +138,28 @@ export function CopilotSheet(props: CopilotSheetProps) {
   useEffect(() => {
     snapOpen();
   }, [snapOpen]);
+
+  const footer = useCallback(
+    (footerProps: BottomSheetFooterProps) => {
+      if (props.state.phase !== 'ready' && props.state.phase !== 'filling') return null;
+      const mappings = props.state.session?.analysis.fieldMappings.length ?? 0;
+      return (
+        <BottomSheetFooter {...footerProps}>
+          <CopilotActions
+            canAutoFill={props.state.phase === 'ready' && props.isOnSourcePage && mappings > 0}
+            filling={props.state.phase === 'filling'}
+            staging={props.staging}
+            logged={props.state.loggedApplicationId !== null}
+            logging={props.logging}
+            onAutoFill={props.onAutoFill}
+            onStageResume={props.onStageResume}
+            onLogApplication={props.onLogApplication}
+          />
+        </BottomSheetFooter>
+      );
+    },
+    [props],
+  );
 
   const backdrop = useCallback(
     (backdropProps: BottomSheetBackdropProps) => (
@@ -154,6 +179,7 @@ export function CopilotSheet(props: CopilotSheetProps) {
       onAnimate={(_from, toIndex) => {
         if (open && toIndex < 0) sheetRef.current?.snapToIndex(0);
       }}
+      footerComponent={footer}
     >
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.textPrimary }]} maxFontSizeMultiplier={fontScaleCaps.default}>
