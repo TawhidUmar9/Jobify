@@ -90,7 +90,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `boardsRepo.ts` except `updateLastVisitedUrl`.
 - **Files:** `src/db/repositories/boardsRepo.ts`, `src/db/repositories/__tests__/boardsRepo.test.ts`.
 - **Depends on:** T-004.
-- **Acceptance:** name 1–16. https required except `http://10.0.2.2`, `localhost`, and private LAN IPs (10.x, 192.168.x, 172.16–31.x). Delete and reorder renumber contiguously in one transaction. Changing the URL clears `last_visited_url`.
+- **Acceptance:**
+  - [x] name 1–16. https required except `http://10.0.2.2`, `localhost`, and private LAN IPs (10.x, 192.168.x, 172.16–31.x). Delete and reorder renumber contiguously in one transaction. Changing the URL clears `last_visited_url`.
 - **Verify:** `npm run verify && npx jest src/db`
 
 ### T-009 Answers repository
