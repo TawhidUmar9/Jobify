@@ -1,4 +1,5 @@
 import type { ComponentProps, ComponentType, Ref, RefObject } from 'react';
+import { Platform } from 'react-native';
 import { WebView as RNWebView } from 'react-native-webview';
 
 import { TestIds } from '../../constants/testIds';
@@ -55,7 +56,9 @@ export interface PortalWebViewProps {
  * testID TestIds.workspace.webview.
  */
 export function PortalWebView({ webViewRef, url, onNavStateChange, onLoadProgress, onMessage }: PortalWebViewProps) {
-  // TODO(T-024): implement the base props and callbacks. TODO(T-046): resilience props.
+  const ios = Platform.OS === 'ios';
+  const android = Platform.OS === 'android';
+  // TODO(T-046): resilience props.
   return (
     <WebView
       ref={webViewRef}
@@ -63,8 +66,17 @@ export function PortalWebView({ webViewRef, url, onNavStateChange, onLoadProgres
       source={{ uri: url }}
       javaScriptEnabled
       domStorageEnabled
-      sharedCookiesEnabled
-      thirdPartyCookiesEnabled
+      originWhitelist={['http://*', 'https://*', 'about:*']}
+      mediaPlaybackRequiresUserAction
+      webviewDebuggingEnabled={__DEV__}
+      {...(ios
+        ? {
+            sharedCookiesEnabled: true,
+            allowsBackForwardNavigationGestures: true,
+            pullToRefreshEnabled: true,
+          }
+        : {})}
+      {...(android ? { thirdPartyCookiesEnabled: true } : {})}
       onNavigationStateChange={(e) =>
         onNavStateChange({
           url: e.url,

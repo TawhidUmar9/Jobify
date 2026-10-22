@@ -310,8 +310,10 @@ true;
 - **Goal:** T-024 rows of ARCHITECTURE §6.1, and `isHttpUrl`.
 - **Files:** `src/components/workspace/PortalWebView.tsx`, `src/lib/url.ts` (`isHttpUrl`), `src/lib/__tests__/url.test.ts`.
 - **Depends on:** T-001.
-- **Acceptance:** props per table (platform-specific ones only on their platform). `isHttpUrl` true for https and `http://10.0.2.2:8787/x`, false for `mailto:`, `javascript:`, `''`, `null`, and plain text.
-- **Manual (A-20):** log in to one board, force-stop, relaunch → still logged in.
+- **Acceptance:**
+  - [x] props per table (platform-specific ones only on their platform). `isHttpUrl` true for https and `http://10.0.2.2:8787/x`, false for `mailto:`, `javascript:`, `''`, `null`, and plain text.
+- **Manual (A-20):**
+  - [ ] log in to one board, force-stop, relaunch → still logged in. MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/lib`
 
 ### T-025 Workspace composition, deep link, share intent
