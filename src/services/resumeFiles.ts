@@ -72,6 +72,12 @@ export async function storeResumePdf(sourceUri: string, resumeId: number): Promi
 
 /** Deletes the stored copy if it exists. Never throws. */
 export async function deleteResumePdf(fileUri: string): Promise<void> {
-  // TODO(T-039): implement.
-  void fileUri;
+  try {
+    const file = new File(fileUri);
+    if (file.exists) {
+      file.delete();
+    }
+  } catch {
+    // Never throws.
+  }
 }

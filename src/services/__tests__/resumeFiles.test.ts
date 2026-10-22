@@ -1,6 +1,6 @@
 import { getDocumentAsync } from 'expo-document-picker';
 
-import { MAX_RESUME_BYTES, pickPdf, readFileBase64, storeResumePdf } from '../resumeFiles';
+import { deleteResumePdf, MAX_RESUME_BYTES, pickPdf, readFileBase64, storeResumePdf } from '../resumeFiles';
 
 jest.mock('expo-file-system', () => {
   const files = new Map<string, string>();
@@ -18,6 +18,12 @@ jest.mock('expo-file-system', () => {
     uri: string;
     constructor(...parts: (string | { uri: string })[]) {
       this.uri = parts.map((part) => (typeof part === 'string' ? part : part.uri)).join('/');
+    }
+    get exists() {
+      return files.has(this.uri);
+    }
+    delete() {
+      files.delete(this.uri);
     }
     async base64() {
       const value = files.get(this.uri);
@@ -79,5 +85,14 @@ describe('resumeFiles', () => {
     const stored = await storeResumePdf('file://alex', 4);
     expect(stored).toBe('file://docs/resumes/4.pdf');
     expect(files.get('file://docs/resumes/4.pdf')).toBe('QUJD');
+  });
+
+  it('deletes stored resume pdf safely', async () => {
+    files.set('file://docs/resumes/4.pdf', 'QUJD');
+    await deleteResumePdf('file://docs/resumes/4.pdf');
+    expect(files.has('file://docs/resumes/4.pdf')).toBe(false);
+
+    // non-existent file doesn't throw
+    await expect(deleteResumePdf('file://docs/resumes/999.pdf')).resolves.toBeUndefined();
   });
 });
