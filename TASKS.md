@@ -127,12 +127,12 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Files:** `src/services/ai/{geminiSchema,validate}.ts`, `src/services/ai/__tests__/{geminiSchema,validate}.test.ts`, `src/lib/url.ts` (`isHttpUrl` only if T-024 is not done yet; then T-024 adds tests).
 - **Depends on:** T-001.
 - **Acceptance (fixtures in `e2e/fixtures/ai/`, scraped inputs = the 5 from T-022's fixture expectations: `jobify-field-0..4`):**
-  - [ ] `toGeminiSchema(JOB_ANALYSIS_SCHEMA)` has upper-case types at every depth and the same required/enum arrays.
-  - [ ] `analysis-remote-ok.json` with resumes `[{id:1}]` → 5 mappings (field-99 and the duplicate field-0 dropped), field-4 source GENERATED (invalid → GENERATED), red flags `[NO_SALARY_INFO, OTHER("Unknown codes must become OTHER.")]` (empty detail dropped), score 92, resume 1.
-  - [ ] `analysis-not-eligible.json` with resumes `[{id:1},{id:2}]` → score 100, resume 1 (999 unknown → first), matchedSkills `["React","Next.js","TypeScript"]`.
-  - [ ] `analysis-unclear.json` with no resumes → "Unknown company", "Unknown role", UNCLEAR, score 56, resume null.
-  - [ ] `tailor.json` → 1 bullet rewrite (empty original dropped), 3 emphasize. `resume-parse.json` → 2 links (javascript: dropped), 1 experience, 3 highlights.
-  - [ ] Non-object, missing score, and non-array fieldMappings → SCHEMA_MISMATCH. Validators never throw on any of `[null, 1, "x", [], {}]`.
+  - [x] `toGeminiSchema(JOB_ANALYSIS_SCHEMA)` has upper-case types at every depth and the same required/enum arrays.
+  - [x] `analysis-remote-ok.json` with resumes `[{id:1}]` → 5 mappings (field-99 and the duplicate field-0 dropped), field-4 source GENERATED (invalid → GENERATED), red flags `[NO_SALARY_INFO, OTHER("Unknown codes must become OTHER.")]` (empty detail dropped), score 92, resume 1.
+  - [x] `analysis-not-eligible.json` with resumes `[{id:1},{id:2}]` → score 100, resume 1 (999 unknown → first), matchedSkills `["React","Next.js","TypeScript"]`.
+  - [x] `analysis-unclear.json` with no resumes → "Unknown company", "Unknown role", UNCLEAR, score 56, resume null.
+  - [x] `tailor.json` → 1 bullet rewrite (empty original dropped), 3 emphasize. `resume-parse.json` → 2 links (javascript: dropped), 1 experience, 3 highlights.
+  - [x] Non-object, missing score, and non-array fieldMappings → SCHEMA_MISMATCH. Validators never throw on any of `[null, 1, "x", [], {}]`.
 - **Verify:** `npm run verify && npx jest src/services/ai`
 
 ### T-013 Prompts

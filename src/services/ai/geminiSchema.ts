@@ -10,6 +10,15 @@ export interface GeminiSchema {
   description?: string;
 }
 
+const GEMINI_TYPES = {
+  object: 'OBJECT',
+  array: 'ARRAY',
+  string: 'STRING',
+  integer: 'INTEGER',
+  number: 'NUMBER',
+  boolean: 'BOOLEAN',
+} as const;
+
 /**
  * Converts a JsonSchema to Gemini's responseSchema format.
  * Rules: upper-case `type`; copy properties/items recursively; copy required, enum, description
@@ -17,7 +26,18 @@ export interface GeminiSchema {
  * Example: {type:'object',properties:{a:{type:'string'}}} → {type:'OBJECT',properties:{a:{type:'STRING'}}}
  */
 export function toGeminiSchema(schema: JsonSchema): GeminiSchema {
-  // TODO(T-012): implement per the rules above.
-  void schema;
-  return { type: 'OBJECT' };
+  const mapped = GEMINI_TYPES[schema.type];
+  const converted: GeminiSchema = { type: mapped ?? 'OBJECT' };
+  if (schema.properties) {
+    const properties: Record<string, GeminiSchema> = {};
+    for (const [key, value] of Object.entries(schema.properties)) {
+      properties[key] = toGeminiSchema(value);
+    }
+    converted.properties = properties;
+  }
+  if (schema.required) converted.required = [...schema.required];
+  if (schema.items) converted.items = toGeminiSchema(schema.items);
+  if (schema.enum) converted.enum = [...schema.enum];
+  if (typeof schema.description === 'string') converted.description = schema.description.slice();
+  return converted;
 }
