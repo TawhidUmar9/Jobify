@@ -18,9 +18,9 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Depends on:** none.
 - **Acceptance:**
   - [x] `npm ci`, `npm run verify` (14 tests pass), `npm run doctor` (no issues).
-  - [ ] `npm run android` on one device/emulator: app launches. The stub onboarding gate shows the Welcome stub (`completed` is `false` in the stub provider). No red box. MANUAL PENDING (device)
-  - [ ] **Sheet check (A-28):** temporarily replace `src/app/onboarding/index.tsx` with the sheet-check screen in TESTING_ON_DEVICE.md §3 (a bare `@gorhom/bottom-sheet` at `index={0}`), run it, drag it up, then pan down to close with no red box. **Revert with `git checkout src/app/onboarding/index.tsx`.** On a crash, write B-001 in BLOCKERS.md and stop. MANUAL PENDING (device)
-  - [ ] `cd android && ./gradlew --stop` afterwards (frees RAM). MANUAL PENDING (device)
+  - [x] `npm run android` on one device/emulator: app launches. The stub onboarding gate shows the Welcome stub (`completed` is `false` in the stub provider). No red box. (2026-10-23, SM-G935F Android 14: launched, no errors; Welcome stub is black text on the dark background, expected until T-017)
+  - [x] **Sheet check (A-28):** temporarily replace `src/app/onboarding/index.tsx` with the sheet-check screen in TESTING_ON_DEVICE.md §3 (a bare `@gorhom/bottom-sheet` at `index={0}`), run it, drag it up, then pan down to close with no red box. **Revert with `git checkout src/app/onboarding/index.tsx`.** On a crash, write B-001 in BLOCKERS.md and stop. (2026-10-23: drag up to 90% and pan-down close work with gesture-handler 3.3. Quirk: after a reload the sheet first sat at ~12% instead of 40%; see T-028.)
+  - [x] `cd android && ./gradlew --stop` afterwards (frees RAM).
 - **Verify:** `npm ci && npm run verify && npm run doctor && npm run android`
 
 ---
@@ -327,6 +327,7 @@ true;
 - **Depends on:** T-027.
 - **Acceptance:** FAB variants (Analyze / Analyzing… / Set up AI). Error copy exact for every error kind (UI_DIRECTIVES §4.4), including the "Open profile" / "Open AI settings" actions. Re-analyze disabled while busy.
 - **Manual (mock):** deep-link `job-error-429.html`, Analyze → "Rate limit reached. Wait a minute and try again."
+- **Sheet position (A-28 quirk from T-001):** open the sheet 5 times, including right after a reload. It must land at 50% every time. If it lands lower, call `snapToIndex(0)` after the sheet's first `onLayout` / in `onAnimate`, and note it in DECISIONS.md. The dev-only Reanimated warning "Dependencies should only be used on the web" comes from @gorhom/bottom-sheet and is harmless.
 - **Verify:** `npm run verify && npx jest src/components`
 
 ### T-029 Result cards
