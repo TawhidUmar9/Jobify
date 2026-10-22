@@ -74,8 +74,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Files:** `src/lib/normalize.ts`, `src/db/repositories/profileRepo.ts`, `src/lib/__tests__/normalize.test.ts`, `src/db/repositories/__tests__/profileRepo.test.ts`.
 - **Depends on:** T-004.
 - **Acceptance:**
-  - [ ] Each normalizer rule has a test (null, wrong types, limits, de-dup, the `javascript:` link dropped, country code upper-cased, workModes empty → REMOTE, overlap clamp, salary ≤0 → null).
-  - [ ] Upsert SQL is `INSERT … ON CONFLICT(id) DO UPDATE`. `getPreferences` with no row → `DEFAULT_PREFERENCES`.
+  - [x] Each normalizer rule has a test (null, wrong types, limits, de-dup, the `javascript:` link dropped, country code upper-cased, workModes empty → REMOTE, overlap clamp, salary ≤0 → null).
+  - [x] Upsert SQL is `INSERT … ON CONFLICT(id) DO UPDATE`. `getPreferences` with no row → `DEFAULT_PREFERENCES`.
 - **Verify:** `npm run verify && npx jest src/lib src/db`
 
 ### T-007 Resumes repository

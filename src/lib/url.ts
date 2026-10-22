@@ -2,9 +2,13 @@
 
 /** True only for absolute URLs whose scheme is http: or https:. Never throws. */
 export function isHttpUrl(value: string | null | undefined): value is string {
-  // TODO(T-024): implement with a try/catch around `new URL(value)`.
-  void value;
-  return false;
+  if (typeof value !== 'string' || value.length === 0) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 /**
