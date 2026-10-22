@@ -1,8 +1,10 @@
 import { router, Stack } from 'expo-router';
-import { FlatList, View } from 'react-native';
+import { ChartColumn } from 'lucide-react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { APPLICATION_ROW_HEIGHT, ApplicationRow } from '../../components/tracker/ApplicationRow';
 import { FollowUpsSection } from '../../components/tracker/FollowUpsSection';
+import { IconButton } from '../../components/ui/IconButton';
 import { StateView } from '../../components/ui/StateView';
 import { TestIds } from '../../constants/testIds';
 import { useApplications } from '../../features/tracker/useApplications';
@@ -20,26 +22,80 @@ export default function TrackerScreen() {
   const { colors } = useTheme();
   const { status, applications, followUpsDue, refreshing, refresh } = useApplications();
 
-  // TODO(T-031): states, header button, styling per the rules above.
   const openApplication = (application: Application) => router.push(`/application/${application.id}`);
 
+  let body;
+  if (status === 'loading') {
+    body = <StateView kind="loading" message="Loading applications…" testID={TestIds.tracker.loading} />;
+  } else if (status === 'error') {
+    body = (
+      <StateView
+        kind="error"
+        title="Could not load applications"
+        message="The local database did not respond."
+        actionLabel="Try again"
+        onAction={refresh}
+        testID={TestIds.tracker.error}
+        actionTestID={TestIds.tracker.retry}
+      />
+    );
+  } else if (applications.length === 0) {
+    body = (
+      <StateView
+        kind="empty"
+        title="No applications yet"
+        message="Analyze a job page in Workspace and tap Log to track it here."
+        actionLabel="Go to Workspace"
+        onAction={() => router.push('/')}
+        testID={TestIds.tracker.empty}
+      />
+    );
+  } else {
+    body = (
+      <FlatList
+        testID={TestIds.tracker.list}
+        style={styles.list}
+        data={applications}
+        keyExtractor={(item) => String(item.id)}
+        ListHeaderComponent={<FollowUpsSection due={followUpsDue} onOpen={openApplication} />}
+        renderItem={({ item }) => <ApplicationRow application={item} onPress={openApplication} />}
+        getItemLayout={(_, index) => ({
+          length: APPLICATION_ROW_HEIGHT,
+          offset: APPLICATION_ROW_HEIGHT * index,
+          index,
+        })}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} colors={[colors.primary]} />
+        }
+      />
+    );
+  }
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }} testID={TestIds.tracker.screen}>
-      <Stack.Screen options={{ title: 'Tracker' }} />
-      {status === 'loading' ? (
-        <StateView kind="loading" message="Loading applications…" testID={TestIds.tracker.loading} />
-      ) : (
-        <FlatList
-          testID={TestIds.tracker.list}
-          data={applications}
-          keyExtractor={(item) => String(item.id)}
-          ListHeaderComponent={<FollowUpsSection due={followUpsDue} onOpen={openApplication} />}
-          renderItem={({ item }) => <ApplicationRow application={item} onPress={openApplication} />}
-          getItemLayout={(_, index) => ({ length: APPLICATION_ROW_HEIGHT, offset: APPLICATION_ROW_HEIGHT * index, index })}
-          refreshing={refreshing}
-          onRefresh={refresh}
-        />
-      )}
+    <View style={[styles.screen, { backgroundColor: colors.background }]} testID={TestIds.tracker.screen}>
+      <Stack.Screen
+        options={{
+          title: 'Tracker',
+          headerRight: () => (
+            <IconButton
+              icon={ChartColumn}
+              accessibilityLabel="Insights"
+              onPress={() => router.push('/insights')}
+              testID={TestIds.tracker.insightsButton}
+            />
+          ),
+        }}
+      />
+      {body}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  list: {
+    flex: 1,
+  },
+});

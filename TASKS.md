@@ -375,7 +375,8 @@ true;
 - **Goal:** `useApplications`, ApplicationRow, StatusChip, FollowUpsSection, Tracker screen (Insights button navigates; the screen comes in T-038).
 - **Files:** `src/features/tracker/useApplications.ts`, `src/components/tracker/{ApplicationRow,StatusChip,FollowUpsSection}.tsx`, `src/app/(tabs)/tracker.tsx`, tests.
 - **Depends on:** T-010, T-002.
-- **Acceptance:** all states. Reload on focus without flashing. Pull to refresh. Follow-ups section shows due items (fake `now`), max 5 + "+N more below". Date "12 Oct 2026" from `"2026-10-12 08:00:00"`.
+- **Acceptance:**
+  - [x] all states. Reload on focus without flashing. Pull to refresh. Follow-ups section shows due items (fake `now`), max 5 + "+N more below". Date "12 Oct 2026" from `"2026-10-12 08:00:00"`.
 - **Verify:** `npm run verify && npx jest src/features/tracker src/components/tracker`
 
 ### ✅ Gate M4: vertical slice (manual, ~5 min, mock server)

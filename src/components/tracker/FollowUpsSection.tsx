@@ -1,11 +1,38 @@
-import { Text, View } from 'react-native';
+import { BellRing } from 'lucide-react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
+import { useTheme } from '../../theme/ThemeProvider';
+import { iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
 import type { Application } from '../../types/domain';
 
 export interface FollowUpsSectionProps {
   due: Application[];
   onOpen: (application: Application) => void;
+}
+
+const VISIBLE_LIMIT = 5;
+const DAY_MS = 86_400_000;
+
+function calendarDay(year: number, monthIndex: number, day: number): number {
+  return Date.UTC(year, monthIndex, day);
+}
+
+/** Whole local calendar days from the stored stamp to `now`. */
+function daysSince(stamp: string, now: Date): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(stamp);
+  if (!match) return null;
+  const created = calendarDay(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const today = calendarDay(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.max(0, Math.round((today - created) / DAY_MS));
+}
+
+function appliedAgo(stamp: string, now: Date): string {
+  const days = daysSince(stamp, now);
+  if (days === null) return 'Applied';
+  if (days === 0) return 'Applied today';
+  if (days === 1) return 'Applied 1 day ago';
+  return `Applied ${days} days ago`;
 }
 
 /**
@@ -15,12 +42,63 @@ export interface FollowUpsSectionProps {
  * More than 5 → caption "+N more below".
  */
 export function FollowUpsSection({ due, onOpen }: FollowUpsSectionProps) {
-  // TODO(T-031): implement per the rules above.
-  void onOpen;
+  const { colors } = useTheme();
   if (due.length === 0) return null;
+  const now = new Date();
+  const visible = due.slice(0, VISIBLE_LIMIT);
+  const extra = due.length - visible.length;
+
   return (
-    <View testID={TestIds.tracker.followUpsSection}>
-      <Text>Follow-ups due ({due.length})</Text>
+    <View testID={TestIds.tracker.followUpsSection} style={styles.section}>
+      <View style={styles.titleRow}>
+        <BellRing size={iconSizes.md} strokeWidth={iconStrokeWidth} color={colors.warningIcon} accessible={false} />
+        <Text style={[styles.title, { color: colors.textPrimary }]}>{`Follow-ups due (${due.length})`}</Text>
+      </View>
+      {visible.map((application) => (
+        <Pressable
+          key={application.id}
+          testID={TestIds.tracker.followUpRow(application.id)}
+          accessibilityRole="button"
+          accessibilityLabel={`${application.roleTitle} at ${application.companyName}`}
+          onPress={() => onOpen(application)}
+          style={styles.row}
+        >
+          <Text numberOfLines={1} style={[styles.role, { color: colors.textPrimary }]}>
+            {`${application.roleTitle} · ${application.companyName}`}
+          </Text>
+          <Text style={[styles.ago, { color: colors.textSecondary }]}>{appliedAgo(application.createdAt, now)}</Text>
+        </Pressable>
+      ))}
+      {extra > 0 ? (
+        <Text style={[styles.more, { color: colors.textSecondary }]}>{`+${extra} more below`}</Text>
+      ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  section: {
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  title: {
+    ...typography.headline,
+  },
+  row: {
+    paddingVertical: spacing.xs,
+  },
+  role: {
+    ...typography.body,
+  },
+  ago: {
+    ...typography.caption,
+  },
+  more: {
+    ...typography.caption,
+  },
+});
