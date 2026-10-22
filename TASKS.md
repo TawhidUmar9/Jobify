@@ -176,8 +176,12 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `OnboardingStatusProvider` and the Welcome screen (without restore, which is T-042).
 - **Files:** `src/features/onboarding/useOnboardingStatus.tsx`, `src/app/onboarding/index.tsx`, tests.
 - **Depends on:** T-002, T-005.
-- **Acceptance:** `completed` is null until kv is read. `markCompleted` persists. A fresh install opens Welcome. With `onboardingCompleted = "1"` the tabs open. "Restore from backup" is rendered but disabled with caption "Available after setup" until T-042.
-- **Manual:** `adb shell pm clear io.github.tawhidumar9.jobify` → Welcome appears.
+- **Acceptance:**
+  - [x] `completed` is null until kv is read. `markCompleted` persists.
+  - [x] A fresh install opens Welcome (`completed` false). With `onboardingCompleted = "1"` the tabs open (`completed` true).
+  - [x] "Restore from backup" is rendered but disabled with caption "Available after setup" until T-042.
+- **Manual:**
+  - [ ] `adb shell pm clear io.github.tawhidumar9.jobify` → Welcome appears. MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/features/onboarding`
 
 ### T-018 AI provider step

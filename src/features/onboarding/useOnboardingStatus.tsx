@@ -1,4 +1,6 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+import { KV_KEYS, kvGet, kvSet } from '../../services/kvStore';
 
 export interface OnboardingStatus {
   /** null while reading kv-store. */
@@ -14,10 +16,26 @@ const OnboardingContext = createContext<OnboardingStatus>({ completed: null, mar
  * backup import flip it). CONTRACT: ARCHITECTURE.md §8 (root gate).
  */
 export function OnboardingStatusProvider({ children }: { children: ReactNode }) {
-  // TODO(T-017): implement (kvGet on mount; markCompleted = kvSet + setState).
-  return (
-    <OnboardingContext.Provider value={{ completed: false, markCompleted: async () => {} }}>{children}</OnboardingContext.Provider>
-  );
+  const [completed, setCompleted] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void kvGet(KV_KEYS.onboardingCompleted).then((value) => {
+      if (!cancelled) setCompleted(value === '1');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const markCompleted = useCallback(async () => {
+    await kvSet(KV_KEYS.onboardingCompleted, '1');
+    setCompleted(true);
+  }, []);
+
+  const value = useMemo(() => ({ completed, markCompleted }), [completed, markCompleted]);
+
+  return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
 
 export function useOnboardingStatus(): OnboardingStatus {
