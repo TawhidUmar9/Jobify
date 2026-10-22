@@ -347,9 +347,12 @@ true;
 - **Goal:** AnalyzeFab and CopilotSheet header/backdrop/loading/error bodies (ready body renders the T-029 stubs).
 - **Files:** `src/components/workspace/AnalyzeFab.tsx`, `src/components/copilot/CopilotSheet.tsx`, `src/app/(tabs)/index.tsx` (`onOpenSettings` → `router.push`), tests.
 - **Depends on:** T-027.
-- **Acceptance:** FAB variants (Analyze / Analyzing… / Set up AI). Error copy exact for every error kind (UI_DIRECTIVES §4.4), including the "Open profile" / "Open AI settings" actions. Re-analyze disabled while busy.
-- **Manual (mock):** deep-link `job-error-429.html`, Analyze → "Rate limit reached. Wait a minute and try again."
-- **Sheet position (A-28 quirk from T-001):** open the sheet 5 times, including right after a reload. It must land at 50% every time. If it lands lower, call `snapToIndex(0)` after the sheet's first `onLayout` / in `onAnimate`, and note it in DECISIONS.md. The dev-only Reanimated warning "Dependencies should only be used on the web" comes from @gorhom/bottom-sheet and is harmless.
+- **Acceptance:**
+  - [x] FAB variants (Analyze / Analyzing… / Set up AI). Error copy exact for every error kind (UI_DIRECTIVES §4.4), including the "Open profile" / "Open AI settings" actions. Re-analyze disabled while busy.
+- **Manual (mock):**
+  - [ ] deep-link `job-error-429.html`, Analyze → "Rate limit reached. Wait a minute and try again." MANUAL PENDING (device)
+- **Sheet position (A-28 quirk from T-001):**
+  - [ ] open the sheet 5 times, including right after a reload. It must land at 50% every time. If it lands lower, call `snapToIndex(0)` after the sheet's first `onLayout` / in `onAnimate`, and note it in DECISIONS.md. The dev-only Reanimated warning "Dependencies should only be used on the web" comes from @gorhom/bottom-sheet and is harmless. MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/components`
 
 ### T-029 Result cards

@@ -1,10 +1,27 @@
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { useMemo } from 'react';
-import { Text } from 'react-native';
+import SheetModule, {
+  BottomSheetBackdrop,
+  BottomSheetScrollView,
+  type BottomSheetBackdropProps,
+} from '@gorhom/bottom-sheet';
+import { RefreshCw, X } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useRef, type ComponentType, type ReactNode, type Ref } from 'react';
+import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
-import type { WorkspaceState } from '../../features/workspace/workspaceReducer';
+import type { WorkspaceError, WorkspaceState } from '../../features/workspace/workspaceReducer';
+import { AI_ERROR_MESSAGES } from '../../services/ai/types';
+import { useTheme } from '../../theme/ThemeProvider';
+import { fontScaleCaps, radii, spacing, typography } from '../../theme/tokens';
 import type { FieldMapping, Resume } from '../../types/domain';
+import { Button } from '../ui/Button';
+import { IconButton } from '../ui/IconButton';
+import { StateView } from '../ui/StateView';
+import { EligibilityBadge } from './EligibilityBadge';
+import { FieldMappingList } from './FieldMappingList';
+import { MatchCard } from './MatchCard';
+import { RedFlagList } from './RedFlagList';
+import { SkillChips } from './SkillChips';
+import { TailorCard } from './TailorCard';
 
 export interface CopilotSheetProps {
   state: WorkspaceState;
@@ -24,6 +41,71 @@ export interface CopilotSheetProps {
   onOpenSettings: (path: '/settings/ai' | '/settings/profile') => void;
 }
 
+interface SheetHandle {
+  snapToIndex: (index: number) => void;
+  close: () => void;
+}
+
+/**
+ * The Jest WebView-style mock exports a CJS object without `__esModule`, so the default import is
+ * that object and the component lives on `.default`. Production imports the component directly.
+ */
+type SheetComponent = ComponentType<{
+  ref?: Ref<SheetHandle>;
+  index?: number;
+  snapPoints?: string[];
+  enablePanDownToClose?: boolean;
+  onClose?: () => void;
+  backdropComponent?: (props: BottomSheetBackdropProps) => ReactNode;
+  onAnimate?: (fromIndex: number, toIndex: number) => void;
+  children?: ReactNode;
+}>;
+
+function resolveSheet(imported: unknown): SheetComponent {
+  if (typeof imported === 'function') return imported as SheetComponent;
+  if (imported && typeof imported === 'object' && 'default' in imported) {
+    const nested = (imported as { default: unknown }).default;
+    if (typeof nested === 'function') return nested as SheetComponent;
+  }
+  return imported as SheetComponent;
+}
+
+const BottomSheet = resolveSheet(SheetModule);
+
+const AI_SETTINGS_CODES = new Set(['NOT_CONFIGURED', 'AUTH', 'MODEL_NOT_FOUND', 'BAD_REQUEST']);
+
+function errorCopy(error: WorkspaceError): {
+  title: string;
+  message: string;
+  action?: { label: string; path: '/settings/ai' | '/settings/profile' };
+} {
+  if (error.kind === 'NO_CONTENT') {
+    return {
+      title: 'Not enough text on this page',
+      message: 'Open a job post or application form, then analyze again.',
+    };
+  }
+  if (error.kind === 'NO_PROFILE') {
+    return {
+      title: 'Add your profile first',
+      message: 'Jobify needs your profile to judge fit and fill forms.',
+      action: { label: 'Open profile', path: '/settings/profile' },
+    };
+  }
+  if (error.kind === 'SCRAPE') {
+    return {
+      title: "Couldn't read this page",
+      message:
+        error.code === 'TIMEOUT' ? 'The page did not respond in 5 seconds.' : 'This page blocked the reader.',
+    };
+  }
+  return {
+    title: 'Analysis failed',
+    message: AI_ERROR_MESSAGES[error.code],
+    action: AI_SETTINGS_CODES.has(error.code) ? { label: 'Open AI settings', path: '/settings/ai' } : undefined,
+  };
+}
+
 /**
  * Gorhom BottomSheet with analysis results. UI_DIRECTIVES.md §4.4 "Copilot sheet".
  * - Controlled by state.sheetOpen via ref (snapToIndex(0) / close()); snapPoints ['50%', '92%'];
@@ -38,13 +120,169 @@ export interface CopilotSheetProps {
  *     TailorCard, FieldMappingList, stale notice when !isOnSourcePage; CopilotActions in BottomSheetFooter.
  */
 export function CopilotSheet(props: CopilotSheetProps) {
-  // TODO(T-028): shell + states. TODO(T-029): result cards. TODO(T-030): actions footer.
+  // TODO(T-029): result cards. TODO(T-030): actions footer.
+  const { colors } = useTheme();
+  const sheetRef = useRef<SheetHandle | null>(null);
   const snapPoints = useMemo(() => ['50%', '92%'], []);
+  const busy = props.state.phase === 'scraping' || props.state.phase === 'analyzing' || props.state.phase === 'filling';
+  const open = props.state.sheetOpen;
+
+  const snapOpen = useCallback(() => {
+    if (open) sheetRef.current?.snapToIndex(0);
+    else sheetRef.current?.close();
+  }, [open]);
+
+  useEffect(() => {
+    snapOpen();
+  }, [snapOpen]);
+
+  const backdrop = useCallback(
+    (backdropProps: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop {...backdropProps} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
+    ),
+    [],
+  );
+
   return (
-    <BottomSheet index={props.state.sheetOpen ? 0 : -1} snapPoints={snapPoints} enablePanDownToClose onClose={props.onClose}>
-      <BottomSheetScrollView testID={TestIds.copilot.sheet}>
-        <Text>Copilot ({props.state.phase})</Text>
+    <BottomSheet
+      ref={sheetRef}
+      index={open ? 0 : -1}
+      snapPoints={snapPoints}
+      enablePanDownToClose
+      onClose={props.onClose}
+      backdropComponent={backdrop}
+      onAnimate={(_from, toIndex) => {
+        if (open && toIndex < 0) sheetRef.current?.snapToIndex(0);
+      }}
+    >
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.textPrimary }]} maxFontSizeMultiplier={fontScaleCaps.default}>
+          Copilot
+        </Text>
+        <IconButton
+          icon={RefreshCw}
+          accessibilityLabel="Re-analyze"
+          testID={TestIds.copilot.reanalyze}
+          disabled={busy}
+          onPress={props.onReanalyze}
+        />
+        <IconButton icon={X} accessibilityLabel="Close" testID={TestIds.copilot.close} onPress={props.onClose} />
+      </View>
+      <BottomSheetScrollView testID={TestIds.copilot.sheet} contentContainerStyle={styles.body}>
+        <SheetBody {...props} />
       </BottomSheetScrollView>
     </BottomSheet>
   );
 }
+
+function SheetBody(props: CopilotSheetProps) {
+  const { colors } = useTheme();
+  const { state } = props;
+  if (state.phase === 'scraping' || state.phase === 'analyzing') {
+    return (
+      <StateView
+        kind="loading"
+        testID={TestIds.copilot.loading}
+        message={state.phase === 'scraping' ? 'Reading the page…' : 'Asking the AI…'}
+      />
+    );
+  }
+  if (state.phase === 'error' && state.error) return <ErrorBody error={state.error} onReanalyze={props.onReanalyze} onOpenSettings={props.onOpenSettings} />;
+  if ((state.phase === 'ready' || state.phase === 'filling') && state.session) {
+    const { analysis } = state.session;
+    return (
+      <View style={styles.sections}>
+        <EligibilityBadge eligibility={analysis.eligibility} reason={analysis.eligibilityReason} />
+        <RedFlagList flags={analysis.redFlags} />
+        <MatchCard score={analysis.matchScore} resume={props.recommendedResume} reason={analysis.resumeReason} />
+        <SkillChips title="Matched skills" skills={analysis.matchedSkills} testID={TestIds.copilot.matchedSkills} />
+        <SkillChips title="Missing skills" skills={analysis.missingSkills} testID={TestIds.copilot.missingSkills} />
+        <TailorCard tailor={state.tailor} onTailor={props.onTailor} onCopy={props.onCopy} />
+        <FieldMappingList
+          mappings={analysis.fieldMappings}
+          scrapedInputCount={state.session.scrapedInputCount}
+          lastFill={state.lastFill}
+          savedAnswerClawIds={state.savedAnswerClawIds}
+          onSaveAnswer={props.onSaveAnswer}
+        />
+        {!props.isOnSourcePage ? (
+          <View style={[styles.stale, { backgroundColor: colors.warningBg }]} testID={TestIds.copilot.staleNotice}>
+            <Text style={{ color: colors.warningText, ...typography.body }} maxFontSizeMultiplier={fontScaleCaps.default}>
+              You left the analyzed page. Auto-fill is off until you analyze again.
+            </Text>
+          </View>
+        ) : null}
+      </View>
+    );
+  }
+  return null;
+}
+
+function ErrorBody({
+  error,
+  onReanalyze,
+  onOpenSettings,
+}: {
+  error: WorkspaceError;
+  onReanalyze: () => void;
+  onOpenSettings: (path: '/settings/ai' | '/settings/profile') => void;
+}) {
+  const { colors } = useTheme();
+  const copy = errorCopy(error);
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(copy.message);
+  }, [copy.message]);
+  return (
+    <View testID={TestIds.copilot.error} style={styles.error}>
+      <Text style={[styles.errorTitle, { color: colors.textPrimary }]}>{copy.title}</Text>
+      <Text testID={TestIds.copilot.errorMessage} style={[styles.errorMessage, { color: colors.textSecondary }]}>
+        {copy.message}
+      </Text>
+      <Button label="Try again" testID={TestIds.copilot.retry} onPress={onReanalyze} />
+      {copy.action ? (
+        <Button
+          label={copy.action.label}
+          variant="secondary"
+          testID={TestIds.copilot.errorAction}
+          onPress={() => {
+            if (copy.action) onOpenSettings(copy.action.path);
+          }}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: spacing.md,
+    borderBottomWidth: 1,
+  },
+  title: {
+    ...typography.headline,
+    flex: 1,
+  },
+  body: {
+    padding: spacing.md,
+    gap: spacing.lg,
+  },
+  sections: {
+    gap: spacing.lg,
+  },
+  stale: {
+    borderRadius: radii.md,
+    padding: spacing.md,
+  },
+  error: {
+    gap: spacing.sm,
+    padding: spacing.md,
+  },
+  errorTitle: {
+    ...typography.headline,
+  },
+  errorMessage: {
+    ...typography.body,
+  },
+});

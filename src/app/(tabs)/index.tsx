@@ -125,7 +125,7 @@ export default function WorkspaceScreen() {
             onStageResume={controller.stageRecommendedResume}
             onLogApplication={controller.logApplication}
             onCopy={controller.copyText}
-            onOpenSettings={() => {}}
+            onOpenSettings={(path) => router.push(path)}
           />
           <StagingExplainer
             visible={controller.stagingExplainerVisible}

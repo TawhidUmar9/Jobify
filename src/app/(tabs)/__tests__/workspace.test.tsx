@@ -11,6 +11,13 @@ const mockPush = jest.fn();
 const mockSetParams = jest.fn();
 let mockParams: { url?: string } = {};
 
+jest.mock('lucide-react-native', () => {
+  const React = jest.requireActual('react') as typeof import('react');
+  const { View } = jest.requireActual('react-native') as typeof import('react-native');
+  const Icon = (props: Record<string, unknown>) => React.createElement(View, props);
+  return { Sparkles: Icon, Settings2: Icon, RefreshCw: Icon, X: Icon };
+});
+
 jest.mock('expo-sqlite', () => ({
   useSQLiteContext: () => mockDb.db,
 }));

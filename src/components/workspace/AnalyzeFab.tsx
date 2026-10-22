@@ -1,6 +1,9 @@
-import { Pressable, Text } from 'react-native';
+import { Settings2, Sparkles } from 'lucide-react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
+import { useTheme } from '../../theme/ThemeProvider';
+import { elevation, fontScaleCaps, iconSizes, iconStrokeWidth, radii, spacing, typography } from '../../theme/tokens';
 
 export interface AnalyzeFabProps {
   onPress: () => void;
@@ -11,6 +14,9 @@ export interface AnalyzeFabProps {
   /** No AI provider configured: label "Set up AI" (icon Settings2), press opens Settings → AI provider. */
   aiMissing: boolean;
 }
+
+/** Height from UI_DIRECTIVES §4.1. The tab bar already includes the bottom inset, so the offset is spacing.md. */
+const FAB_HEIGHT = 56;
 
 /**
  * Extended floating action button "Analyze & Fill". UI_DIRECTIVES.md §4.1 "Analyze FAB".
@@ -25,17 +31,52 @@ export interface AnalyzeFabProps {
  * - Hidden (not rendered) while the copilot sheet is open.
  */
 export function AnalyzeFab({ onPress, disabled, busy, aiMissing }: AnalyzeFabProps) {
-  // TODO(T-028): implement per the rules above.
+  const { colors } = useTheme();
+  const label = aiMissing ? 'Set up AI' : busy ? 'Analyzing…' : 'Analyze & Fill';
+  const Icon = aiMissing ? Settings2 : Sparkles;
   return (
     <Pressable
       testID={TestIds.workspace.analyzeFab}
-      onPress={disabled ? undefined : onPress}
+      disabled={disabled}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel="Analyze this job page and prepare auto-fill"
       accessibilityState={{ disabled, busy }}
-      style={{ position: 'absolute', right: 16, bottom: 16, minHeight: 56, justifyContent: 'center' }}
+      style={[
+        styles.fab,
+        { backgroundColor: colors.accent, opacity: disabled ? 0.4 : 1 },
+      ]}
     >
-      <Text>{aiMissing ? 'Set up AI' : busy ? 'Analyzing…' : 'Analyze & Fill'}</Text>
+      {busy && !aiMissing ? (
+        <ActivityIndicator color={colors.onAccent} />
+      ) : (
+        <Icon size={iconSizes.md} strokeWidth={iconStrokeWidth} color={colors.onAccent} accessible={false} />
+      )}
+      <Text
+        style={[styles.label, { color: colors.onAccent }]}
+        maxFontSizeMultiplier={fontScaleCaps.default}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  fab: {
+    position: 'absolute',
+    right: spacing.md,
+    bottom: spacing.md,
+    height: FAB_HEIGHT,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    elevation: elevation.fab,
+  },
+  label: {
+    ...typography.bodyStrong,
+  },
+});
