@@ -294,7 +294,8 @@ export const SCRAPE_PAGE_JS = String.raw`
 true;
 `;
 ```
-- **Acceptance (load `e2e/fixtures/pages/job-remote-form.html` into jsdom):** exactly 5 inputs (full_name, email, portfolio with ariaLabel "Portfolio URL", textarea labelled "Why Acme Cloud?", select with 4 options). Password, hidden, checkbox, file, display:none, and disabled are excluded. clawIds `jobify-field-0..4`. A second run clears stale attributes. 80/12 000 caps. SCRAPE_ERROR on throw. Ends with `true;`. Output passes `parseBridgeMessage`.
+- **Acceptance (load `e2e/fixtures/pages/job-remote-form.html` into jsdom):**
+  - [x] exactly 5 inputs (full_name, email, portfolio with ariaLabel "Portfolio URL", textarea labelled "Why Acme Cloud?", select with 4 options). Password, hidden, checkbox, file, display:none, and disabled are excluded. clawIds `jobify-field-0..4`. A second run clears stale attributes. 80/12 000 caps. SCRAPE_ERROR on throw. Ends with `true;`. Output passes `parseBridgeMessage`.
 - **Verify:** `npm run verify && npx jest --selectProjects dom`
 
 ### T-023 Board bar and `useBoards` (load/select/reload)
