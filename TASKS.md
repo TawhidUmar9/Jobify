@@ -19,7 +19,7 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Acceptance:**
   - [x] `npm ci`, `npm run verify` (14 tests pass), `npm run doctor` (no issues).
   - [ ] `npm run android` on one device/emulator: app launches. The stub onboarding gate shows the Welcome stub (`completed` is `false` in the stub provider). No red box. MANUAL PENDING (device)
-  - [ ] **Sheet check (A-28):** temporarily set `completed: true` in `OnboardingStatusProvider` and `index={0}` in `CopilotSheet`. Reload, then drag and dismiss the sheet with no red box. **Revert both.** On a crash, write B-001 in BLOCKERS.md and stop. MANUAL PENDING (device)
+  - [ ] **Sheet check (A-28):** temporarily replace `src/app/onboarding/index.tsx` with the sheet-check screen in TESTING_ON_DEVICE.md §3 (a bare `@gorhom/bottom-sheet` at `index={0}`), run it, drag it up, then pan down to close with no red box. **Revert with `git checkout src/app/onboarding/index.tsx`.** On a crash, write B-001 in BLOCKERS.md and stop. MANUAL PENDING (device)
   - [ ] `cd android && ./gradlew --stop` afterwards (frees RAM). MANUAL PENDING (device)
 - **Verify:** `npm ci && npm run verify && npm run doctor && npm run android`
 
