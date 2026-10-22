@@ -1,4 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { useTheme } from '../../theme/ThemeProvider';
+import { fontScaleCaps, radii, spacing, touchTarget, typography } from '../../theme/tokens';
 
 export interface SegmentOption<T extends string> {
   value: T;
@@ -21,15 +24,82 @@ export interface SegmentedControlProps<T extends string> {
  * Multi-select never allows deselecting the last selected option.
  */
 export function SegmentedControl<T extends string>(props: SegmentedControlProps<T>) {
-  // TODO(T-003): implement per the rules above.
+  const { colors } = useTheme();
+  const multiple = !!props.multiple;
+
+  function press(value: T) {
+    const isSelected = props.selected.includes(value);
+    if (multiple) {
+      if (isSelected) {
+        if (props.selected.length <= 1) return;
+        props.onChange(props.selected.filter((item) => item !== value));
+        return;
+      }
+      props.onChange([...props.selected, value]);
+      return;
+    }
+    if (isSelected) return;
+    props.onChange([value]);
+  }
+
   return (
-    <View>
-      <Text>{props.label}</Text>
-      {props.options.map((o) => (
-        <Pressable key={o.value} testID={o.testID} onPress={() => props.onChange([o.value])}>
-          <Text>{o.label}</Text>
-        </Pressable>
-      ))}
+    <View style={styles.wrap}>
+      <Text style={[styles.label, { color: colors.textPrimary }]}>{props.label}</Text>
+      <View style={styles.row}>
+        {props.options.map((option) => {
+          const checked = props.selected.includes(option.value);
+          return (
+            <Pressable
+              key={option.value}
+              testID={option.testID}
+              accessibilityRole={multiple ? 'checkbox' : 'radio'}
+              accessibilityLabel={option.label}
+              accessibilityState={{ checked }}
+              onPress={() => press(option.value)}
+              style={[
+                styles.segment,
+                {
+                  backgroundColor: checked ? colors.primary : colors.surface,
+                  borderColor: checked ? colors.primary : colors.borderStrong,
+                },
+              ]}
+            >
+              <Text
+                numberOfLines={1}
+                maxFontSizeMultiplier={fontScaleCaps.compact}
+                style={[styles.segmentLabel, { color: checked ? colors.onPrimary : colors.textPrimary }]}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrap: {
+    gap: spacing.xxs,
+  },
+  label: {
+    ...typography.label,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  segment: {
+    flex: 1,
+    height: touchTarget.android,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs,
+  },
+  segmentLabel: {
+    ...typography.bodyStrong,
+  },
+});

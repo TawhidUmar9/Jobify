@@ -43,10 +43,10 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Files:** `src/components/ui/{TextField,TagInput,ToggleRow,SegmentedControl,ListRow,ConfirmDialog}.tsx`, `src/components/ui/__tests__/formControls.test.tsx`.
 - **Depends on:** T-002.
 - **Acceptance:**
-  - [ ] TextField shows the label, helper, and error (error also in `accessibilityHint`). The secure toggle switches `secureTextEntry`.
-  - [ ] TagInput: trims, ignores empty and case-insensitive duplicates, respects `max`, `normalize` null → "Not valid", chip press removes. testIDs via `TestIds.tagInput.*`.
-  - [ ] SegmentedControl multi never deselects the last item. Roles radio/checkbox.
-  - [ ] ConfirmDialog: back = cancel. Destructive styling when `destructive`.
+  - [x] TextField shows the label, helper, and error (error also in `accessibilityHint`). The secure toggle switches `secureTextEntry`.
+  - [x] TagInput: trims, ignores empty and case-insensitive duplicates, respects `max`, `normalize` null → "Not valid", chip press removes. testIDs via `TestIds.tagInput.*`.
+  - [x] SegmentedControl multi never deselects the last item. Roles radio/checkbox.
+  - [x] ConfirmDialog: back = cancel. Destructive styling when `destructive`.
 - **Verify:** `npm run verify && npx jest src/components/ui`
 
 ### T-004 Database migration and seeding
