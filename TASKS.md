@@ -528,7 +528,8 @@ true;
 - **Goal:** AnswerForm + `settings/answers`.
 - **Files:** `src/components/forms/AnswerForm.tsx`, `src/app/settings/answers.tsx`, tests.
 - **Depends on:** T-009, T-003.
-- **Acceptance:** empty state copy, add/edit/delete, counter, use count shown.
+- **Acceptance:**
+  - [x] empty state copy, add/edit/delete, counter, use count shown.
 - **Verify:** `npm run verify && npx jest src/app src/components/forms`
 
 ### T-042 Backup export/import
