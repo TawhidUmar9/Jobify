@@ -63,10 +63,10 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Files:** those 3 files, `src/services/__tests__/storage.test.ts`.
 - **Depends on:** T-001.
 - **Acceptance:**
-  - [ ] kv round-trip. Store errors → null / swallowed with `logger.warn(key only)`.
-  - [ ] `setApiKey('  k  ')` stores "k". `setApiKey('')` deletes. `getApiKey` never throws.
-  - [ ] `saveAiConfig` rejects a non-http base URL or empty model (returns false, nothing saved) and strips the trailing slash. `loadAiConfig` returns null for an unknown provider and fills defaults. `clearAiConfig` removes all 3 kv keys and the key.
-  - [ ] A test asserts the API key value never appears in any `logger` call.
+  - [x] kv round-trip. Store errors → null / swallowed with `logger.warn(key only)`.
+  - [x] `setApiKey('  k  ')` stores "k". `setApiKey('')` deletes. `getApiKey` never throws.
+  - [x] `saveAiConfig` rejects a non-http base URL or empty model (returns false, nothing saved) and strips the trailing slash. `loadAiConfig` returns null for an unknown provider and fills defaults. `clearAiConfig` removes all 3 kv keys and the key.
+  - [x] A test asserts the API key value never appears in any `logger` call.
 - **Verify:** `npm run verify && npx jest src/services`
 
 ### T-006 Profile and preferences (normalizers + repo)

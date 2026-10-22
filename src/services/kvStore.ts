@@ -1,3 +1,7 @@
+import Storage from 'expo-sqlite/kv-store';
+
+import { logger } from '../lib/logger';
+
 /**
  * Typed key-value settings backed by expo-sqlite/kv-store. CONTRACT FILE for the key list.
  * Secrets never go here (src/services/secrets.ts).
@@ -25,20 +29,28 @@ export type KvKey = (typeof KV_KEYS)[keyof typeof KV_KEYS];
  * Implementation: `import Storage from 'expo-sqlite/kv-store'; Storage.getItem(key)`.
  */
 export async function kvGet(key: KvKey): Promise<string | null> {
-  // TODO(T-005): implement.
-  void key;
-  return null;
+  try {
+    return await Storage.getItem(key);
+  } catch {
+    logger.warn('kvStore', key);
+    return null;
+  }
 }
 
 /** Writes a value. Swallows and logs errors. */
 export async function kvSet(key: KvKey, value: string): Promise<void> {
-  // TODO(T-005): implement.
-  void key;
-  void value;
+  try {
+    await Storage.setItem(key, value);
+  } catch {
+    logger.warn('kvStore', key);
+  }
 }
 
 /** Removes a value. Swallows and logs errors. */
 export async function kvRemove(key: KvKey): Promise<void> {
-  // TODO(T-005): implement.
-  void key;
+  try {
+    await Storage.removeItem(key);
+  } catch {
+    logger.warn('kvStore', key);
+  }
 }
