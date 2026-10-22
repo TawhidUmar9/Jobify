@@ -339,7 +339,8 @@ true;
 - **Goal:** controller parts listed under TODO(T-027).
 - **Files:** `src/features/workspace/useWorkspaceController.ts`, test.
 - **Depends on:** T-016, T-021, T-022, T-025, T-026, T-006, T-007, T-009.
-- **Acceptance (fake timers, mocked aiClient):** AI config loaded on mount and focus (`aiMissing`). No AI → `onAnalyzePress` navigates to `/settings/ai`. Inject on press. 5 s timeout → SCRAPE TIMEOUT. Out-of-phase messages ignored. No profile → NO_PROFILE. Success → ready with `boardName` and `pageText`. Close during analyze aborts. contextKey change resets.
+- **Acceptance (fake timers, mocked aiClient):**
+  - [x] AI config loaded on mount and focus (`aiMissing`). No AI → `onAnalyzePress` navigates to `/settings/ai`. Inject on press. 5 s timeout → SCRAPE TIMEOUT. Out-of-phase messages ignored. No profile → NO_PROFILE. Success → ready with `boardName` and `pageText`. Close during analyze aborts. contextKey change resets.
 - **Verify:** `npm run verify && npx jest src/features/workspace`
 
 ### T-028 Analyze FAB and copilot sheet shell

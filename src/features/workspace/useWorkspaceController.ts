@@ -1,8 +1,20 @@
-import { useReducer, useRef, type RefObject } from 'react';
+import * as Haptics from 'expo-haptics';
+import { router, useFocusEffect } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useEffect, useReducer, useRef, useState, type RefObject } from 'react';
 
+import { parseBridgeMessage, SCRAPE_LIMITS, type PageScrapedMessage } from '../../bridge/messages';
+import { SCRAPE_PAGE_JS } from '../../bridge/scrapePageScript';
 import type { WebViewHandle } from '../../components/workspace/PortalWebView';
+import { listAnswers } from '../../db/repositories/answersRepo';
+import { getPreferences, getProfile } from '../../db/repositories/profileRepo';
+import { listResumes } from '../../db/repositories/resumesRepo';
+import { analyzeJob, createProvider } from '../../services/ai/aiClient';
+import { loadAiConfig } from '../../services/ai/config';
+import type { AiProvider } from '../../services/ai/types';
+import { getApiKey } from '../../services/secrets';
 import type { FieldMapping, JobBoard, Resume } from '../../types/domain';
-import { initialWorkspaceState, workspaceReducer, type WorkspaceState } from './workspaceReducer';
+import { BRIDGE_TIMEOUT_MS, initialWorkspaceState, workspaceReducer, type WorkspaceState } from './workspaceReducer';
 
 export interface WorkspaceControllerParams {
   /** Board selected in the bar; null for a shared/typed link opened with no board active. */
@@ -73,33 +85,180 @@ export interface WorkspaceController {
  * - contextKey change: abort, clear timers, CONTEXT_CHANGED. Unmount: abort and clear timers.
  */
 export function useWorkspaceController(params: WorkspaceControllerParams): WorkspaceController {
-  // TODO(T-027): scrape/analyze/close/context. TODO(T-030): log. TODO(T-033): fill + saveAnswer.
-  // TODO(T-034): tailor + copyText. TODO(T-036): stage.
-  const [state] = useReducer(workspaceReducer, initialWorkspaceState);
+  // TODO(T-030): log. TODO(T-033): fill + saveAnswer. TODO(T-034): tailor + copyText. TODO(T-036): stage.
+  const db = useSQLiteContext();
+  const [state, dispatch] = useReducer(workspaceReducer, initialWorkspaceState);
+  const [aiMissing, setAiMissing] = useState(true);
   const webViewRef = useRef<WebViewHandle | null>(null);
-  void params;
+  const stateRef = useRef(state);
+  const providerRef = useRef<AiProvider | null>(null);
+  const boardRef = useRef(params.activeBoard);
+  const abortRef = useRef<AbortController | null>(null);
+  const scrapeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const seenContext = useRef(params.contextKey);
+
+  useEffect(() => {
+    stateRef.current = state;
+    boardRef.current = params.activeBoard;
+  }, [params.activeBoard, state]);
+
+  const stopInFlight = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    if (scrapeTimer.current !== null) {
+      clearTimeout(scrapeTimer.current);
+      scrapeTimer.current = null;
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void loadAiConfig().then(async (config) => {
+        const key = await getApiKey();
+        if (cancelled) return;
+        const provider = config === null ? null : createProvider(config, key);
+        providerRef.current = provider;
+        setAiMissing(provider === null);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, []),
+  );
+
+  useEffect(() => {
+    if (seenContext.current === params.contextKey) return;
+    seenContext.current = params.contextKey;
+    stopInFlight();
+    dispatch({ type: 'CONTEXT_CHANGED' });
+  }, [params.contextKey, stopInFlight]);
+
+  useEffect(() => stopInFlight, [stopInFlight]);
+
+  const runAnalyze = useCallback(
+    async (message: PageScrapedMessage, controller: AbortController) => {
+      const profile = await getProfile(db);
+      if (controller.signal.aborted || stateRef.current.phase !== 'analyzing') return;
+      if (profile === null) {
+        dispatch({ type: 'PROFILE_MISSING' });
+        return;
+      }
+      const preferences = await getPreferences(db);
+      const resumes = await listResumes(db);
+      const answers = await listAnswers(db);
+      if (controller.signal.aborted || stateRef.current.phase !== 'analyzing') return;
+      const result = await analyzeJob(
+        providerRef.current,
+        { profile, preferences, resumes, answers, scraped: message, today: new Date() },
+        controller.signal,
+      );
+      if (controller.signal.aborted || stateRef.current.phase !== 'analyzing') return;
+      if (!result.ok) {
+        dispatch({ type: 'ANALYSIS_FAILED', code: result.error.code });
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        return;
+      }
+      dispatch({
+        type: 'ANALYSIS_SUCCEEDED',
+        session: {
+          analysis: result.value,
+          sourceUrl: message.url,
+          boardName: boardRef.current?.name ?? 'Shared link',
+          scrapedInputCount: message.inputs.length,
+          pageText: message.pageText,
+        },
+      });
+    },
+    [db],
+  );
+
+  const reanalyze = useCallback(() => {
+    stopInFlight();
+    dispatch({ type: 'ANALYZE_REQUESTED' });
+    stateRef.current = {
+      phase: 'scraping',
+      sheetOpen: true,
+      session: null,
+      error: null,
+      lastFill: null,
+      loggedApplicationId: null,
+      tailor: { status: 'idle' },
+      savedAnswerClawIds: [],
+    };
+    webViewRef.current?.injectJavaScript(SCRAPE_PAGE_JS);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    scrapeTimer.current = setTimeout(() => {
+      scrapeTimer.current = null;
+      if (stateRef.current.phase === 'scraping') dispatch({ type: 'SCRAPE_FAILED', code: 'TIMEOUT' });
+    }, BRIDGE_TIMEOUT_MS);
+  }, [stopInFlight]);
+
+  const onBridgeMessage = useCallback(
+    (raw: string) => {
+      const parsed = parseBridgeMessage(raw);
+      if (!parsed.ok) return;
+      const message = parsed.value;
+      if (message.type !== 'PAGE_SCRAPED' && message.type !== 'SCRAPE_ERROR') return;
+      if (stateRef.current.phase !== 'scraping') return;
+      if (scrapeTimer.current !== null) {
+        clearTimeout(scrapeTimer.current);
+        scrapeTimer.current = null;
+      }
+      if (message.type === 'SCRAPE_ERROR') {
+        dispatch({ type: 'SCRAPE_FAILED', code: 'SCRIPT_ERROR' });
+        return;
+      }
+      dispatch({ type: 'SCRAPE_SUCCEEDED', message });
+      if (message.pageText.length < SCRAPE_LIMITS.minPageTextChars) return;
+      stateRef.current = { ...stateRef.current, phase: 'analyzing' };
+      const controller = new AbortController();
+      abortRef.current = controller;
+      void runAnalyze(message, controller);
+    },
+    [runAnalyze],
+  );
+
+  const onAnalyzePress = useCallback(() => {
+    if (aiMissing) {
+      router.push('/settings/ai');
+      return;
+    }
+    const current = stateRef.current;
+    if (current.phase === 'ready' && !current.sheetOpen && params.currentUrl === current.session?.sourceUrl) {
+      dispatch({ type: 'SHEET_OPENED' });
+      return;
+    }
+    reanalyze();
+  }, [aiMissing, params.currentUrl, reanalyze]);
+
+  const closeSheet = useCallback(() => {
+    stopInFlight();
+    dispatch({ type: 'SHEET_CLOSED' });
+  }, [stopInFlight]);
+
   const noop = () => {};
   const asyncNoop = async () => {};
   return {
     state,
     webViewRef,
-    isOnSourcePage: false,
+    isOnSourcePage: params.currentUrl === state.session?.sourceUrl,
     recommendedResume: null,
-    aiMissing: true,
+    aiMissing,
     staging: false,
     logging: false,
     stagingExplainerVisible: false,
     onStagingExplainerContinue: noop,
     onStagingExplainerCancel: noop,
-    onBridgeMessage: noop,
-    onAnalyzePress: noop,
-    reanalyze: noop,
+    onBridgeMessage,
+    onAnalyzePress,
+    reanalyze,
     autoFill: noop,
     tailor: noop,
     saveAnswer: asyncNoop,
     logApplication: asyncNoop,
     stageRecommendedResume: asyncNoop,
     copyText: asyncNoop,
-    closeSheet: noop,
+    closeSheet,
   };
 }
