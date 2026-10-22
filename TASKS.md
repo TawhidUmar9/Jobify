@@ -163,7 +163,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `createProvider`, `testConnection`, `parseResume`, `analyzeJob`, `tailorApplication`.
 - **Files:** `src/services/ai/aiClient.ts`, test.
 - **Depends on:** T-013, T-014, T-015.
-- **Acceptance:** null-provider rules. Each call passes the right schema, schemaName, and timeout. Validator failure → SCHEMA_MISMATCH. PDF with openai_compatible → PDF_NOT_SUPPORTED with no request.
+- **Acceptance:**
+  - [x] null-provider rules. Each call passes the right schema, schemaName, and timeout. Validator failure → SCHEMA_MISMATCH. PDF with openai_compatible → PDF_NOT_SUPPORTED with no request.
 - **Integration check:** start `npm run mock:server`, then `npx jest src/services/ai/__tests__/aiClient.integration.test.ts` (you write it: real `fetch` against `http://localhost:8787` for both providers; skip with a clear message when `/health` is unreachable).
 - **Verify:** `npm run verify && npx jest src/services/ai`
 
