@@ -478,7 +478,8 @@ true;
 - **Goal:** `stageResume` per its doc.
 - **Files:** `src/services/resumeStaging.ts`, test.
 - **Depends on:** T-005, T-019.
-- **Acceptance:** mocks for `expo-file-system(/legacy)`, `expo-sharing`, and Platform. Cases: NO_FILE, FILE_MISSING, Android first run, permission denied, stored-URI failure → re-prompt, second failure, iOS share/unavailable, clipboard first and its failure non-fatal, fileName fallback `${label}.pdf`.
+- **Acceptance:**
+  - [x] mocks for `expo-file-system(/legacy)`, `expo-sharing`, and Platform. Cases: NO_FILE, FILE_MISSING, Android first run, permission denied, stored-URI failure → re-prompt, second failure, iOS share/unavailable, clipboard first and its failure non-fatal, fileName fallback `${label}.pdf`.
 - **Verify:** `npm run verify && npx jest src/services`
 
 ### T-036 Stage CV action and explainer
