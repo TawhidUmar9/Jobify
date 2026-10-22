@@ -331,7 +331,8 @@ true;
 - **Goal:** `workspaceReducer` per its transition table.
 - **Files:** `src/features/workspace/workspaceReducer.ts` (function only), test.
 - **Depends on:** T-001.
-- **Acceptance:** one test per table row, including the tailor sub-state and ANSWER_SAVED de-dup. Unlisted action → same reference (test every phase). 199 vs 200 chars boundary.
+- **Acceptance:**
+  - [x] one test per table row, including the tailor sub-state and ANSWER_SAVED de-dup. Unlisted action → same reference (test every phase). 199 vs 200 chars boundary.
 - **Verify:** `npm run verify && npx jest src/features/workspace`
 
 ### T-027 Controller: scrape, analyze, close, context

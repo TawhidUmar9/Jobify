@@ -1,4 +1,4 @@
-import type { PageScrapedMessage } from '../../bridge/messages';
+import { SCRAPE_LIMITS, type PageScrapedMessage } from '../../bridge/messages';
 import type { AiErrorCode } from '../../services/ai/types';
 import type { AnalysisSession, TailorResult } from '../../types/domain';
 
@@ -98,8 +98,100 @@ export const BRIDGE_TIMEOUT_MS = 5000;
  *                     (tailor 'loading' becomes {idle}: the controller aborts it).
  * CONTEXT_CHANGED     any → initialWorkspaceState (board switched or a shared link opened).
  */
+function resetForAnalyze(): WorkspaceState {
+  return {
+    phase: 'scraping',
+    sheetOpen: true,
+    session: null,
+    error: null,
+    lastFill: null,
+    loggedApplicationId: null,
+    tailor: { status: 'idle' },
+    savedAnswerClawIds: [],
+  };
+}
+
 export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): WorkspaceState {
-  // TODO(T-026): implement per the rules above.
-  void action;
-  return state;
+  switch (action.type) {
+    case 'ANALYZE_REQUESTED':
+      if (state.phase !== 'idle' && state.phase !== 'ready' && state.phase !== 'error') return state;
+      return resetForAnalyze();
+    case 'SCRAPE_SUCCEEDED':
+      if (state.phase !== 'scraping') return state;
+      if (action.message.pageText.length < SCRAPE_LIMITS.minPageTextChars) {
+        return { ...state, phase: 'error', error: { kind: 'NO_CONTENT' } };
+      }
+      return { ...state, phase: 'analyzing' };
+    case 'SCRAPE_FAILED':
+      if (state.phase !== 'scraping') return state;
+      return { ...state, phase: 'error', error: { kind: 'SCRAPE', code: action.code } };
+    case 'PROFILE_MISSING':
+      if (state.phase !== 'analyzing') return state;
+      return { ...state, phase: 'error', error: { kind: 'NO_PROFILE' } };
+    case 'ANALYSIS_SUCCEEDED':
+      if (state.phase !== 'analyzing') return state;
+      return { ...state, phase: 'ready', session: action.session };
+    case 'ANALYSIS_FAILED':
+      if (state.phase !== 'analyzing') return state;
+      return { ...state, phase: 'error', error: { kind: 'AI', code: action.code } };
+    case 'FILL_REQUESTED':
+      if (state.phase !== 'ready' || state.session === null || state.session.analysis.fieldMappings.length === 0) {
+        return state;
+      }
+      return { ...state, phase: 'filling' };
+    case 'FILL_COMPLETED':
+      if (state.phase !== 'filling') return state;
+      return {
+        ...state,
+        phase: 'ready',
+        lastFill: { filledCount: action.filledCount, missingCount: action.missingCount },
+      };
+    case 'FILL_FAILED':
+      if (state.phase !== 'filling' || state.session === null) return state;
+      return {
+        ...state,
+        phase: 'ready',
+        lastFill: { filledCount: 0, missingCount: state.session.analysis.fieldMappings.length },
+      };
+    case 'TAILOR_REQUESTED':
+      if ((state.phase !== 'ready' && state.phase !== 'filling') || state.tailor.status === 'loading') return state;
+      return { ...state, tailor: { status: 'loading' } };
+    case 'TAILOR_SUCCEEDED':
+      if (state.tailor.status !== 'loading') return state;
+      return { ...state, tailor: { status: 'ready', result: action.result } };
+    case 'TAILOR_FAILED':
+      if (state.tailor.status !== 'loading') return state;
+      return { ...state, tailor: { status: 'error', code: action.code } };
+    case 'ANSWER_SAVED':
+      if ((state.phase !== 'ready' && state.phase !== 'filling') || state.savedAnswerClawIds.includes(action.clawId)) {
+        return state;
+      }
+      return { ...state, savedAnswerClawIds: [...state.savedAnswerClawIds, action.clawId] };
+    case 'APPLICATION_LOGGED':
+      if (state.phase !== 'ready' && state.phase !== 'filling') return state;
+      return { ...state, loggedApplicationId: action.applicationId };
+    case 'SHEET_OPENED':
+      if ((state.phase !== 'ready' && state.phase !== 'error') || state.sheetOpen) return state;
+      return { ...state, sheetOpen: true };
+    case 'SHEET_CLOSED':
+      return closeSheet(state);
+    case 'CONTEXT_CHANGED':
+      return state === initialWorkspaceState ? state : initialWorkspaceState;
+    default: {
+      const unreachable: never = action;
+      return unreachable;
+    }
+  }
+}
+
+function closeSheet(state: WorkspaceState): WorkspaceState {
+  const phase =
+    state.phase === 'scraping' || state.phase === 'analyzing' || state.phase === 'error' ? 'idle' : state.phase;
+  const error = state.phase === 'error' ? null : state.error;
+  const tailor =
+    (state.phase === 'ready' || state.phase === 'filling') && state.tailor.status === 'loading'
+      ? { status: 'idle' as const }
+      : state.tailor;
+  if (!state.sheetOpen && phase === state.phase && error === state.error && tailor === state.tailor) return state;
+  return { ...state, sheetOpen: false, phase, error, tailor };
 }
