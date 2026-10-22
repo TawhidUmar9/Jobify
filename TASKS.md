@@ -359,7 +359,8 @@ true;
 - **Goal:** EligibilityBadge, RedFlagList, MatchCard, SkillChips, `displayHost`.
 - **Files:** those 4 components, `src/lib/url.ts` (`displayHost`), tests.
 - **Depends on:** T-028.
-- **Acceptance:** labels, tones, and icons per presentation maps. "No red flags found" empty state. Match accessibility label. Null resume copy. `displayHost('https://www.wellfound.com/jobs')` → `wellfound.com`.
+- **Acceptance:**
+  - [x] labels, tones, and icons per presentation maps. "No red flags found" empty state. Match accessibility label. Null resume copy. `displayHost('https://www.wellfound.com/jobs')` → `wellfound.com`.
 - **Verify:** `npm run verify && npx jest src/components src/lib`
 
 ### T-030 Log application

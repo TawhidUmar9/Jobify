@@ -51,6 +51,9 @@ export function isExternalSchemeUrl(url: string): boolean {
 
 /** Hostname for display ("wellfound.com"), leading "www." stripped; non-URLs returned unchanged. */
 export function displayHost(url: string): string {
-  // TODO(T-029): implement.
-  return url;
+  try {
+    return new URL(url).hostname.replace(/^www\./i, '');
+  } catch {
+    return url;
+  }
 }

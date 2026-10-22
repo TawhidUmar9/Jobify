@@ -1,4 +1,4 @@
-import { extractFirstUrl, isHttpUrl, normalizeAddressInput } from '../url';
+import { displayHost, extractFirstUrl, isHttpUrl, normalizeAddressInput } from '../url';
 
 describe('isHttpUrl', () => {
   it('accepts http and https URLs', () => {
@@ -25,6 +25,14 @@ describe('normalizeAddressInput', () => {
     expect(normalizeAddressInput('hello world')).toBeNull();
     expect(normalizeAddressInput('javascript:alert(1)')).toBeNull();
     expect(normalizeAddressInput('')).toBeNull();
+  });
+});
+
+describe('displayHost', () => {
+  it('strips a leading www and leaves non-URLs unchanged', () => {
+    expect(displayHost('https://www.wellfound.com/jobs')).toBe('wellfound.com');
+    expect(displayHost('https://boards.example/jobs')).toBe('boards.example');
+    expect(displayHost('not a url')).toBe('not a url');
   });
 });
 

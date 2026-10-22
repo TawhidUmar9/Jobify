@@ -11,7 +11,16 @@ jest.mock('lucide-react-native', () => {
   const React = jest.requireActual('react') as typeof import('react');
   const { View } = jest.requireActual('react-native') as typeof import('react-native');
   const Icon = (props: Record<string, unknown>) => React.createElement(View, props);
-  return { RefreshCw: Icon, X: Icon, CircleCheck: Icon, CircleHelp: Icon, CircleX: Icon, TriangleAlert: Icon, ShieldCheck: Icon };
+  return {
+    RefreshCw: Icon,
+    X: Icon,
+    CircleCheck: Icon,
+    CircleHelp: Icon,
+    CircleX: Icon,
+    TriangleAlert: Icon,
+    ShieldCheck: Icon,
+    FileText: Icon,
+  };
 });
 
 const analysis: JobAnalysis = {

@@ -1,6 +1,9 @@
-import { Text, View } from 'react-native';
+import { ShieldCheck, TriangleAlert } from 'lucide-react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
+import { useTheme } from '../../theme/ThemeProvider';
+import { iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
 import type { RedFlag, RedFlagCode } from '../../types/domain';
 
 /** Short titles per code. CONTRACT: UI_DIRECTIVES.md §4.4. */
@@ -21,14 +24,50 @@ export const RED_FLAG_TITLES: Record<RedFlagCode, string> = {
  * Empty list → single line "No red flags found" with ShieldCheck 16 successIcon.
  */
 export function RedFlagList({ flags }: { flags: RedFlag[] }) {
-  // TODO(T-029): implement per the rules above.
+  const { colors } = useTheme();
   return (
-    <View testID={TestIds.copilot.redFlags}>
-      {flags.map((f, i) => (
-        <Text key={`${f.code}-${i}`} testID={TestIds.copilot.redFlag(i)}>
-          {RED_FLAG_TITLES[f.code]}: {f.detail}
-        </Text>
-      ))}
+    <View testID={TestIds.copilot.redFlags} style={styles.section}>
+      <Text style={[styles.heading, { color: colors.textPrimary }]}>Red flags</Text>
+      {flags.length === 0 ? (
+        <View style={styles.row}>
+          <ShieldCheck size={iconSizes.sm} strokeWidth={iconStrokeWidth} color={colors.successIcon} accessible={false} />
+          <Text style={[styles.title, { color: colors.textPrimary }]}>No red flags found</Text>
+        </View>
+      ) : (
+        flags.map((flag, index) => (
+          <View key={`${flag.code}-${index}`} testID={TestIds.copilot.redFlag(index)} style={styles.row}>
+            <TriangleAlert size={iconSizes.sm} strokeWidth={iconStrokeWidth} color={colors.warningIcon} accessible={false} />
+            <View style={styles.copy}>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>{RED_FLAG_TITLES[flag.code]}</Text>
+              <Text style={[styles.detail, { color: colors.textSecondary }]}>{flag.detail}</Text>
+            </View>
+          </View>
+        ))
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  section: {
+    gap: spacing.sm,
+  },
+  heading: {
+    ...typography.headline,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.xs,
+  },
+  copy: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  title: {
+    ...typography.bodyStrong,
+  },
+  detail: {
+    ...typography.body,
+  },
+});
