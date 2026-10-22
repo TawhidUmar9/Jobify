@@ -13,7 +13,7 @@
     "test": "jest",
     "test:ci": "jest --ci",
     "verify": "npm run typecheck && npm run lint && npm run test:ci",
-    "doctor": "expo-doctor",
+    "doctor": "npx --yes expo-doctor@1.21.5",
     "mock:server": "node scripts/mock-server.mjs",
     "e2e:android": "maestro test e2e/flows"
   },
