@@ -7,7 +7,10 @@ import { createFakeDb } from '../../../../tests/helpers/fakeDb';
 import { incrementAnswerUse, listAnswers, upsertAnswer } from '../../../db/repositories/answersRepo';
 import * as Clipboard from 'expo-clipboard';
 import { attachTailorText, insertApplication } from '../../../db/repositories/applicationsRepo';
+import { Platform } from 'react-native';
 import { analyzeJob, createProvider, tailorApplication } from '../../../services/ai/aiClient';
+import { stageResume } from '../../../services/resumeStaging';
+import { KV_KEYS, kvGet, kvRemove } from '../../../services/kvStore';
 import { clearAiConfig, saveAiConfig } from '../../../services/ai/config';
 import { setApiKey } from '../../../services/secrets';
 import type { JobAnalysis, JobBoard, TailorResult } from '../../../types/domain';
@@ -48,6 +51,10 @@ jest.mock('../../../db/repositories/answersRepo', () => ({
   listAnswers: jest.fn().mockResolvedValue([]),
   upsertAnswer: jest.fn().mockResolvedValue({ ok: true, value: { id: 1 } }),
   incrementAnswerUse: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('../../../services/resumeStaging', () => ({
+  stageResume: jest.fn(),
 }));
 
 jest.mock('../../../services/ai/aiClient', () => ({
@@ -542,5 +549,151 @@ describe('useWorkspaceController', () => {
     });
     expect(Clipboard.setStringAsync).toHaveBeenCalledWith('Hello world');
     expect(mockShow).toHaveBeenCalledWith('Copied');
+  });
+
+  it("shows snackbar when stageRecommendedResume is called without resume", async () => {
+    const { result } = await mount();
+    await act(async () => {
+      await result.current.stageRecommendedResume();
+    });
+    expect(mockShow).toHaveBeenCalledWith("Add a resume in Settings first");
+  });
+
+  it("handles staging flow on Android: explainer on first use, cancel stores nothing, continue stages", async () => {
+    Object.defineProperty(Platform, "OS", { value: "android", configurable: true });
+    await kvRemove(KV_KEYS.stagingExplainerSeen);
+
+    await saveAiConfig({ provider: "gemini", model: "gemini-3.8-flash", baseUrl: "https://generativelanguage.googleapis.com" });
+    await setApiKey("test-key");
+    createProviderMock.mockReturnValue({ kind: "gemini" });
+    analyzeJobMock.mockResolvedValue({ ok: true, value: { ...analysisWithMappings, recommendedResumeId: 1 } });
+
+    const rawResumeRow = {
+      id: 1,
+      label: "Backend",
+      file_name: "alex.pdf",
+      file_uri: "file://alex.pdf",
+      content_json: JSON.stringify({ summary: "", skills: [], highlights: [] }),
+      created_at: "2026-10-12",
+    };
+    const mockResume = {
+      id: 1,
+      label: "Backend",
+      fileName: "alex.pdf",
+      fileUri: "file://alex.pdf",
+      content: { summary: "", skills: [], highlights: [] },
+      createdAt: "2026-10-12",
+    };
+    mockDb.queue("getFirstAsync", { data_json: JSON.stringify({ fullName: "Alex Rahman" }) });
+    mockDb.queue("getAllAsync", [rawResumeRow]);
+
+    const { result } = await mount();
+    result.current.webViewRef.current = handle();
+    await act(async () => {
+      result.current.onAnalyzePress();
+      result.current.onBridgeMessage(pageMessage(200));
+    });
+    await waitFor(() => expect(result.current.state.phase).toBe("ready"));
+    await waitFor(() => expect(result.current.recommendedResume).toEqual(mockResume));
+
+    // First tap -> shows explainer
+    await act(async () => {
+      await result.current.stageRecommendedResume();
+    });
+    await waitFor(() => expect(result.current.stagingExplainerVisible).toBe(true));
+    expect(await kvGet(KV_KEYS.stagingExplainerSeen)).toBeNull();
+
+    // Cancel -> hides explainer, does not set kv
+    await act(async () => {
+      result.current.onStagingExplainerCancel();
+    });
+    await waitFor(() => expect(result.current.stagingExplainerVisible).toBe(false));
+    expect(await kvGet(KV_KEYS.stagingExplainerSeen)).toBeNull();
+
+    // Re-tap and continue
+    (stageResume as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      value: { platform: "android", destinationUri: "content://jobify/alex.pdf", clipboardCopied: true },
+    });
+
+    await act(async () => {
+      await result.current.stageRecommendedResume();
+    });
+    await waitFor(() => expect(result.current.stagingExplainerVisible).toBe(true));
+
+    await act(async () => {
+      await result.current.onStagingExplainerContinue();
+    });
+    await waitFor(() => expect(result.current.stagingExplainerVisible).toBe(false));
+    expect(await kvGet(KV_KEYS.stagingExplainerSeen)).toBe("true");
+    expect(stageResume).toHaveBeenCalledWith(mockResume, "");
+    expect(mockShow).toHaveBeenCalledWith("Resume saved to your Jobify folder. Cover note copied.");
+    expect(Haptics.notificationAsync).toHaveBeenCalledWith(Haptics.NotificationFeedbackType.Success);
+
+    // Subsequent tap -> no explainer shown
+    (stageResume as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      value: { platform: "android", destinationUri: "content://jobify/alex.pdf", clipboardCopied: false },
+    });
+    await act(async () => {
+      await result.current.stageRecommendedResume();
+    });
+    expect(result.current.stagingExplainerVisible).toBe(false);
+    expect(mockShow).toHaveBeenCalledWith("Resume saved to your Jobify folder.");
+  });
+
+  it("handles staging errors and maps them to snackbars", async () => {
+    Object.defineProperty(Platform, "OS", { value: "ios", configurable: true });
+
+    await saveAiConfig({ provider: "gemini", model: "gemini-3.8-flash", baseUrl: "https://generativelanguage.googleapis.com" });
+    await setApiKey("test-key");
+    createProviderMock.mockReturnValue({ kind: "gemini" });
+    analyzeJobMock.mockResolvedValue({ ok: true, value: { ...analysisWithMappings, recommendedResumeId: 1 } });
+
+    const rawResumeRow = {
+      id: 1,
+      label: "Backend",
+      file_name: "alex.pdf",
+      file_uri: "file://alex.pdf",
+      content_json: JSON.stringify({ summary: "", skills: [], highlights: [] }),
+      created_at: "2026-10-12",
+    };
+    const mockResume = {
+      id: 1,
+      label: "Backend",
+      fileName: "alex.pdf",
+      fileUri: "file://alex.pdf",
+      content: { summary: "", skills: [], highlights: [] },
+      createdAt: "2026-10-12",
+    };
+    mockDb.queue("getFirstAsync", { data_json: JSON.stringify({ fullName: "Alex Rahman" }) });
+    mockDb.queue("getAllAsync", [rawResumeRow]);
+
+    const { result } = await mount();
+    result.current.webViewRef.current = handle();
+    await act(async () => {
+      result.current.onAnalyzePress();
+      result.current.onBridgeMessage(pageMessage(200));
+    });
+    await waitFor(() => expect(result.current.recommendedResume).toEqual(mockResume));
+
+    const errors = [
+      ["NO_FILE", "This resume has no PDF. Add one in Settings → Resumes."],
+      ["PERMISSION_DENIED", "Folder access was not granted. Tap Stage CV to try again."],
+      ["FILE_MISSING", "The resume file is missing. Re-import it in Settings → Resumes."],
+      ["WRITE_FAILED", "Could not save the resume. Try again."],
+      ["SHARE_UNAVAILABLE", "Sharing is not available on this device."],
+    ];
+
+    for (const [code, expectedMsg] of errors) {
+      (stageResume as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        error: { code, clipboardCopied: false },
+      });
+      await act(async () => {
+        await result.current.stageRecommendedResume();
+      });
+      expect(mockShow).toHaveBeenCalledWith(expectedMsg);
+    }
   });
 });

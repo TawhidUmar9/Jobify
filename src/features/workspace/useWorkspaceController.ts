@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useReducer, useRef, useState, type RefObject } from 'react';
+import { Platform } from 'react-native';
 
 import { buildAutoFillScript } from '../../bridge/autoFillScript';
 import { parseBridgeMessage, SCRAPE_LIMITS, type PageScrapedMessage } from '../../bridge/messages';
@@ -15,6 +16,8 @@ import { getPreferences, getProfile } from '../../db/repositories/profileRepo';
 import { listResumes } from '../../db/repositories/resumesRepo';
 import { analyzeJob, createProvider, tailorApplication } from '../../services/ai/aiClient';
 import { loadAiConfig } from '../../services/ai/config';
+import { KV_KEYS, kvGet, kvSet } from '../../services/kvStore';
+import { stageResume } from '../../services/resumeStaging';
 import type { AiProvider } from '../../services/ai/types';
 import { getApiKey } from '../../services/secrets';
 import type { FieldMapping, JobBoard, Resume } from '../../types/domain';
@@ -88,12 +91,13 @@ export interface WorkspaceController {
  * - contextKey change: abort, clear timers, CONTEXT_CHANGED. Unmount: abort and clear timers.
  */
 export function useWorkspaceController(params: WorkspaceControllerParams): WorkspaceController {
-  // TODO(T-036): stage.
   const db = useSQLiteContext();
   const { show } = useSnackbar();
   const [state, dispatch] = useReducer(workspaceReducer, initialWorkspaceState);
   const [aiMissing, setAiMissing] = useState(true);
   const [logging, setLogging] = useState(false);
+  const [staging, setStaging] = useState(false);
+  const [stagingExplainerVisible, setStagingExplainerVisible] = useState(false);
   const [recommendedResume, setRecommendedResume] = useState<Resume | null>(null);
   const webViewRef = useRef<WebViewHandle | null>(null);
   const stateRef = useRef(state);
@@ -401,24 +405,96 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     [show],
   );
 
+  const doStage = useCallback(
+    async (resume: Resume) => {
+      setStaging(true);
+      const coverNote =
+        stateRef.current.tailor.status === "ready"
+          ? stateRef.current.tailor.result.coverNote
+          : "";
+      const result = await stageResume(resume, coverNote);
+      setStaging(false);
+      if (result.ok) {
+        if (result.value.platform === "android") {
+          show(
+            result.value.clipboardCopied
+              ? "Resume saved to your Jobify folder. Cover note copied."
+              : "Resume saved to your Jobify folder.",
+          );
+        } else {
+          show(
+            result.value.clipboardCopied
+              ? "Save the resume from the share sheet. Cover note copied."
+              : "Save the resume from the share sheet.",
+          );
+        }
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        switch (result.error.code) {
+          case "NO_FILE":
+            show("This resume has no PDF. Add one in Settings → Resumes.");
+            break;
+          case "PERMISSION_DENIED":
+            show("Folder access was not granted. Tap Stage CV to try again.");
+            break;
+          case "FILE_MISSING":
+            show("The resume file is missing. Re-import it in Settings → Resumes.");
+            break;
+          case "WRITE_FAILED":
+            show("Could not save the resume. Try again.");
+            break;
+          case "SHARE_UNAVAILABLE":
+            show("Sharing is not available on this device.");
+            break;
+        }
+      }
+    },
+    [show],
+  );
+
+  const stageRecommendedResume = useCallback(async () => {
+    if (!recommendedResume) {
+      show("Add a resume in Settings first");
+      return;
+    }
+    if (Platform.OS === "android") {
+      const seen = await kvGet(KV_KEYS.stagingExplainerSeen);
+      if (!seen) {
+        setStagingExplainerVisible(true);
+        return;
+      }
+    }
+    await doStage(recommendedResume);
+  }, [doStage, recommendedResume, show]);
+
+  const onStagingExplainerContinue = useCallback(async () => {
+    setStagingExplainerVisible(false);
+    await kvSet(KV_KEYS.stagingExplainerSeen, "true");
+    if (recommendedResume) {
+      await doStage(recommendedResume);
+    }
+  }, [doStage, recommendedResume]);
+
+  const onStagingExplainerCancel = useCallback(() => {
+    setStagingExplainerVisible(false);
+  }, []);
+
   const closeSheet = useCallback(() => {
     stopInFlight();
     dispatch({ type: 'SHEET_CLOSED' });
   }, [stopInFlight]);
 
-  const noop = () => {};
-  const asyncNoop = async () => {};
   return {
     state,
     webViewRef,
     isOnSourcePage: params.currentUrl === state.session?.sourceUrl,
     recommendedResume,
     aiMissing,
-    staging: false,
+    staging,
     logging,
-    stagingExplainerVisible: false,
-    onStagingExplainerContinue: noop,
-    onStagingExplainerCancel: noop,
+    stagingExplainerVisible,
+    onStagingExplainerContinue,
+    onStagingExplainerCancel,
     onBridgeMessage,
     onAnalyzePress,
     reanalyze,
@@ -426,7 +502,7 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     tailor,
     saveAnswer,
     logApplication,
-    stageRecommendedResume: asyncNoop,
+    stageRecommendedResume,
     copyText,
     closeSheet,
   };

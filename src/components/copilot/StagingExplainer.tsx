@@ -1,6 +1,10 @@
-import { Modal, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo, Modal, StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
+import { useTheme } from '../../theme/ThemeProvider';
+import { radii, spacing, typography } from '../../theme/tokens';
+import { Button } from '../ui/Button';
 
 export interface StagingExplainerProps {
   visible: boolean;
@@ -21,13 +25,90 @@ export interface StagingExplainerProps {
  * - onRequestClose (hardware back) → onCancel.
  */
 export function StagingExplainer({ visible, onContinue, onCancel }: StagingExplainerProps) {
-  // TODO(T-036): implement per the rules above.
-  void onContinue;
+  const { colors } = useTheme();
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const pending = AccessibilityInfo.isReduceMotionEnabled();
+    if (typeof pending?.then === 'function') {
+      pending
+        .then((enabled) => {
+          if (active) setReduceMotion(enabled);
+        })
+        .catch(() => {});
+    }
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
-    <Modal visible={visible} transparent onRequestClose={onCancel}>
-      <View testID={TestIds.stagingExplainer.dialog}>
-        <Text>Choose a folder for resumes</Text>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={reduceMotion ? 'none' : 'fade'}
+      onRequestClose={onCancel}
+      statusBarTranslucent
+    >
+      <View style={[styles.scrim, { backgroundColor: colors.scrim }]}>
+        <View
+          testID={TestIds.stagingExplainer.dialog}
+          accessibilityViewIsModal
+          style={[styles.card, { backgroundColor: colors.surface }]}
+        >
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
+            Choose a folder for resumes
+          </Text>
+          <Text style={[styles.body, { color: colors.textSecondary }]}>
+            Android will ask for a folder. Open Download, create a folder named Jobify, and tap Use
+            this folder. Staged resumes go there so they show first under Recent when a job site asks
+            for a file.
+          </Text>
+          <View style={styles.actions}>
+            <Button
+              label="Cancel"
+              variant="ghost"
+              onPress={onCancel}
+              testID={TestIds.stagingExplainer.cancel}
+            />
+            <Button
+              label="Continue"
+              onPress={onContinue}
+              testID={TestIds.stagingExplainer.continue}
+            />
+          </View>
+        </View>
       </View>
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  scrim: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.md,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: radii.lg,
+    padding: spacing.xl,
+    gap: spacing.sm,
+  },
+  title: {
+    ...typography.headline,
+  },
+  body: {
+    ...typography.body,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+});

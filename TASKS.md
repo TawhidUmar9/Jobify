@@ -486,8 +486,10 @@ true;
 - **Goal:** `stageRecommendedResume`, StagingExplainer, and the Stage CV button.
 - **Files:** `useWorkspaceController.ts`, `StagingExplainer.tsx`, `CopilotActions.tsx`, tests.
 - **Depends on:** T-034, T-035.
-- **Acceptance:** explainer on first Android use only. Cancel stores nothing. Snackbars per UI_DIRECTIVES §6. No resume → "Add a resume in Settings first".
-- **Manual:** Android: create `Download/Jobify`. Stage twice → exactly one file with that name. In Chrome on the device, a file input shows it first under Recent.
+- **Acceptance:**
+  - [x] explainer on first Android use only. Cancel stores nothing. Snackbars per UI_DIRECTIVES §6. No resume → "Add a resume in Settings first".
+- **Manual:**
+  - [ ] Android: create `Download/Jobify`. Stage twice → exactly one file with that name. In Chrome on the device, a file input shows it first under Recent. MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/features/workspace src/components/copilot`
 
 ### T-037 Application detail, status, follow-up, notes, delete
