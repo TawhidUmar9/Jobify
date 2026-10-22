@@ -568,7 +568,8 @@ true;
 - **Goal:** T-046 rows of ARCHITECTURE §6.1 + `isExternalSchemeUrl`.
 - **Files:** `PortalWebView.tsx`, `src/lib/url.ts`, tests.
 - **Depends on:** T-024.
-- **Acceptance:** on `external-links.html`, mailto/tel open externally while the WebView stays put, and target=_blank / window.open load in place. Airplane mode → error view → Retry recovers. Renderer kill (`adb root && adb shell pkill -f sandboxed_process` on a Google APIs emulator) → remount at the same page.
+- **Acceptance:**
+  - [ ] on `external-links.html`, mailto/tel open externally while the WebView stays put, and target=_blank / window.open load in place. Airplane mode → error view → Retry recovers. Renderer kill (`adb root && adb shell pkill -f sandboxed_process` on a Google APIs emulator) → remount at the same page. MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/lib` + manual.
 
 ---

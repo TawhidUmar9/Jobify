@@ -1,4 +1,4 @@
-import { displayHost, extractFirstUrl, isHttpUrl, normalizeAddressInput } from '../url';
+import { displayHost, extractFirstUrl, isExternalSchemeUrl, isHttpUrl, normalizeAddressInput } from '../url';
 
 describe('isHttpUrl', () => {
   it('accepts http and https URLs', () => {
@@ -13,6 +13,29 @@ describe('isHttpUrl', () => {
     expect(isHttpUrl(null)).toBe(false);
     expect(isHttpUrl(undefined)).toBe(false);
     expect(isHttpUrl('wellfound.com/jobs')).toBe(false);
+  });
+});
+
+describe('isExternalSchemeUrl', () => {
+  it('identifies external schemes case-insensitively', () => {
+    expect(isExternalSchemeUrl('mailto:alex@example.com')).toBe(true);
+    expect(isExternalSchemeUrl('MAILTO:hr@example.com')).toBe(true);
+    expect(isExternalSchemeUrl('tel:+15551234567')).toBe(true);
+    expect(isExternalSchemeUrl('TEL:911')).toBe(true);
+    expect(isExternalSchemeUrl('sms:123456')).toBe(true);
+    expect(isExternalSchemeUrl('intent:#Intent;action=...')).toBe(true);
+    expect(isExternalSchemeUrl('market://details?id=com.example')).toBe(true);
+    expect(isExternalSchemeUrl('whatsapp://send?text=hi')).toBe(true);
+  });
+
+  it('rejects internal/web schemes and invalid inputs', () => {
+    expect(isExternalSchemeUrl('https://example.com')).toBe(false);
+    expect(isExternalSchemeUrl('http://example.com')).toBe(false);
+    expect(isExternalSchemeUrl('about:blank')).toBe(false);
+    expect(isExternalSchemeUrl('data:text/html,...')).toBe(false);
+    expect(isExternalSchemeUrl('blob:https://example.com/...')).toBe(false);
+    expect(isExternalSchemeUrl('javascript:alert(1)')).toBe(false);
+    expect(isExternalSchemeUrl('')).toBe(false);
   });
 });
 

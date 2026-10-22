@@ -29,7 +29,7 @@ export function normalizeAddressInput(input: string): string | null {
  * First http(s) URL inside shared text (e.g. "Check this job https://x.y/z via LinkedIn"),
  * with trailing punctuation `.,;:!?)]}'"` stripped. null if none.
  */
-const TRAILING_URL_PUNCTUATION = /[.,;:!?)'"\]}]+$/;
+const TRAILING_URL_PUNCTUATION = /[.,;:!?)'\"\]}]+$/;
 
 export function extractFirstUrl(text: string | null | undefined): string | null {
   if (typeof text !== 'string' || text.length === 0) return null;
@@ -44,9 +44,9 @@ export const EXTERNAL_SCHEMES = ['mailto:', 'tel:', 'sms:', 'intent:', 'market:'
 
 /** True if `url` starts with one of EXTERNAL_SCHEMES (case-insensitive). */
 export function isExternalSchemeUrl(url: string): boolean {
-  // TODO(T-046): implement.
-  void url;
-  return false;
+  if (typeof url !== 'string' || url.length === 0) return false;
+  const lower = url.trim().toLowerCase();
+  return EXTERNAL_SCHEMES.some((scheme) => lower.startsWith(scheme));
 }
 
 /** Hostname for display ("wellfound.com"), leading "www." stripped; non-URLs returned unchanged. */
