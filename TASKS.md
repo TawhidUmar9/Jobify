@@ -147,7 +147,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `createGeminiProvider`.
 - **Files:** `src/services/ai/providers/gemini.ts`, `src/services/ai/__tests__/gemini.test.ts`.
 - **Depends on:** T-012.
-- **Acceptance:** exact URL/headers/body (assert via `fetchImpl` mock). The key is never in the URL. PDF part is placed before text. One test per error row (ARCHITECTURE §5.4; TIMEOUT with fake timers). `thought` parts are ignored. Caller abort re-throws AbortError. No logger call contains the key or prompts.
+- **Acceptance:**
+  - [x] exact URL/headers/body (assert via `fetchImpl` mock). The key is never in the URL. PDF part is placed before text. One test per error row (ARCHITECTURE §5.4; TIMEOUT with fake timers). `thought` parts are ignored. Caller abort re-throws AbortError. No logger call contains the key or prompts.
 - **Verify:** `npm run verify && npx jest src/services/ai`
 
 ### T-015 OpenAI-compatible provider
