@@ -544,7 +544,8 @@ true;
 - **Goal:** `settings/about`.
 - **Files:** `src/app/settings/about.tsx`, test.
 - **Depends on:** T-039.
-- **Acceptance:** version from expo-constants, the privacy statement verbatim, source link from `extra.repositoryUrl`, license name (from A-40 once chosen; until then "License: to be announced").
+- **Acceptance:**
+  - [x] version from expo-constants, the privacy statement verbatim, source link from `extra.repositoryUrl`, license name (from A-40 once chosen; until then "License: to be announced").
 - **Verify:** `npm run verify && npx jest src/app`
 
 ### T-044 Browser toolbar, address bar, Android back
