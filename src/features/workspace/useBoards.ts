@@ -3,6 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useRef, useState } from 'react';
 
 import { listBoards } from '../../db/repositories/boardsRepo';
+import { isHttpUrl } from '../../lib/url';
 import { KV_KEYS, kvGet, kvSet } from '../../services/kvStore';
 import type { JobBoard } from '../../types/domain';
 
@@ -49,10 +50,20 @@ export function useBoards(): BoardsState {
   const [contextKey, setContextKey] = useState(0);
   const activeIdRef = useRef<number | null>(null);
   const activeUrlRef = useRef<string>('');
+  /** Set by openUrl so an in-flight or later reload does not replace a shared/typed link. */
+  const customUrlRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       const list = await listBoards(db);
+      if (customUrlRef.current !== null) {
+        setBoards(list);
+        setActiveBoard(null);
+        activeIdRef.current = null;
+        activeUrlRef.current = '';
+        setStatus('ready');
+        return;
+      }
       let preferred = activeIdRef.current;
       if (preferred === null) {
         const raw = await kvGet(KV_KEYS.activeBoardId);
@@ -84,6 +95,7 @@ export function useBoards(): BoardsState {
   );
 
   const selectBoard = useCallback((board: JobBoard) => {
+    customUrlRef.current = null;
     const retap = activeIdRef.current === board.id;
     setActiveBoard(board);
     activeIdRef.current = board.id;
@@ -93,9 +105,14 @@ export function useBoards(): BoardsState {
     void kvSet(KV_KEYS.activeBoardId, String(board.id));
   }, []);
 
-  // TODO(T-025): openUrl.
-  const openUrl = useCallback((_url: string) => {
-    void _url;
+  const openUrl = useCallback((url: string) => {
+    if (!isHttpUrl(url)) return;
+    customUrlRef.current = url;
+    setActiveBoard(null);
+    activeIdRef.current = null;
+    activeUrlRef.current = '';
+    setTargetUrl(url);
+    setContextKey((current) => current + 1);
   }, []);
 
   // TODO(T-045): recordVisit + restore.

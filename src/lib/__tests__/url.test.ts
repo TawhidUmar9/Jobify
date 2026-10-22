@@ -1,4 +1,4 @@
-import { isHttpUrl } from '../url';
+import { extractFirstUrl, isHttpUrl, normalizeAddressInput } from '../url';
 
 describe('isHttpUrl', () => {
   it('accepts http and https URLs', () => {
@@ -13,5 +13,28 @@ describe('isHttpUrl', () => {
     expect(isHttpUrl(null)).toBe(false);
     expect(isHttpUrl(undefined)).toBe(false);
     expect(isHttpUrl('wellfound.com/jobs')).toBe(false);
+  });
+});
+
+describe('normalizeAddressInput', () => {
+  it('prefixes a host that has no scheme and rejects text that is not a URL', () => {
+    expect(normalizeAddressInput('wellfound.com/jobs')).toBe('https://wellfound.com/jobs');
+    expect(normalizeAddressInput('  wellfound.com/jobs  ')).toBe('https://wellfound.com/jobs');
+    expect(normalizeAddressInput('https://example.com/a')).toBe('https://example.com/a');
+    expect(normalizeAddressInput('http://10.0.2.2:8787/x')).toBe('http://10.0.2.2:8787/x');
+    expect(normalizeAddressInput('hello world')).toBeNull();
+    expect(normalizeAddressInput('javascript:alert(1)')).toBeNull();
+    expect(normalizeAddressInput('')).toBeNull();
+  });
+});
+
+describe('extractFirstUrl', () => {
+  it('returns the first http(s) URL with trailing punctuation removed', () => {
+    expect(extractFirstUrl('Check this job https://x.y/z via LinkedIn')).toBe('https://x.y/z');
+    expect(extractFirstUrl('Look https://x.y/z.')).toBe('https://x.y/z');
+    expect(extractFirstUrl('See https://x.y/z). next')).toBe('https://x.y/z');
+    expect(extractFirstUrl('no link here')).toBeNull();
+    expect(extractFirstUrl(null)).toBeNull();
+    expect(extractFirstUrl(undefined)).toBeNull();
   });
 });

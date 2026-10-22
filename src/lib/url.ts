@@ -17,19 +17,26 @@ export function isHttpUrl(value: string | null | undefined): value is string {
  * "wellfound.com/jobs" → "https://wellfound.com/jobs"; "hello world" → null.
  */
 export function normalizeAddressInput(input: string): string | null {
-  // TODO(T-025): implement.
-  void input;
-  return null;
+  const trimmed = input.trim();
+  if (trimmed.length === 0) return null;
+  const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(trimmed);
+  const candidate =
+    !hasScheme && trimmed.includes('.') && !/\s/.test(trimmed) ? `https://${trimmed}` : trimmed;
+  return isHttpUrl(candidate) ? candidate : null;
 }
 
 /**
  * First http(s) URL inside shared text (e.g. "Check this job https://x.y/z via LinkedIn"),
  * with trailing punctuation `.,;:!?)]}'"` stripped. null if none.
  */
+const TRAILING_URL_PUNCTUATION = /[.,;:!?)'"\]}]+$/;
+
 export function extractFirstUrl(text: string | null | undefined): string | null {
-  // TODO(T-025): implement.
-  void text;
-  return null;
+  if (typeof text !== 'string' || text.length === 0) return null;
+  const match = /https?:\/\/\S+/i.exec(text);
+  if (!match) return null;
+  const stripped = match[0].replace(TRAILING_URL_PUNCTUATION, '');
+  return isHttpUrl(stripped) ? stripped : null;
 }
 
 /** Schemes that leave the app via Linking.openURL instead of loading in the WebView. */

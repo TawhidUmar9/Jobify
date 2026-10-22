@@ -1,5 +1,5 @@
-import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,6 +13,7 @@ import { PortalWebView, type WebNavState } from '../../components/workspace/Port
 import { TestIds } from '../../constants/testIds';
 import { useBoards } from '../../features/workspace/useBoards';
 import { useWorkspaceController } from '../../features/workspace/useWorkspaceController';
+import { isHttpUrl } from '../../lib/url';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /** Route params for "/". CONTRACT: ARCHITECTURE.md §8. */
@@ -38,6 +39,13 @@ export default function WorkspaceScreen() {
   const params = useLocalSearchParams<WorkspaceParams>();
   const { colors } = useTheme();
   const boards = useBoards();
+  const requestedUrl = typeof params.url === 'string' ? params.url : undefined;
+  const { openUrl } = boards;
+  useEffect(() => {
+    if (!isHttpUrl(requestedUrl)) return;
+    openUrl(requestedUrl);
+    router.setParams({ url: undefined });
+  }, [openUrl, requestedUrl]);
   const [nav, setNav] = useState<WebNavState>(EMPTY_NAV);
   const [progress, setProgress] = useState(0);
   const controller = useWorkspaceController({
@@ -48,8 +56,8 @@ export default function WorkspaceScreen() {
   const { state } = controller;
   const busy = state.phase === 'scraping' || state.phase === 'analyzing' || state.phase === 'filling';
 
-  // TODO(T-025): url param + empty state wiring. TODO(T-044): back handling. TODO(T-045): recordVisit.
-  void params;
+  // TODO(T-044): back handling. TODO(T-045): recordVisit.
+  const showEmpty = boards.boards.length === 0 && boards.targetUrl === '';
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }} testID={TestIds.workspace.screen}>
@@ -62,6 +70,15 @@ export default function WorkspaceScreen() {
           message="The local database did not open. Try again."
           actionLabel="Try again"
           onAction={boards.reload}
+        />
+      ) : showEmpty ? (
+        <StateView
+          kind="empty"
+          testID={TestIds.workspace.emptyBoards}
+          title="No job boards"
+          message="Add one in Settings → Job boards, or tap the address bar to open a link."
+          actionLabel="Manage job boards"
+          onAction={() => router.push('/settings/boards')}
         />
       ) : (
         <View style={{ flex: 1 }}>

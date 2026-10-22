@@ -96,6 +96,36 @@ describe('useBoards', () => {
     expect(await Storage.getItem(KV_KEYS.activeBoardId)).toBe('1');
   });
 
+  it('opens an http url without selecting a board and keeps it across reload', async () => {
+    mockDb.queue('getAllAsync', [row(linkedIn)]);
+    const { result, unmount } = await renderHook(() => useBoards());
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    const key = result.current.contextKey;
+    await act(async () => {
+      result.current.openUrl('javascript:alert(1)');
+    });
+    expect(result.current.activeBoard?.id).toBe(1);
+    expect(result.current.contextKey).toBe(key);
+
+    await act(async () => {
+      result.current.openUrl('https://x.y/z');
+    });
+    expect(result.current.activeBoard).toBeNull();
+    expect(result.current.targetUrl).toBe('https://x.y/z');
+    expect(result.current.contextKey).toBe(key + 1);
+
+    mockDb.queue('getAllAsync', [row(linkedIn), row(wellfound)]);
+    await act(async () => {
+      result.current.reload();
+    });
+    await waitFor(() => expect(result.current.boards).toHaveLength(2));
+    expect(result.current.targetUrl).toBe('https://x.y/z');
+    expect(result.current.activeBoard).toBeNull();
+    await act(async () => {
+      unmount();
+    });
+  });
+
   it('reports an error when the database throws', async () => {
     mockDb.fail('getAllAsync');
     const { result } = await renderHook(() => useBoards());

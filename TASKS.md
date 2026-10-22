@@ -320,8 +320,11 @@ true;
 - **Goal:** Workspace screen states, the `url` param, `useBoards.openUrl`, `useIncomingShare`, and the `normalizeAddressInput`/`extractFirstUrl` helpers.
 - **Files:** `src/app/(tabs)/index.tsx`, `src/features/workspace/useBoards.ts` (openUrl), `src/features/share/useIncomingShare.ts`, `src/lib/url.ts` (2 helpers), tests.
 - **Depends on:** T-020, T-023, T-024.
-- **Acceptance:** loading/empty/error states with copy. `jobify:///?url=<encoded>` opens the page (activeBoard null; param cleared after use). `javascript:` is ignored. A share of "Look https://x.y/z." opens `https://x.y/z`. A share with no URL → snackbar. Before onboarding, the share is ignored. Helper unit tests per doc examples.
-- **Manual:** `adb shell am start -a android.intent.action.VIEW -d "jobify:///?url=http%3A%2F%2F10.0.2.2%3A8787%2Ffixtures%2Fjob-remote-form.html"` opens the fixture. `adb shell am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT "Apply http://10.0.2.2:8787/fixtures/job-local-only.html" io.github.tawhidumar9.jobify` opens it.
+- **Acceptance:**
+  - [x] loading/empty/error states with copy. `jobify:///?url=<encoded>` opens the page (activeBoard null; param cleared after use). `javascript:` is ignored. A share of "Look https://x.y/z." opens `https://x.y/z`. A share with no URL → snackbar. Before onboarding, the share is ignored. Helper unit tests per doc examples.
+- **Manual:**
+  - [ ] `adb shell am start -a android.intent.action.VIEW -d "jobify:///?url=http%3A%2F%2F10.0.2.2%3A8787%2Ffixtures%2Fjob-remote-form.html"` opens the fixture. MANUAL PENDING (device)
+  - [ ] `adb shell am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT "Apply http://10.0.2.2:8787/fixtures/job-local-only.html" io.github.tawhidumar9.jobify` opens it. MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/lib src/features`
 
 ### T-026 Workspace reducer
