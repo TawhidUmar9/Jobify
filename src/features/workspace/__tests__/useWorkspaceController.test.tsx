@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { SCRAPE_PAGE_JS } from '../../../bridge/scrapePageScript';
 import type { WebViewHandle } from '../../../components/workspace/PortalWebView';
 import { createFakeDb } from '../../../../tests/helpers/fakeDb';
+import { incrementAnswerUse, listAnswers, upsertAnswer } from '../../../db/repositories/answersRepo';
 import { insertApplication } from '../../../db/repositories/applicationsRepo';
 import { analyzeJob, createProvider } from '../../../services/ai/aiClient';
 import { clearAiConfig, saveAiConfig } from '../../../services/ai/config';
@@ -41,6 +42,12 @@ jest.mock('../../../db/repositories/applicationsRepo', () => ({
   insertApplication: jest.fn(),
 }));
 
+jest.mock('../../../db/repositories/answersRepo', () => ({
+  listAnswers: jest.fn().mockResolvedValue([]),
+  upsertAnswer: jest.fn().mockResolvedValue({ ok: true, value: { id: 1 } }),
+  incrementAnswerUse: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock('../../../services/ai/aiClient', () => ({
   createProvider: jest.fn(),
   analyzeJob: jest.fn(),
@@ -49,6 +56,9 @@ jest.mock('../../../services/ai/aiClient', () => ({
 const createProviderMock = createProvider as jest.Mock;
 const analyzeJobMock = analyzeJob as jest.Mock;
 const insertApplicationMock = insertApplication as jest.Mock;
+const listAnswersMock = listAnswers as jest.Mock;
+const upsertAnswerMock = upsertAnswer as jest.Mock;
+const incrementAnswerUseMock = incrementAnswerUse as jest.Mock;
 
 const board: JobBoard = {
   id: 1,
@@ -70,6 +80,15 @@ const analysis: JobAnalysis = {
   matchedSkills: [],
   missingSkills: [],
   fieldMappings: [],
+};
+
+const analysisWithMappings: JobAnalysis = {
+  ...analysis,
+  fieldMappings: [
+    { clawId: 'f0', fieldLabel: 'Full name', value: 'Alex Rahman', source: 'PROFILE' },
+    { clawId: 'f1', fieldLabel: 'Notice period', value: '1 month', source: 'ANSWER_BANK' },
+    { clawId: 'f2', fieldLabel: 'Why Acme?', value: 'Love it', source: 'GENERATED' },
+  ],
 };
 
 function pageMessage(length: number): string {
@@ -100,6 +119,9 @@ describe('useWorkspaceController', () => {
     createProviderMock.mockReset();
     analyzeJobMock.mockReset();
     insertApplicationMock.mockReset();
+    listAnswersMock.mockReset().mockResolvedValue([]);
+    upsertAnswerMock.mockReset().mockResolvedValue({ ok: true, value: { id: 1 } });
+    incrementAnswerUseMock.mockReset().mockResolvedValue(undefined);
     mockShow.mockClear();
     await clearAiConfig();
   });
@@ -315,5 +337,113 @@ describe('useWorkspaceController', () => {
       await result.current.logApplication();
     });
     expect(insertApplicationMock).not.toHaveBeenCalled();
+  });
+
+  it('runs autoFill, handles complete, error, timeout, and increments answer use count', async () => {
+    jest.useFakeTimers();
+    await saveAiConfig({ provider: 'gemini', model: 'gemini-3.8-flash', baseUrl: 'https://generativelanguage.googleapis.com' });
+    await setApiKey('test-key');
+    createProviderMock.mockReturnValue({ kind: 'gemini' });
+    analyzeJobMock.mockResolvedValue({ ok: true, value: analysisWithMappings });
+    listAnswersMock.mockResolvedValue([
+      { id: 10, question: 'Notice period', answer: '1 month', useCount: 0, updatedAt: '' },
+    ]);
+    mockDb.queue('getFirstAsync', { data_json: JSON.stringify({ fullName: 'Alex Rahman' }) });
+
+    const { result } = await renderHook(() =>
+      useWorkspaceController({ activeBoard: board, currentUrl: 'https://example.com/job', contextKey: 0 }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const web = handle();
+    result.current.webViewRef.current = web;
+
+    await act(async () => {
+      result.current.onAnalyzePress();
+      result.current.onBridgeMessage(pageMessage(200));
+    });
+    expect(result.current.state.phase).toBe('ready');
+
+    // 1. autoFill triggers script injection and transitions to 'filling'
+    await act(async () => {
+      result.current.autoFill();
+    });
+    expect(result.current.state.phase).toBe('filling');
+    expect(web.injectJavaScript).toHaveBeenCalled();
+
+    // 2. AUTOFILL_COMPLETE transitions to ready, shows snackbar, increments answer use
+    await act(async () => {
+      result.current.onBridgeMessage(
+        JSON.stringify({ type: 'AUTOFILL_COMPLETE', filledCount: 2, missingClawIds: ['f0'] }),
+      );
+    });
+    expect(result.current.state.phase).toBe('ready');
+    expect(result.current.state.lastFill).toEqual({ filledCount: 2, missingCount: 1 });
+    expect(mockShow).toHaveBeenCalledWith('Filled 2 of 3 fields');
+    expect(Haptics.notificationAsync).toHaveBeenCalledWith(Haptics.NotificationFeedbackType.Success);
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(incrementAnswerUseMock).toHaveBeenCalledWith(mockDb.db, [10]);
+
+    // 3. AUTOFILL_ERROR handling
+    await act(async () => {
+      result.current.autoFill();
+    });
+    expect(result.current.state.phase).toBe('filling');
+    await act(async () => {
+      result.current.onBridgeMessage(JSON.stringify({ type: 'AUTOFILL_ERROR', error: 'Page error' }));
+    });
+    expect(result.current.state.phase).toBe('ready');
+    expect(mockShow).toHaveBeenCalledWith('Auto-fill failed on this page');
+
+    // 4. Timeout handling
+    await act(async () => {
+      result.current.autoFill();
+    });
+    expect(result.current.state.phase).toBe('filling');
+    await act(async () => {
+      jest.advanceTimersByTime(BRIDGE_TIMEOUT_MS);
+    });
+    expect(result.current.state.phase).toBe('ready');
+    expect(mockShow).toHaveBeenCalledWith('Auto-fill failed on this page');
+  });
+
+  it('saves an answer and updates savedAnswerClawIds', async () => {
+    await saveAiConfig({ provider: 'gemini', model: 'gemini-3.8-flash', baseUrl: 'https://generativelanguage.googleapis.com' });
+    await setApiKey('test-key');
+    createProviderMock.mockReturnValue({ kind: 'gemini' });
+    analyzeJobMock.mockResolvedValue({ ok: true, value: analysisWithMappings });
+    mockDb.queue('getFirstAsync', { data_json: JSON.stringify({ fullName: 'Alex Rahman' }) });
+
+    const { result } = await mount();
+    result.current.webViewRef.current = handle();
+    await act(async () => {
+      result.current.onAnalyzePress();
+      result.current.onBridgeMessage(pageMessage(200));
+    });
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+
+    upsertAnswerMock.mockResolvedValueOnce({ ok: true, value: { id: 1 } });
+    await act(async () => {
+      await result.current.saveAnswer(analysisWithMappings.fieldMappings[2]!);
+    });
+    expect(upsertAnswerMock).toHaveBeenCalledWith(mockDb.db, {
+      question: 'Why Acme?',
+      answer: 'Love it',
+    });
+    expect(result.current.state.savedAnswerClawIds).toEqual(['f2']);
+    expect(mockShow).toHaveBeenCalledWith('Saved to answer bank');
+
+    upsertAnswerMock.mockResolvedValueOnce({ ok: false, error: 'DB_ERROR' });
+    await act(async () => {
+      await result.current.saveAnswer(analysisWithMappings.fieldMappings[0]!);
+    });
+    expect(mockShow).toHaveBeenCalledWith('Could not save answer');
   });
 });

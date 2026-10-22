@@ -62,22 +62,27 @@ export async function upsertAnswer(
         updatedAt: existing.updated_at,
       });
     }
-    const inserted = await db.runAsync('INSERT INTO answers (question, answer) VALUES (?, ?)', [
-      checked.value.question,
-      checked.value.answer,
-    ]);
+    const result = await db.runAsync(
+      'INSERT INTO answers (question, answer, use_count, updated_at) VALUES (?, ?, 0, CURRENT_TIMESTAMP)',
+      [checked.value.question, checked.value.answer],
+    );
+    const id = result.lastInsertRowId;
     return ok({
-      id: inserted.lastInsertRowId,
+      id,
       question: checked.value.question,
       answer: checked.value.answer,
       useCount: 0,
-      updatedAt: '',
+      updatedAt: new Date().toISOString(),
     });
   } catch {
     return err('DB_ERROR');
   }
 }
 
+/**
+ * Updates question and answer on an existing row by id. Used by the edit screen.
+ * Validates length (EMPTY / TOO_LONG); bumps updated_at; leaves use_count untouched.
+ */
 export async function updateAnswer(
   db: SQLiteDatabase,
   id: number,
@@ -87,14 +92,10 @@ export async function updateAnswer(
   if (!checked.ok) return checked;
   const current = await db.getFirstAsync<AnswerRow>('SELECT * FROM answers WHERE id = ?', [id]);
   if (!current) return err('DB_ERROR');
-  try {
-    await db.runAsync(
-      'UPDATE answers SET question = ?, answer = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [checked.value.question, checked.value.answer, id],
-    );
-  } catch {
-    return err('DB_ERROR');
-  }
+  await db.runAsync(
+    'UPDATE answers SET question = ?, answer = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [checked.value.question, checked.value.answer, id],
+  );
   return ok({
     id,
     question: checked.value.question,
@@ -110,7 +111,7 @@ export async function deleteAnswer(db: SQLiteDatabase, id: number): Promise<void
 
 /** use_count += 1 for each id (one statement with IN (…)). Used after a fill with ANSWER_BANK mappings. */
 export async function incrementAnswerUse(db: SQLiteDatabase, ids: readonly number[]): Promise<void> {
-  // TODO(T-033): implement.
-  void db;
-  void ids;
+  if (ids.length === 0) return;
+  const placeholders = ids.map(() => '?').join(', ');
+  await db.runAsync(`UPDATE answers SET use_count = use_count + 1 WHERE id IN (${placeholders})`, ids as number[]);
 }

@@ -1,6 +1,6 @@
 import { createFakeDb } from '../../../../tests/helpers/fakeDb';
 import type { AnswerRow } from '../../schema';
-import { listAnswers, updateAnswer, upsertAnswer } from '../answersRepo';
+import { incrementAnswerUse, listAnswers, updateAnswer, upsertAnswer } from '../answersRepo';
 
 function answer(partial: Partial<AnswerRow> & Pick<AnswerRow, 'id' | 'question'>): AnswerRow {
   return {
@@ -49,5 +49,16 @@ describe('answersRepo', () => {
     const fake = createFakeDb();
     await listAnswers(fake.db);
     expect(fake.calls[0]?.sql).toContain('ORDER BY use_count DESC, updated_at DESC');
+  });
+
+  it('increments use_count for multiple ids in one statement, or does nothing when empty', async () => {
+    const fake = createFakeDb();
+    await incrementAnswerUse(fake.db, []);
+    expect(fake.calls).toHaveLength(0);
+
+    await incrementAnswerUse(fake.db, [1, 3]);
+    expect(fake.calls).toHaveLength(1);
+    expect(fake.calls[0]?.sql).toBe('UPDATE answers SET use_count = use_count + 1 WHERE id IN (?, ?)');
+    expect(fake.calls[0]?.params).toEqual([1, 3]);
   });
 });

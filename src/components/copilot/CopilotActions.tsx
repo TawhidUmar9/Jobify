@@ -35,7 +35,7 @@ const ICON_MIN_WIDTH = 360;
  * On screens < 360dp wide, labels stay; icons are dropped.
  */
 export function CopilotActions(props: CopilotActionsProps) {
-  // TODO(T-033): Auto-fill. TODO(T-036): Stage CV.
+  // TODO(T-036): Stage CV.
   const { colors } = useTheme();
   const insets = useContext(SafeAreaInsetsContext);
   const { width } = useWindowDimensions();

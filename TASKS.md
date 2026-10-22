@@ -461,8 +461,9 @@ true;
 - **Goal:** `autoFill`, AUTOFILL_* handling, `saveAnswer`, `incrementAnswerUse`, FieldMappingList, and the enabled Auto-fill button.
 - **Files:** `useWorkspaceController.ts`, `src/db/repositories/answersRepo.ts` (`incrementAnswerUse`), `FieldMappingList.tsx`, `CopilotActions.tsx`, `CopilotSheet.tsx`, tests.
 - **Depends on:** T-030, T-032, T-009.
-- **Acceptance:** `canAutoFill` rule. Stale notice. Snackbar `Filled X of Y fields`. 5 s timeout → failure snackbar. Source badges. "Save to answers" on GENERATED rows → upsert + "Saved". ANSWER_BANK mappings increment use counts after a fill.
-- **Manual (mock):** fixture page → Auto-fill → 5 green outlines. The page's "state:" line shows the values. Save the "Why Acme Cloud?" draft → it appears in Settings → Answer bank after T-041.
+- **Acceptance:**
+  - [x] `canAutoFill` rule. Stale notice. Snackbar `Filled X of Y fields`. 5 s timeout → failure snackbar. Source badges. "Save to answers" on GENERATED rows → upsert + "Saved". ANSWER_BANK mappings increment use counts after a fill.
+  - [ ] **Manual (mock):** fixture page → Auto-fill → 5 green outlines. The page's "state:" line shows the values. Save the "Why Acme Cloud?" draft → it appears in Settings → Answer bank after T-041. MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/features/workspace src/components/copilot src/db`
 
 ### T-034 Improve my application (tailor) + copy

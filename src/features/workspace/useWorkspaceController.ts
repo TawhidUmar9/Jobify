@@ -3,11 +3,12 @@ import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useReducer, useRef, useState, type RefObject } from 'react';
 
+import { buildAutoFillScript } from '../../bridge/autoFillScript';
 import { parseBridgeMessage, SCRAPE_LIMITS, type PageScrapedMessage } from '../../bridge/messages';
 import { SCRAPE_PAGE_JS } from '../../bridge/scrapePageScript';
 import type { WebViewHandle } from '../../components/workspace/PortalWebView';
 import { useSnackbar } from '../../components/ui/Snackbar';
-import { listAnswers } from '../../db/repositories/answersRepo';
+import { incrementAnswerUse, listAnswers, upsertAnswer } from '../../db/repositories/answersRepo';
 import { insertApplication } from '../../db/repositories/applicationsRepo';
 import { getPreferences, getProfile } from '../../db/repositories/profileRepo';
 import { listResumes } from '../../db/repositories/resumesRepo';
@@ -54,40 +55,39 @@ export interface WorkspaceController {
 }
 
 /**
- * Orchestrates scrape → analyze → fill / tailor / save answer / log / stage.
- * CONTRACT: ARCHITECTURE.md §7.3. Exact behaviour:
- * - On mount and on focus: load AI config + key (loadAiConfig, getApiKey) → createProvider;
- *   aiMissing = provider === null.
- * - onAnalyzePress: aiMissing → router.push('/settings/ai'). Else if phase 'ready', sheet closed and
- *   isOnSourcePage → SHEET_OPENED. Else reanalyze().
- * - reanalyze: ANALYZE_REQUESTED; injectJavaScript(SCRAPE_PAGE_JS); BRIDGE_TIMEOUT_MS timer →
- *   SCRAPE_FAILED TIMEOUT. Haptics Light.
- * - onBridgeMessage: parseBridgeMessage; ignore errors and messages not expected in the current
- *   phase (PAGE_SCRAPED/SCRAPE_ERROR only while scraping; AUTOFILL_* only while filling).
- *   PAGE_SCRAPED → SCRAPE_SUCCEEDED; if long enough: load profile (getProfile; null → PROFILE_MISSING),
- *   preferences, resumes, answers; analyzeJob(provider, …, today=new Date()) with an AbortController →
- *   ANALYSIS_SUCCEEDED {analysis, sourceUrl: message.url, boardName: activeBoard?.name ?? 'Shared link',
+ * Coordinates Workspace state: scraping, AI analysis, auto-fill, tailor, staging, and logging.
+ *
+ * Exact behaviours (T-028, T-030, T-033, T-034, T-036):
+ * - Focus: reload AI config. If no provider or no key, aiMissing=true.
+ * - onAnalyzePress: if aiMissing, navigate /settings/ai. If ready and sheet closed and on the
+ *   same URL, SHEET_OPENED. Otherwise reanalyze().
+ * - reanalyze: ANALYZE_REQUESTED (scrapes, sheet opens, timers reset), inject SCRAPE_PAGE_JS,
+ *   5-second timer fires SCRAPE_FAILED TIMEOUT. Haptics Light.
+ * - onBridgeMessage: parses raw string via parseBridgeMessage.
+ *   PAGE_SCRAPED -> if text too short, SCRAPE_SUCCEEDED (NO_CONTENT); else phase 'analyzing',
+ *   load profile/preferences/resumes/answers from SQLite, call analyzeJob -> ANALYSIS_SUCCEEDED {session:
+ *   analysis, sourceUrl, boardName: activeBoard?.name ?? 'Shared link',
  *   scrapedInputCount, pageText} or ANALYSIS_FAILED (Haptics Error).
- *   AUTOFILL_COMPLETE → FILL_COMPLETED + snackbar `Filled X of Y fields` + Haptics Success +
+ *   AUTOFILL_COMPLETE -> FILL_COMPLETED + snackbar `Filled X of Y fields` + Haptics Success +
  *   incrementAnswerUse for ANSWER_BANK mappings that were filled (match answers by question text).
- *   AUTOFILL_ERROR → FILL_FAILED + snackbar "Auto-fill failed on this page".
- * - autoFill: only phase 'ready' && isOnSourcePage && mappings > 0 → FILL_REQUESTED,
- *   inject buildAutoFillScript(mappings), timer → FILL_FAILED.
- * - tailor: TAILOR_REQUESTED → tailorApplication(provider, {profile, resume: recommendedResume,
- *   analysis, pageText}) → TAILOR_SUCCEEDED / TAILOR_FAILED. If already logged, attachTailorText.
- * - saveAnswer(mapping): upsertAnswer({question: mapping.fieldLabel, answer: mapping.value}) → ok:
+ *   AUTOFILL_ERROR -> FILL_FAILED + snackbar "Auto-fill failed on this page".
+ * - autoFill: only phase 'ready' && isOnSourcePage && mappings > 0 -> FILL_REQUESTED,
+ *   inject buildAutoFillScript(mappings), timer -> FILL_FAILED.
+ * - tailor: TAILOR_REQUESTED -> tailorApplication(provider, {profile, resume: recommendedResume,
+ *   analysis, pageText}) -> TAILOR_SUCCEEDED / TAILOR_FAILED. If already logged, attachTailorText.
+ * - saveAnswer(mapping): upsertAnswer({question: mapping.fieldLabel, answer: mapping.value}) -> ok:
  *   ANSWER_SAVED + snackbar "Saved to answer bank"; err: snackbar "Could not save answer".
- * - logApplication: insertApplication with fields per ARCHITECTURE §7.3 table → APPLICATION_LOGGED +
+ * - logApplication: insertApplication with fields per ARCHITECTURE §7.3 table -> APPLICATION_LOGGED +
  *   snackbar "Logged to Tracker" | "Already in Tracker" | "Could not save. Try again."
- * - stageRecommendedResume: no recommendedResume → snackbar "Add a resume in Settings first".
- *   Android first use → explainer (KV stagingExplainerSeen); then stageResume(resume,
+ * - stageRecommendedResume: no recommendedResume -> snackbar "Add a resume in Settings first".
+ *   Android first use -> explainer (KV stagingExplainerSeen); then stageResume(resume,
  *   tailor ready ? coverNote : '') with snackbars per UI_DIRECTIVES §6.
  * - copyText: Clipboard.setStringAsync + snackbar "Copied".
  * - closeSheet: abort in-flight AI calls, clear timers, SHEET_CLOSED.
  * - contextKey change: abort, clear timers, CONTEXT_CHANGED. Unmount: abort and clear timers.
  */
 export function useWorkspaceController(params: WorkspaceControllerParams): WorkspaceController {
-  // TODO(T-033): fill + saveAnswer. TODO(T-034): tailor + copyText. TODO(T-036): stage.
+  // TODO(T-034): tailor + copyText. TODO(T-036): stage.
   const db = useSQLiteContext();
   const { show } = useSnackbar();
   const [state, dispatch] = useReducer(workspaceReducer, initialWorkspaceState);
@@ -100,6 +100,7 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
   const boardRef = useRef(params.activeBoard);
   const abortRef = useRef<AbortController | null>(null);
   const scrapeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fillTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seenContext = useRef(params.contextKey);
 
   useEffect(() => {
@@ -113,6 +114,10 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     if (scrapeTimer.current !== null) {
       clearTimeout(scrapeTimer.current);
       scrapeTimer.current = null;
+    }
+    if (fillTimer.current !== null) {
+      clearTimeout(fillTimer.current);
+      fillTimer.current = null;
     }
   }, []);
 
@@ -198,6 +203,55 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
       const parsed = parseBridgeMessage(raw);
       if (!parsed.ok) return;
       const message = parsed.value;
+
+      if (message.type === 'AUTOFILL_COMPLETE' || message.type === 'AUTOFILL_ERROR') {
+        if (stateRef.current.phase !== 'filling') return;
+        if (fillTimer.current !== null) {
+          clearTimeout(fillTimer.current);
+          fillTimer.current = null;
+        }
+        if (message.type === 'AUTOFILL_ERROR') {
+          dispatch({ type: 'FILL_FAILED' });
+          show('Auto-fill failed on this page');
+          return;
+        }
+        const total = stateRef.current.session?.analysis.fieldMappings.length ?? message.filledCount + message.missingClawIds.length;
+        dispatch({
+          type: 'FILL_COMPLETED',
+          filledCount: message.filledCount,
+          missingCount: message.missingClawIds.length,
+        });
+        show(`Filled ${message.filledCount} of ${total} fields`);
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+        const currentMappings = stateRef.current.session?.analysis.fieldMappings ?? [];
+        const filledAnswerBank = currentMappings.filter(
+          (m) =>
+            m.source === 'ANSWER_BANK' &&
+            !message.missingClawIds.includes(m.clawId) &&
+            typeof m.value === 'string' &&
+            m.value.trim() !== '',
+        );
+        if (filledAnswerBank.length > 0) {
+          void listAnswers(db).then(async (answers) => {
+            const idsToIncrement: number[] = [];
+            for (const mapping of filledAnswerBank) {
+              const key = mapping.fieldLabel.trim().replace(/\s+/g, ' ').toLowerCase();
+              const match = answers.find(
+                (a) => a.question.trim().replace(/\s+/g, ' ').toLowerCase() === key,
+              );
+              if (match) {
+                idsToIncrement.push(match.id);
+              }
+            }
+            if (idsToIncrement.length > 0) {
+              await incrementAnswerUse(db, Array.from(new Set(idsToIncrement)));
+            }
+          });
+        }
+        return;
+      }
+
       if (message.type !== 'PAGE_SCRAPED' && message.type !== 'SCRAPE_ERROR') return;
       if (stateRef.current.phase !== 'scraping') return;
       if (scrapeTimer.current !== null) {
@@ -215,7 +269,7 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
       abortRef.current = controller;
       void runAnalyze(message, controller);
     },
-    [runAnalyze],
+    [db, runAnalyze, show],
   );
 
   const onAnalyzePress = useCallback(() => {
@@ -230,6 +284,43 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     }
     reanalyze();
   }, [aiMissing, params.currentUrl, reanalyze]);
+
+  const autoFill = useCallback(() => {
+    const current = stateRef.current;
+    const mappings = current.session?.analysis.fieldMappings ?? [];
+    const isOnSourcePage = params.currentUrl === current.session?.sourceUrl;
+    if (current.phase !== 'ready' || !isOnSourcePage || mappings.length === 0) return;
+    if (fillTimer.current !== null) {
+      clearTimeout(fillTimer.current);
+      fillTimer.current = null;
+    }
+    dispatch({ type: 'FILL_REQUESTED' });
+    stateRef.current = workspaceReducer(stateRef.current, { type: 'FILL_REQUESTED' });
+    webViewRef.current?.injectJavaScript(buildAutoFillScript(mappings));
+    fillTimer.current = setTimeout(() => {
+      fillTimer.current = null;
+      if (stateRef.current.phase === 'filling') {
+        dispatch({ type: 'FILL_FAILED' });
+        show('Auto-fill failed on this page');
+      }
+    }, BRIDGE_TIMEOUT_MS);
+  }, [params.currentUrl, show]);
+
+  const saveAnswer = useCallback(
+    async (mapping: FieldMapping) => {
+      const result = await upsertAnswer(db, {
+        question: mapping.fieldLabel,
+        answer: mapping.value,
+      });
+      if (result.ok) {
+        dispatch({ type: 'ANSWER_SAVED', clawId: mapping.clawId });
+        show('Saved to answer bank');
+      } else {
+        show('Could not save answer');
+      }
+    },
+    [db, show],
+  );
 
   const logApplication = useCallback(async () => {
     const current = stateRef.current;
@@ -283,9 +374,9 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     onBridgeMessage,
     onAnalyzePress,
     reanalyze,
-    autoFill: noop,
+    autoFill,
     tailor: noop,
-    saveAnswer: asyncNoop,
+    saveAnswer,
     logApplication,
     stageRecommendedResume: asyncNoop,
     copyText: asyncNoop,
