@@ -54,8 +54,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Files:** `src/db/migrate.ts`, `src/db/__tests__/migrate.test.ts`.
 - **Depends on:** T-001.
 - **Acceptance:**
-  - [ ] Steps 0–6 of the doc comment. Seeds use parameterised `runAsync`.
-  - [ ] fakeDb tests: fresh DB → `MIGRATION_V1` executed, 8 boards inserted, `user_version = 1`. Version 1 → no migration and no seeds.
+  - [x] Steps 0–6 of the doc comment. Seeds use parameterised `runAsync`.
+  - [x] fakeDb tests: fresh DB → `MIGRATION_V1` executed, 8 boards inserted, `user_version = 1`. Version 1 → no migration and no seeds.
 - **Verify:** `npm run verify && npx jest src/db`
 
 ### T-005 Key-value store, secrets, AI config
