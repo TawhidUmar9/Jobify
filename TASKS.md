@@ -82,7 +82,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `resumesRepo.ts` (all functions).
 - **Files:** `src/db/repositories/resumesRepo.ts`, `src/db/repositories/__tests__/resumesRepo.test.ts`.
 - **Depends on:** T-004.
-- **Acceptance:** label rules (EMPTY_LABEL / DUPLICATE_LABEL, case-insensitive). Bad content JSON → empty content. `setResumeFile` updates both columns. Ordering per doc.
+- **Acceptance:**
+  - [x] label rules (EMPTY_LABEL / DUPLICATE_LABEL, case-insensitive). Bad content JSON → empty content. `setResumeFile` updates both columns. Ordering per doc.
 - **Verify:** `npm run verify && npx jest src/db`
 
 ### T-008 Job boards repository
