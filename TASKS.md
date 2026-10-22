@@ -32,10 +32,10 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Files:** `src/components/ui/{Button,IconButton,StateView,Snackbar}.tsx`, `src/components/ui/__tests__/primitives.test.tsx`.
 - **Depends on:** T-001.
 - **Acceptance:**
-  - [ ] Tokens only (no hex or raw sizes). Min heights 48 (Android) / 44 (iOS) via `Platform.select`.
-  - [ ] Disabled/loading Button never calls `onPress`. `accessibilityState` is correct.
-  - [ ] Snackbar: `show('a'); show('b')` shows only "b" and hides after 4000 ms (fake timers).
-  - [ ] StateView error announces its message on mount.
+  - [x] Tokens only (no hex or raw sizes). Min heights 48 (Android) / 44 (iOS) via `Platform.select`.
+  - [x] Disabled/loading Button never calls `onPress`. `accessibilityState` is correct.
+  - [x] Snackbar: `show('a'); show('b')` shows only "b" and hides after 4000 ms (fake timers).
+  - [x] StateView error announces its message on mount.
 - **Verify:** `npm run verify && npx jest src/components/ui`
 
 ### T-003 UI primitives II (form controls)
