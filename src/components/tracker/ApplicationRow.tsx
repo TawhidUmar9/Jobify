@@ -2,6 +2,7 @@ import { CircleCheck, CircleHelp, CircleX, type LucideIcon } from 'lucide-react-
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
+import { parseDbTimestamp } from '../../lib/dates';
 import { useTheme } from '../../theme/ThemeProvider';
 import { iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
 import { APPLICATION_STATUS_LABELS, type Application, type Eligibility } from '../../types/domain';
@@ -23,33 +24,16 @@ const ELIGIBILITY_ICONS: Record<Eligibility, { icon: LucideIcon; tone: 'success'
   NOT_ELIGIBLE: { icon: CircleX, tone: 'danger' },
 };
 
-/** "12 Oct 2026" from a stored "YYYY-MM-DD HH:MM:SS" stamp (calendar date, not shifted). */
+/** "12 Oct 2026": the local calendar date of a stored UTC stamp. */
 export function formatTrackerDate(stamp: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(stamp);
-  if (!match) return stamp;
-  const month = MONTHS[Number(match[2]) - 1];
-  const day = Number(match[3]);
-  if (!month || !Number.isFinite(day)) return stamp;
-  return `${day} ${month} ${match[1]}`;
-}
-
-function parseLocalTimestamp(stamp: string): Date | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(stamp);
-  if (!match) return null;
-  const date = new Date(
-    Number(match[1]),
-    Number(match[2]) - 1,
-    Number(match[3]),
-    Number(match[4]),
-    Number(match[5]),
-    Number(match[6]),
-  );
-  return Number.isNaN(date.getTime()) ? null : date;
+  const date = parseDbTimestamp(stamp);
+  if (date === null) return stamp;
+  return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
 }
 
 function isFollowUpDue(followUpAt: string | null, now: Date): boolean {
   if (!followUpAt) return false;
-  const due = parseLocalTimestamp(followUpAt);
+  const due = parseDbTimestamp(followUpAt);
   return due !== null && due.getTime() <= now.getTime();
 }
 

@@ -7,7 +7,8 @@ import 'react-native-gesture-handler/jestSetup';
 
 jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 
-jest.mock('@gorhom/bottom-sheet', () => require('@gorhom/bottom-sheet/mock'));
+// gorhom's mock is CJS without __esModule; flag it so `import BottomSheet from` gets `.default`.
+jest.mock('@gorhom/bottom-sheet', () => ({ __esModule: true, ...require('@gorhom/bottom-sheet/mock') }));
 
 // WebView → plain View that keeps testID and exposes the WebViewHandle methods as jest.fn.
 jest.mock('react-native-webview', () => {

@@ -42,7 +42,7 @@ export function CopilotActions(props: CopilotActionsProps) {
   const showIcons = width >= ICON_MIN_WIDTH;
   const bottom = insets?.bottom ?? 0;
   return (
-    <View style={[styles.row, { borderTopColor: colors.border, paddingBottom: spacing.md + bottom }]}>
+    <View style={[styles.row, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: spacing.md + bottom }]}>
       <View style={styles.slot}>
         <Button
           label="Auto-fill"

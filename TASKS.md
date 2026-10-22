@@ -181,7 +181,7 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
   - [x] A fresh install opens Welcome (`completed` false). With `onboardingCompleted = "1"` the tabs open (`completed` true).
   - [x] "Restore from backup" is rendered but disabled with caption "Available after setup" until T-042.
 - **Manual:**
-  - [ ] `adb shell pm clear io.github.tawhidumar9.jobify` → Welcome appears. MANUAL PENDING (device)
+  - [x] `adb shell pm clear io.github.tawhidumar9.jobify` → Welcome appears. (passed 2026-10-23 on SM-G935F)
 - **Verify:** `npm run verify && npx jest src/features/onboarding`
 
 ### T-018 AI provider step
@@ -192,7 +192,7 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
   - [x] provider switch resets model/baseUrl and keeps the key. Test connection shows "Connected" or the exact error copy.
   - [x] Continue saves (the test is not required). Skip saves nothing. Field errors per the hook doc. The key field is secure with a show/hide toggle.
 - **Manual (mock):**
-  - [ ] OpenAI-compatible, base `http://10.0.2.2:8787/v1`, model `mock`, key `k` → Test → "Connected". MANUAL PENDING (device)
+  - [x] OpenAI-compatible, base `http://10.0.2.2:8787/v1`, model `mock`, key `k` → Test → "Connected". (passed 2026-10-23 on SM-G935F)
 - **Verify:** `npm run verify && npx jest src/features/settings src/components/forms`
 
 ### T-019 Profile step and resume import
@@ -203,7 +203,7 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
   - [x] pick errors map to copy. Import PDF is hidden for openai_compatible or when AI is skipped. Paste text works with any configured provider.
   - [x] The merge never overwrites non-empty fields. Time zone and country default from expo-localization. Continue blocked with field errors.
 - **Manual (mock, Gemini base URL `http://10.0.2.2:8787`):**
-  - [ ] paste `e2e/fixtures/resume-alex-rahman.txt` → the form shows Alex Rahman. Import `resume-alex-rahman.pdf` (push it with `adb push e2e/fixtures/resume-alex-rahman.pdf /sdcard/Download/`) → the resume is stored with a file. MANUAL PENDING (device)
+  - [x] paste `e2e/fixtures/resume-alex-rahman.txt` → the form shows Alex Rahman. Import `resume-alex-rahman.pdf` (push it with `adb push e2e/fixtures/resume-alex-rahman.pdf /sdcard/Download/`) → the resume is stored with a file. (passed 2026-10-23 on SM-G935F)
 - **Verify:** `npm run verify && npx jest src/features src/services src/components/forms`
 
 ### T-020 Preferences step and finish
@@ -213,7 +213,7 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Acceptance:**
   - [x] all fields per the doc. Countries normalize to upper-case 2 letters. Finish → `markCompleted` → tabs (Workspace).
 - **Manual:**
-  - [ ] a full onboarding run on a device lands in Workspace with the 8 board pills (after T-023; before T-023, the stub screen). MANUAL PENDING (device)
+  - [x] a full onboarding run on a device lands in Workspace with the 8 board pills (after T-023; before T-023, the stub screen). (passed 2026-10-23 on SM-G935F)
 - **Verify:** `npm run verify && npx jest src/components/forms src/features`
 
 ---
@@ -313,7 +313,7 @@ true;
 - **Acceptance:**
   - [x] props per table (platform-specific ones only on their platform). `isHttpUrl` true for https and `http://10.0.2.2:8787/x`, false for `mailto:`, `javascript:`, `''`, `null`, and plain text.
 - **Manual (A-20):**
-  - [ ] log in to one board, force-stop, relaunch → still logged in. MANUAL PENDING (device)
+  - [ ] log in to one board, force-stop, relaunch → still logged in. MANUAL PENDING (needs internet on the test phone)
 - **Verify:** `npm run verify && npx jest src/lib`
 
 ### T-025 Workspace composition, deep link, share intent
@@ -323,8 +323,8 @@ true;
 - **Acceptance:**
   - [x] loading/empty/error states with copy. `jobify:///?url=<encoded>` opens the page (activeBoard null; param cleared after use). `javascript:` is ignored. A share of "Look https://x.y/z." opens `https://x.y/z`. A share with no URL → snackbar. Before onboarding, the share is ignored. Helper unit tests per doc examples.
 - **Manual:**
-  - [ ] `adb shell am start -a android.intent.action.VIEW -d "jobify:///?url=http%3A%2F%2F10.0.2.2%3A8787%2Ffixtures%2Fjob-remote-form.html"` opens the fixture. MANUAL PENDING (device)
-  - [ ] `adb shell am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT "Apply http://10.0.2.2:8787/fixtures/job-local-only.html" io.github.tawhidumar9.jobify` opens it. MANUAL PENDING (device)
+  - [x] `adb shell am start -a android.intent.action.VIEW -d "jobify:///?url=http%3A%2F%2F10.0.2.2%3A8787%2Ffixtures%2Fjob-remote-form.html"` opens the fixture. (passed 2026-10-23 on SM-G935F)
+  - [x] `adb shell am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT "Apply http://10.0.2.2:8787/fixtures/job-local-only.html" io.github.tawhidumar9.jobify` opens it. (passed 2026-10-23 on SM-G935F)
 - **Verify:** `npm run verify && npx jest src/lib src/features`
 
 ### T-026 Workspace reducer
@@ -350,9 +350,9 @@ true;
 - **Acceptance:**
   - [x] FAB variants (Analyze / Analyzing… / Set up AI). Error copy exact for every error kind (UI_DIRECTIVES §4.4), including the "Open profile" / "Open AI settings" actions. Re-analyze disabled while busy.
 - **Manual (mock):**
-  - [ ] deep-link `job-error-429.html`, Analyze → "Rate limit reached. Wait a minute and try again." MANUAL PENDING (device)
+  - [x] deep-link `job-error-429.html`, Analyze → "Rate limit reached. Wait a minute and try again." (passed 2026-10-23 on SM-G935F)
 - **Sheet position (A-28 quirk from T-001):**
-  - [ ] open the sheet 5 times, including right after a reload. It must land at 50% every time. If it lands lower, call `snapToIndex(0)` after the sheet's first `onLayout` / in `onAnimate`, and note it in DECISIONS.md. The dev-only Reanimated warning "Dependencies should only be used on the web" comes from @gorhom/bottom-sheet and is harmless. MANUAL PENDING (device)
+  - [x] open the sheet 5 times, including right after a reload. It must land at 50% every time. If it lands lower, call `snapToIndex(0)` after the sheet's first `onLayout` / in `onAnimate`, and note it in DECISIONS.md. The dev-only Reanimated warning "Dependencies should only be used on the web" comes from @gorhom/bottom-sheet and is harmless. (passed 2026-10-23 on SM-G935F)
 - **Verify:** `npm run verify && npx jest src/components`
 
 ### T-029 Result cards
@@ -385,6 +385,8 @@ true;
 3. Deep-link `job-remote-form.html` → Analyze → green "You can apply", "No salary listed" flag, 92, resume "Main".
 4. Log → "Logged to Tracker". Tracker shows "Senior Backend Engineer · Acme Cloud · Shared link · Applied".
 5. `npm run verify` green. `cd android && ./gradlew --stop`.
+
+**Result 2026-10-23: PASSED** on a physical phone (SM-G935F, Android 14, dark mode). On a physical phone, skip `npm run android` if the installed debug build has no native changes. Run `npx expo start --dev-client`, then `adb reverse tcp:8081 tcp:8081` and `adb reverse tcp:8787 tcp:8787`, and use `http://localhost:8787` wherever these steps say `http://10.0.2.2:8787`. Fixed during the gate: the board bar grew to half the screen (ScrollView `flexGrow`), the copilot sheet and footer ignored the dark theme, and Tracker dates read SQLite's UTC stamps as local (`src/lib/dates.ts`).
 
 ---
 

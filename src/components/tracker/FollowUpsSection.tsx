@@ -2,6 +2,7 @@ import { BellRing } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
+import { parseDbTimestamp } from '../../lib/dates';
 import { useTheme } from '../../theme/ThemeProvider';
 import { iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
 import type { Application } from '../../types/domain';
@@ -18,11 +19,11 @@ function calendarDay(year: number, monthIndex: number, day: number): number {
   return Date.UTC(year, monthIndex, day);
 }
 
-/** Whole local calendar days from the stored stamp to `now`. */
+/** Whole local calendar days from the stored UTC stamp to `now`. */
 function daysSince(stamp: string, now: Date): number | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(stamp);
-  if (!match) return null;
-  const created = calendarDay(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const stored = parseDbTimestamp(stamp);
+  if (stored === null) return null;
+  const created = calendarDay(stored.getFullYear(), stored.getMonth(), stored.getDate());
   const today = calendarDay(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.max(0, Math.round((today - created) / DAY_MS));
 }

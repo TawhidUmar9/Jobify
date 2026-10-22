@@ -70,6 +70,8 @@ export function BoardBar({ boards, activeBoardId, onSelect }: BoardBarProps) {
 
 const styles = StyleSheet.create({
   bar: {
+    // ScrollView defaults to flexGrow 1, which would ignore the fixed height in a flex column.
+    flexGrow: 0,
     height: BAR_HEIGHT,
     borderBottomWidth: 1,
   },

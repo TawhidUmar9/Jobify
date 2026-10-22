@@ -1,4 +1,4 @@
-import SheetModule, {
+import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetFooter,
   BottomSheetScrollView,
@@ -6,7 +6,7 @@ import SheetModule, {
   type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet';
 import { RefreshCw, X } from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useRef, type ComponentType, type ReactNode, type Ref } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type ComponentRef } from 'react';
 import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
@@ -43,38 +43,6 @@ export interface CopilotSheetProps {
   /** Error-state secondary action, e.g. NO_PROFILE → open Settings → Profile; AI config errors → Settings → AI. */
   onOpenSettings: (path: '/settings/ai' | '/settings/profile') => void;
 }
-
-interface SheetHandle {
-  snapToIndex: (index: number) => void;
-  close: () => void;
-}
-
-/**
- * The Jest WebView-style mock exports a CJS object without `__esModule`, so the default import is
- * that object and the component lives on `.default`. Production imports the component directly.
- */
-type SheetComponent = ComponentType<{
-  ref?: Ref<SheetHandle>;
-  index?: number;
-  snapPoints?: string[];
-  enablePanDownToClose?: boolean;
-  onClose?: () => void;
-  backdropComponent?: (props: BottomSheetBackdropProps) => ReactNode;
-  onAnimate?: (fromIndex: number, toIndex: number) => void;
-  footerComponent?: (props: BottomSheetFooterProps) => ReactNode;
-  children?: ReactNode;
-}>;
-
-function resolveSheet(imported: unknown): SheetComponent {
-  if (typeof imported === 'function') return imported as SheetComponent;
-  if (imported && typeof imported === 'object' && 'default' in imported) {
-    const nested = (imported as { default: unknown }).default;
-    if (typeof nested === 'function') return nested as SheetComponent;
-  }
-  return imported as SheetComponent;
-}
-
-const BottomSheet = resolveSheet(SheetModule);
 
 const AI_SETTINGS_CODES = new Set(['NOT_CONFIGURED', 'AUTH', 'MODEL_NOT_FOUND', 'BAD_REQUEST']);
 
@@ -125,7 +93,7 @@ function errorCopy(error: WorkspaceError): {
  */
 export function CopilotSheet(props: CopilotSheetProps) {
   const { colors } = useTheme();
-  const sheetRef = useRef<SheetHandle | null>(null);
+  const sheetRef = useRef<ComponentRef<typeof BottomSheet> | null>(null);
   const snapPoints = useMemo(() => ['50%', '92%'], []);
   const busy = props.state.phase === 'scraping' || props.state.phase === 'analyzing' || props.state.phase === 'filling';
   const open = props.state.sheetOpen;
@@ -180,6 +148,8 @@ export function CopilotSheet(props: CopilotSheetProps) {
         if (open && toIndex < 0) sheetRef.current?.snapToIndex(0);
       }}
       footerComponent={footer}
+      backgroundStyle={{ backgroundColor: colors.surface }}
+      handleIndicatorStyle={{ backgroundColor: colors.borderStrong }}
     >
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.textPrimary }]} maxFontSizeMultiplier={fontScaleCaps.default}>
