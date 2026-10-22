@@ -453,7 +453,8 @@ true;
 `;
 }
 ```
-- **Acceptance (jsdom: fixture → run the fixture's inline script via `runInjectedScript` → scraper → fill with the 5 validated mappings from T-012):** `{filledCount: 5, missingClawIds: []}`. `#state` contains `name=Alex Rahman`, `email=alex.rahman@example.com`, and `years=3-5`. Unknown clawId → missing. Select by option text "6+ years" → `6+`. "ten" → missing. A textarea value with quotes, a backslash, `</script>`, and a newline is written verbatim.
+- **Acceptance:**
+  - [x] (jsdom: fixture → run the fixture's inline script via `runInjectedScript` → scraper → fill with the 5 validated mappings from T-012): `{filledCount: 5, missingClawIds: []}`. `#state` contains `name=Alex Rahman`, `email=alex.rahman@example.com`, and `years=3-5`. Unknown clawId → missing. Select by option text "6+ years" → `6+`. "ten" → missing. A textarea value with quotes, a backslash, `</script>`, and a newline is written verbatim.
 - **Verify:** `npm run verify && npx jest --selectProjects dom`
 
 ### T-033 Auto-fill action, field list, save to answer bank

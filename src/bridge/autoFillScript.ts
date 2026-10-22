@@ -21,11 +21,55 @@ import type { FieldMapping } from '../types/domain';
  * - End with `true;`.
  */
 export function buildAutoFillScript(fieldMappings: FieldMapping[]): string {
-  // TODO(T-032): implement per the rules above.
-  void fieldMappings;
+  const payload = JSON.stringify(fieldMappings.map((m) => ({ clawId: m.clawId, value: m.value })));
   return `
-(function() {
-  window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'AUTOFILL_ERROR', error: 'NOT_IMPLEMENTED' }));
+(function () {
+  try {
+    var mappings = ${payload};
+    var filledCount = 0;
+    var missingClawIds = [];
+    var setNative = function (el, proto, value) {
+      var d = Object.getOwnPropertyDescriptor(proto, 'value');
+      if (d && d.set) { d.set.call(el, value); } else { el.value = value; }
+    };
+    var fire = function (el, names) {
+      names.forEach(function (n) { el.dispatchEvent(new Event(n, { bubbles: true })); });
+    };
+    mappings.forEach(function (m) {
+      if (!m || typeof m.value !== 'string' || m.value === '') return;
+      try {
+        var el = document.querySelector('[data-jobify-id="' + m.clawId + '"]');
+        if (!el) { missingClawIds.push(m.clawId); return; }
+        if (el.tagName === 'SELECT') {
+          var match = null;
+          var want = m.value.trim().toLowerCase();
+          for (var i = 0; i < el.options.length && match === null; i++) {
+            if (el.options[i].value === m.value) match = el.options[i].value;
+          }
+          for (var j = 0; j < el.options.length && match === null; j++) {
+            if (el.options[j].text.trim().toLowerCase() === want) match = el.options[j].value;
+          }
+          if (match === null) { missingClawIds.push(m.clawId); return; }
+          setNative(el, window.HTMLSelectElement.prototype, match);
+          fire(el, ['input', 'change']);
+        } else {
+          if (typeof el.focus === 'function') el.focus();
+          var proto = el.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+          setNative(el, proto, m.value);
+          fire(el, ['input', 'change', 'blur']);
+        }
+        el.style.outline = '2px solid #10b981';
+        filledCount++;
+      } catch (e) {
+        missingClawIds.push(m.clawId);
+      }
+    });
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'AUTOFILL_COMPLETE', filledCount: filledCount, missingClawIds: missingClawIds
+    }));
+  } catch (err) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'AUTOFILL_ERROR', error: String(err && err.message) }));
+  }
 })();
 true;
 `;
