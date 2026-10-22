@@ -106,7 +106,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `insertApplication`, `listApplications`, `getApplication`, `listFollowUpsDue`.
 - **Files:** `src/db/repositories/applicationsRepo.ts` (those 4 functions), test.
 - **Depends on:** T-004.
-- **Acceptance:** DUPLICATE by `job_url` (pre-check, and the UNIQUE violation also maps to DUPLICATE). Score clamp/round. `red_flags_json` round-trip. APPLIED → `follow_up_at = datetime('now','+7 days')`, SAVED → NULL. Rows with unknown status/eligibility are skipped. Follow-ups: only APPLIED/INTERVIEWING with `follow_up_at <= now`, ascending.
+- **Acceptance:**
+  - [x] DUPLICATE by `job_url` (pre-check, and the UNIQUE violation also maps to DUPLICATE). Score clamp/round. `red_flags_json` round-trip. APPLIED → `follow_up_at = datetime('now','+7 days')`, SAVED → NULL. Rows with unknown status/eligibility are skipped. Follow-ups: only APPLIED/INTERVIEWING with `follow_up_at <= now`, ascending.
 - **Verify:** `npm run verify && npx jest src/db`
 
 ### T-011 Insights repository
