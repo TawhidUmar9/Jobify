@@ -155,7 +155,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `createOpenAiCompatibleProvider`.
 - **Files:** `src/services/ai/providers/openaiCompatible.ts`, test.
 - **Depends on:** T-012.
-- **Acceptance:** body shape. No Authorization header for an empty key. 400 → exactly one retry with `json_object` + the schema in system; second 400 → BAD_REQUEST. Fence stripping. `content_filter` → BLOCKED. PDF → PDF_NOT_SUPPORTED with no fetch. Empty model → NOT_CONFIGURED with no fetch. Shared error rows.
+- **Acceptance:**
+  - [x] body shape. No Authorization header for an empty key. 400 → exactly one retry with `json_object` + the schema in system; second 400 → BAD_REQUEST. Fence stripping. `content_filter` → BLOCKED. PDF → PDF_NOT_SUPPORTED with no fetch. Empty model → NOT_CONFIGURED with no fetch. Shared error rows.
 - **Verify:** `npm run verify && npx jest src/services/ai`
 
 ### T-016 AI client
