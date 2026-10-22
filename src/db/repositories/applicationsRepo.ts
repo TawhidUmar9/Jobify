@@ -186,11 +186,49 @@ export async function patchApplication(
   id: number,
   patch: ApplicationPatch,
 ): Promise<Application | null> {
-  // TODO(T-037): implement.
-  void db;
-  void id;
-  void patch;
-  return null;
+  const existing = await getApplication(db, id);
+  if (!existing) return null;
+
+  const sets: string[] = [];
+  const params: (string | number | null)[] = [];
+
+  const statusChanged = patch.status !== undefined && patch.status !== existing.status;
+
+  if (patch.status !== undefined) {
+    sets.push('status = ?');
+    params.push(patch.status);
+    if (statusChanged) {
+      sets.push('status_changed_at = CURRENT_TIMESTAMP');
+    }
+  }
+
+  if (patch.notes !== undefined) {
+    sets.push('notes = ?');
+    params.push(patch.notes.slice(0, 5000));
+  }
+
+  let nextFollowUp = patch.followUpAt;
+  if (
+    nextFollowUp === undefined &&
+    statusChanged &&
+    patch.status &&
+    ['OFFER', 'REJECTED', 'WITHDRAWN'].includes(patch.status)
+  ) {
+    nextFollowUp = null;
+  }
+
+  if (nextFollowUp !== undefined) {
+    sets.push('follow_up_at = ?');
+    params.push(nextFollowUp);
+  }
+
+  if (sets.length === 0) {
+    return existing;
+  }
+
+  params.push(id);
+  await db.runAsync(`UPDATE applications SET ${sets.join(', ')} WHERE id = ?`, params);
+  return getApplication(db, id);
 }
 
 /** Sets cover_note / cold_dm after tailoring an already-logged job (same job_url). */
@@ -209,7 +247,5 @@ export async function attachTailorText(
 }
 
 export async function deleteApplication(db: SQLiteDatabase, id: number): Promise<void> {
-  // TODO(T-037): implement.
-  void db;
-  void id;
+  await db.runAsync('DELETE FROM applications WHERE id = ?', [id]);
 }

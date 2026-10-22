@@ -203,7 +203,7 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
   - [x] pick errors map to copy. Import PDF is hidden for openai_compatible or when AI is skipped. Paste text works with any configured provider.
   - [x] The merge never overwrites non-empty fields. Time zone and country default from expo-localization. Continue blocked with field errors.
 - **Manual (mock, Gemini base URL `http://10.0.2.2:8787`):**
-  - [x] paste `e2e/fixtures/resume-alex-rahman.txt` → the form shows Alex Rahman. Import `resume-alex-rahman.pdf` (push it with `adb push e2e/fixtures/resume-alex-rahman.pdf /sdcard/Download/`) → the resume is stored with a file. (passed 2026-10-23 on SM-G935F)
+  - [x] paste `e2e/fixtures/resume-alex-rahman.txt` → the form shows Alex Rahman. Import `resume-alex-rahman.pdf` (push it with `adb push e2e/fixtures/resume-alex-rahman.pdf /sdcard/Download/`) → the resume is stored with a file. (passed 2026-10-23 on SM-G935F; PDF via real Gemini `gemini-3.5-flash-lite`)
 - **Verify:** `npm run verify && npx jest src/features src/services src/components/forms`
 
 ### T-020 Preferences step and finish
@@ -496,7 +496,8 @@ true;
 - **Goal:** `useApplication`, `patchApplication`, `deleteApplication`, StatusPicker, FollowUpPicker + `followUpAtFromOption`, and the detail screen.
 - **Files:** `src/features/tracker/useApplication.ts`, `applicationsRepo.ts` (patch/delete), `src/components/tracker/{StatusPicker,FollowUpPicker}.tsx`, `src/app/application/[id].tsx`, tests.
 - **Depends on:** T-031, T-029.
-- **Acceptance:** not_found for `abc`, `0`, `-1`, and `999`. Status change sets `status_changed_at`, and OFFER/REJECTED/WITHDRAWN clear the reminder. Follow-up options compute UTC +N days (fixed `now`). Notes ≤5000. Delete confirms then navigates back. All snackbars. Open job post navigates with the `url` param.
+- **Acceptance:**
+  - [x] not_found for `abc`, `0`, `-1`, and `999`. Status change sets `status_changed_at`, and OFFER/REJECTED/WITHDRAWN clear the reminder. Follow-up options compute UTC +N days (fixed `now`). Notes ≤5000. Delete confirms then navigates back. All snackbars. Open job post navigates with the `url` param.
 - **Verify:** `npm run verify && npx jest src/features/tracker src/components/tracker src/db`
 
 ### T-038 Insights screen
