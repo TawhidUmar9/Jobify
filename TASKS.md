@@ -139,7 +139,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `buildAnalyzePrompt`, `buildTailorPrompt`, `buildResumeParsePrompt`.
 - **Files:** `src/services/ai/prompts.ts`, `src/services/ai/__tests__/prompts.test.ts`.
 - **Depends on:** T-012.
-- **Acceptance:** numbered rules verbatim (`toContain` each). Snapshot with a fixed `today` (2026-10-22) and the Alex profile. Answers capped at 40 (most-used first, as given). User content keys are exactly `url,title,pageText,inputs`. Pasted text is trimmed and capped at 30 000.
+- **Acceptance:**
+  - [x] numbered rules verbatim (`toContain` each). Snapshot with a fixed `today` (2026-10-22) and the Alex profile. Answers capped at 40 (most-used first, as given). User content keys are exactly `url,title,pageText,inputs`. Pasted text is trimmed and capped at 30 000.
 - **Verify:** `npm run verify && npx jest src/services/ai`
 
 ### T-014 Gemini provider
