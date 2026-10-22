@@ -552,7 +552,8 @@ true;
 - **Goal:** BrowserToolbar per doc, and BackHandler in Workspace.
 - **Files:** `src/components/workspace/BrowserToolbar.tsx`, `src/app/(tabs)/index.tsx`, tests.
 - **Depends on:** T-025, T-028.
-- **Acceptance:** Back/Forward enabled per nav state. Host text and address bar flow (`normalizeAddressInput`; invalid → inline error). Progress bar. Hardware back: sheet → close; canGoBack → goBack; else default (only while Workspace is focused).
+- **Acceptance:**
+  - [x] Back/Forward enabled per nav state. Host text and address bar flow (`normalizeAddressInput`; invalid → inline error). Progress bar. Hardware back: sheet → close; canGoBack → goBack; else default (only while Workspace is focused).
 - **Verify:** `npm run verify && npx jest src/components/workspace`
 
 ### T-045 Remember last page per board

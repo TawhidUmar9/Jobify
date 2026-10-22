@@ -1,6 +1,6 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { BackHandler, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CopilotSheet } from '../../components/copilot/CopilotSheet';
@@ -56,7 +56,24 @@ export default function WorkspaceScreen() {
   const { state } = controller;
   const busy = state.phase === 'scraping' || state.phase === 'analyzing' || state.phase === 'filling';
 
-  // TODO(T-044): back handling. TODO(T-045): recordVisit.
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        if (state.sheetOpen) {
+          controller.closeSheet();
+          return true;
+        }
+        if (nav.canGoBack) {
+          controller.webViewRef.current?.goBack();
+          return true;
+        }
+        return false;
+      });
+      return () => sub.remove();
+    }, [state.sheetOpen, controller, nav.canGoBack]),
+  );
+
+  // TODO(T-045): recordVisit.
   const showEmpty = boards.boards.length === 0 && boards.targetUrl === '';
 
   return (

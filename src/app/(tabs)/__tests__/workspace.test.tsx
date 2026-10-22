@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { BackHandler } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { createFakeDb } from '../../../../tests/helpers/fakeDb';
@@ -15,7 +16,15 @@ jest.mock('lucide-react-native', () => {
   const React = jest.requireActual('react') as typeof import('react');
   const { View } = jest.requireActual('react-native') as typeof import('react-native');
   const Icon = (props: Record<string, unknown>) => React.createElement(View, props);
-  return { Sparkles: Icon, Settings2: Icon, RefreshCw: Icon, X: Icon };
+  return {
+    Sparkles: Icon,
+    Settings2: Icon,
+    RefreshCw: Icon,
+    X: Icon,
+    ChevronLeft: Icon,
+    ChevronRight: Icon,
+    RotateCw: Icon,
+  };
 });
 
 jest.mock('expo-sqlite', () => ({
@@ -38,9 +47,12 @@ jest.mock('expo-router', () => {
       setParams: (...args: unknown[]) => mockSetParams(...args),
     },
     useLocalSearchParams: () => mockParams,
-    useFocusEffect: (effect: () => void) => {
+    useFocusEffect: (effect: () => void | (() => void)) => {
       React.useEffect(() => {
-        effect();
+        const cleanup = effect();
+        return () => {
+          if (typeof cleanup === 'function') cleanup();
+        };
       }, [effect]);
     },
   };
@@ -62,11 +74,30 @@ async function renderWorkspace() {
 }
 
 describe('WorkspaceScreen', () => {
+  const backListeners: Parameters<typeof BackHandler.addEventListener>[1][] = [];
+
   beforeEach(() => {
     mockDb.calls.length = 0;
     mockPush.mockClear();
     mockSetParams.mockClear();
     mockParams = {};
+    backListeners.length = 0;
+
+    jest.spyOn(BackHandler, 'addEventListener').mockImplementation((event, handler) => {
+      if (event === 'hardwareBackPress') {
+        backListeners.push(handler);
+      }
+      return {
+        remove: () => {
+          const idx = backListeners.indexOf(handler);
+          if (idx !== -1) backListeners.splice(idx, 1);
+        },
+      };
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('shows a loading message while boards are being read', async () => {
@@ -115,5 +146,13 @@ describe('WorkspaceScreen', () => {
     await waitFor(() =>
       expect(mockSetParams).toHaveBeenCalledWith({ url: undefined }),
     );
+  });
+
+  it('handles hardware back button: default returns false when neither sheet open nor canGoBack', async () => {
+    mockDb.queue('getAllAsync', []);
+    await renderWorkspace();
+    expect(backListeners.length).toBeGreaterThan(0);
+    const lastHandler = backListeners[backListeners.length - 1];
+    expect(lastHandler({} as Parameters<typeof lastHandler>[0])).toBe(false);
   });
 });
