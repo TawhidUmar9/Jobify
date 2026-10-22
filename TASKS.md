@@ -536,7 +536,8 @@ true;
 - **Goal:** `backup.ts`, `settings/backup`, and enabling "Restore from backup" on Welcome.
 - **Files:** `src/services/backup.ts`, `src/app/settings/backup.tsx`, `src/app/onboarding/index.tsx`, tests.
 - **Depends on:** T-006 to T-011, T-017.
-- **Acceptance:** export → import round-trip on a fakeDb restores equal data (apart from IDs, `fileUri` → null, and resume relinking by label). The key is never present (assert on the JSON string). Wrong format, newer version, and unreadable each give the right error. Import marks onboarding completed. One transaction (a failure leaves data unchanged).
+- **Acceptance:**
+  - [x] export → import round-trip on a fakeDb restores equal data (apart from IDs, `fileUri` → null, and resume relinking by label). The key is never present (assert on the JSON string). Wrong format, newer version, and unreadable each give the right error. Import marks onboarding completed. One transaction (a failure leaves data unchanged).
 - **Verify:** `npm run verify && npx jest src/services src/app`
 
 ### T-043 About screen

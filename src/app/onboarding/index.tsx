@@ -1,10 +1,16 @@
+import { useState } from 'react';
 import { router } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
 import { Globe, ListChecks, Sparkles } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '../../components/ui/Button';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { useSnackbar } from '../../components/ui/Snackbar';
 import { TestIds } from '../../constants/testIds';
+import { useOnboardingStatus } from '../../features/onboarding/useOnboardingStatus';
+import { importBackup, type ImportError } from '../../services/backup';
 import { useTheme } from '../../theme/ThemeProvider';
 import { fontScaleCaps, iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
 
@@ -13,6 +19,13 @@ const BULLETS = [
   { icon: Sparkles, text: 'Check fit, red flags and fill forms with your own AI key' },
   { icon: ListChecks, text: 'Track every application on this device' },
 ] as const;
+
+const IMPORT_ERROR_MESSAGES: Record<Exclude<ImportError, 'CANCELLED'>, string> = {
+  UNREADABLE: 'This file could not be read.',
+  WRONG_FORMAT: 'This is not a Jobify backup.',
+  NEWER_VERSION: 'This backup is from a newer Jobify. Update the app first.',
+  DB_ERROR: 'Import failed. Your data was not changed.',
+};
 
 /**
  * Welcome ("/onboarding"). UI_DIRECTIVES.md §4.2.
@@ -24,6 +37,31 @@ const BULLETS = [
  */
 export default function OnboardingWelcomeScreen() {
   const { colors } = useTheme();
+  const db = useSQLiteContext();
+  const { markCompleted } = useOnboardingStatus();
+  const snackbar = useSnackbar();
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+
+  async function handleConfirmRestore() {
+    setConfirmOpen(false);
+    if (restoring) return;
+    setRestoring(true);
+    try {
+      const outcome = await importBackup(db);
+      if (!outcome.ok) {
+        if (outcome.error !== 'CANCELLED') {
+          snackbar.show(IMPORT_ERROR_MESSAGES[outcome.error]);
+        }
+        return;
+      }
+      await markCompleted();
+      router.replace('/');
+    } finally {
+      setRestoring(false);
+    }
+  }
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.screen, { backgroundColor: colors.background }]} testID={TestIds.onboarding.welcome}>
@@ -62,23 +100,31 @@ export default function OnboardingWelcomeScreen() {
           <Button
             label="Restore from backup"
             variant="ghost"
-            disabled
             testID={TestIds.onboarding.restoreBackup}
             accessibilityLabel="Restore from backup"
-            accessibilityHint="Available after setup"
-            onPress={() => {}}
+            loading={restoring}
+            disabled={restoring}
+            onPress={() => setConfirmOpen(true)}
           />
-          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.caption, { color: colors.textSecondary }]}>
-            Available after setup
-          </Text>
         </View>
         <Button
           label="Get started"
           testID={TestIds.onboarding.start}
           accessibilityLabel="Get started"
+          disabled={restoring}
           onPress={() => router.push('/onboarding/ai')}
         />
       </View>
+
+      <ConfirmDialog
+        visible={confirmOpen}
+        title="Restore from backup"
+        message="This replaces all profile, resumes, boards, answers and applications on this device with the backup file."
+        confirmLabel="Replace and restore"
+        destructive
+        onConfirm={handleConfirmRestore}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </SafeAreaView>
   );
 }
