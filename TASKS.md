@@ -224,7 +224,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `parseBridgeMessage`.
 - **Files:** `src/bridge/messages.ts` (function only), `src/bridge/__tests__/messages.test.ts`.
 - **Depends on:** T-001.
-- **Acceptance:** doc-comment rules. Valid example per type → ok. `"{"` → INVALID_JSON. Unknown type → UNKNOWN_TYPE. Wrong field types → INVALID_SHAPE. 20 000 chars → 12 000, 100 inputs → 80. Never throws on `null`, `1`, or `[]`.
+- **Acceptance:**
+  - [x] doc-comment rules. Valid example per type → ok. `"{"` → INVALID_JSON. Unknown type → UNKNOWN_TYPE. Wrong field types → INVALID_SHAPE. 20 000 chars → 12 000, 100 inputs → 80. Never throws on `null`, `1`, or `[]`.
 - **Verify:** `npm run verify && npx jest src/bridge`
 
 ### T-022 Scraper script
