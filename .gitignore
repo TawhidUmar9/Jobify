@@ -1,0 +1,66 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# Jobify
+.env
+coverage/
+e2e/artifacts/
+
+# Build outputs and crash artifacts
+*.apk
+*.aab
+*.hprof
+hs_err_pid*.log
+replay_pid*.log
+core
+core.[0-9]*
+.gradle/
+/build/
+
+# IDE / local tool state
+.idea/
+.vscode/
+*.iml
+.claude/settings.local.json
+
+# Original personal plan (contains private contact details); PRODUCT_SPEC.md is the public spec
+jobify_mobile_implementation_plan.md

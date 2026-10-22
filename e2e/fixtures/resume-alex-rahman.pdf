@@ -1,0 +1,49 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 872 >>
+stream
+BT
+/F1 11 Tf
+1 0 0 1 60 760 Tm (Alex Rahman) Tj
+1 0 0 1 60 744 Tm (alex.rahman@example.com | +880 1700 000000 | Dhaka, Bangladesh) Tj
+1 0 0 1 60 728 Tm (https://alex.example.com | https://github.com/alex-example) Tj
+1 0 0 1 60 712 Tm () Tj
+1 0 0 1 60 696 Tm (Backend engineer who builds Node.js and Python services and owns CI/CD.) Tj
+1 0 0 1 60 680 Tm () Tj
+1 0 0 1 60 664 Tm (Experience) Tj
+1 0 0 1 60 648 Tm (Backend Engineer, Example Labs \(Jan 2023 - Present\)) Tj
+1 0 0 1 60 632 Tm (- Built CI pipelines for 6 services) Tj
+1 0 0 1 60 616 Tm (- Cut deploy time from 20 to 6 minutes) Tj
+1 0 0 1 60 600 Tm (- Shipped a survey product used by 200+ people) Tj
+1 0 0 1 60 584 Tm () Tj
+1 0 0 1 60 568 Tm (Skills: Node.js, Python, PostgreSQL, Docker, k3s, GitHub Actions) Tj
+1 0 0 1 60 552 Tm (Education: B.Sc. in CSE, Example University, 2022) Tj
+1 0 0 1 60 536 Tm () Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001164 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1234
+%%EOF

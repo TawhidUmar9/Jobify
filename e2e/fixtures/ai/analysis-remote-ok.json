@@ -1,0 +1,25 @@
+{
+  "companyName": "Acme Cloud",
+  "roleTitle": "Senior Backend Engineer",
+  "eligibility": "ELIGIBLE",
+  "eligibilityReason": "The post says the role is fully remote and open to candidates anywhere in Asia-Pacific, including Bangladesh.",
+  "redFlags": [
+    { "code": "NO_SALARY_INFO", "detail": "The post does not list a salary range." },
+    { "code": "NOT_A_REAL_CODE", "detail": "Unknown codes must become OTHER." },
+    { "code": "OTHER", "detail": "" }
+  ],
+  "matchScore": 92,
+  "recommendedResumeId": 1,
+  "resumeReason": "The role centres on Node.js, Python, PostgreSQL, Docker, k3s and GitHub Actions, which the Backend resume covers.",
+  "matchedSkills": ["Node.js", "Python", "PostgreSQL", "Docker", "k3s", "GitHub Actions"],
+  "missingSkills": ["Kubernetes operators"],
+  "fieldMappings": [
+    { "clawId": "jobify-field-0", "fieldLabel": "Full name", "value": "Alex Rahman", "source": "PROFILE" },
+    { "clawId": "jobify-field-1", "fieldLabel": "Email", "value": "alex.rahman@example.com", "source": "PROFILE" },
+    { "clawId": "jobify-field-2", "fieldLabel": "Portfolio URL", "value": "https://alex.example.com", "source": "PROFILE" },
+    { "clawId": "jobify-field-3", "fieldLabel": "Why Acme Cloud?", "value": "I want to own backend and platform work end to end, as I did on my last two projects.", "source": "GENERATED" },
+    { "clawId": "jobify-field-4", "fieldLabel": "Years of experience", "value": "3-5", "source": "WRONG_SOURCE" },
+    { "clawId": "jobify-field-99", "fieldLabel": "Does not exist", "value": "must be dropped", "source": "PROFILE" },
+    { "clawId": "jobify-field-0", "fieldLabel": "Duplicate", "value": "must be dropped as a duplicate", "source": "PROFILE" }
+  ]
+}

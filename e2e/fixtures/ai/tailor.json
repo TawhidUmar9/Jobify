@@ -1,0 +1,17 @@
+{
+  "emphasize": [
+    "Owning CI/CD in GitHub Actions end to end",
+    "Running services on k3s with signed images",
+    "Shipping a product used by 200+ people"
+  ],
+  "bulletRewrites": [
+    {
+      "original": "Built CI pipelines for 6 services",
+      "suggested": "Owned GitHub Actions CI/CD for 6 Node.js and Python services",
+      "reason": "Uses the job's wording for the same fact."
+    },
+    { "original": "", "suggested": "Dropped: empty original", "reason": "" }
+  ],
+  "coverNote": "Hi Acme Cloud team, I'm Alex, a backend engineer in Dhaka. I've owned CI/CD and k3s deployments for six services and would like to bring that to your platform team.",
+  "coldDm": "Hi, I just applied for the Senior Backend Engineer role at Acme Cloud. I run Node.js and Python services on k3s with GitHub Actions. Could we talk for 15 minutes this week?"
+}

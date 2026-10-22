@@ -1,0 +1,14 @@
+Alex Rahman
+alex.rahman@example.com | +880 1700 000000 | Dhaka, Bangladesh
+https://alex.example.com | https://github.com/alex-example
+
+Backend engineer who builds Node.js and Python services and owns CI/CD.
+
+Experience
+Backend Engineer, Example Labs (Jan 2023 – Present)
+- Built CI pipelines for 6 services
+- Cut deploy time from 20 to 6 minutes
+- Shipped a survey product used by 200+ people
+
+Skills: Node.js, Python, PostgreSQL, Docker, k3s, GitHub Actions
+Education: B.Sc. in CSE, Example University, 2022

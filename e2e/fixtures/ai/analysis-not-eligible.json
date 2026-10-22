@@ -1,0 +1,13 @@
+{
+  "companyName": "Lion City Payments",
+  "roleTitle": "Full-Stack Developer",
+  "eligibility": "NOT_ELIGIBLE",
+  "eligibilityReason": "The post requires Singapore citizens or permanent residents.",
+  "redFlags": [{ "code": "LOCATION_OR_AUTHORIZATION", "detail": "Singapore citizens or PRs only." }],
+  "matchScore": 140,
+  "recommendedResumeId": 999,
+  "resumeReason": "The stack is React, Next.js and TypeScript.",
+  "matchedSkills": ["React", "react", "Next.js", "  ", "TypeScript"],
+  "missingSkills": [],
+  "fieldMappings": []
+}

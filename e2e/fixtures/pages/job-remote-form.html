@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Senior Backend Engineer - Acme Cloud</title>
+<style>
+  body { font-family: sans-serif; padding: 16px; }
+  label { display: block; margin-top: 12px; }
+  input, textarea, select { width: 100%; font-size: 16px; padding: 8px; }
+</style>
+</head>
+<body>
+<h1>Senior Backend Engineer</h1>
+<p>Acme Cloud is hiring a Senior Backend Engineer. This role is fully remote and open to candidates
+anywhere in Asia-Pacific, including Bangladesh. We work async with a few hours of overlap with
+Singapore time. You will build Node.js and Python services on PostgreSQL, ship with Docker and
+Kubernetes (k3s), and own CI/CD in GitHub Actions. Experience with supply-chain security (SBOM,
+Cosign, Trivy) is a strong plus. No visa sponsorship is needed because the role is remote.</p>
+
+<form id="apply" onsubmit="return false">
+  <label for="full_name">Full name</label>
+  <input id="full_name" name="full_name" type="text" data-controlled="name">
+
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" data-controlled="email">
+
+  <input name="portfolio" type="url" aria-label="Portfolio URL" placeholder="https://" data-controlled="portfolio">
+
+  <label>Why Acme Cloud?
+    <textarea name="why" rows="4" data-controlled="why"></textarea>
+  </label>
+
+  <label for="years">Years of experience</label>
+  <select id="years" name="years" data-controlled="years">
+    <option value="">Choose…</option>
+    <option value="0-2">0–2 years</option>
+    <option value="3-5">3–5 years</option>
+    <option value="6+">6+ years</option>
+  </select>
+
+  <!-- Must be excluded by the scraper -->
+  <input type="password" name="password" aria-label="Password">
+  <input type="hidden" name="csrf" value="x">
+  <input type="checkbox" name="terms" aria-label="Accept terms">
+  <input type="file" name="resume" aria-label="Resume">
+  <input type="text" name="honeypot" style="display:none">
+  <input type="text" name="disabled_field" disabled aria-label="Disabled">
+</form>
+
+<!-- Controlled-input echo: only updates when an 'input' or 'change' event fires,
+     like React state. Assertions read #state. -->
+<p id="state">state:</p>
+<script>
+  var state = {};
+  function render() {
+    var parts = Object.keys(state).sort().map(function (k) { return k + '=' + state[k]; });
+    document.getElementById('state').textContent = 'state: ' + parts.join(' | ');
+  }
+  document.querySelectorAll('[data-controlled]').forEach(function (el) {
+    var onEvent = function () { state[el.getAttribute('data-controlled')] = el.value; render(); };
+    el.addEventListener('input', onEvent);
+    el.addEventListener('change', onEvent);
+  });
+</script>
+</body>
+</html>

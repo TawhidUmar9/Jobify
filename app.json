@@ -1,0 +1,73 @@
+{
+  "expo": {
+    "name": "Jobify",
+    "slug": "jobify",
+    "scheme": "jobify",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "io.github.tawhidumar9.jobify",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Jobify lets job sites you open ask for a photo when you upload a document. The camera is only used if you choose Take Photo.",
+        "NSPhotoLibraryUsageDescription": "Jobify lets job sites you open ask for an image when you upload a document. Photos are only read if you pick one.",
+        "NSMicrophoneUsageDescription": "Jobify only uses the microphone if a job site asks you to record a video and you choose to record one."
+      }
+    },
+    "android": {
+      "package": "io.github.tawhidumar9.jobify",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "blockedPermissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-sharing",
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#F6F8F8",
+          "dark": {
+            "backgroundColor": "#0B1312"
+          }
+        }
+      ],
+      "expo-secure-store",
+      "expo-localization",
+      [
+        "expo-share-intent",
+        {
+          "androidIntentFilters": [
+            "text/*"
+          ],
+          "disableIOS": true
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "repositoryUrl": "https://github.com/TawhidUmar9/jobify"
+    }
+  }
+}

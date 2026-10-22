@@ -1,0 +1,25 @@
+{
+  "fullName": "Alex Rahman",
+  "email": "alex.rahman@example.com",
+  "phone": "+880 1700 000000",
+  "location": "Dhaka, Bangladesh",
+  "headline": "Backend engineer, 3 years",
+  "summary": "Backend engineer who builds Node.js and Python services and owns CI/CD.",
+  "links": [
+    { "label": "Portfolio", "url": "https://alex.example.com" },
+    { "label": "GitHub", "url": "https://github.com/alex-example" },
+    { "label": "Bad", "url": "javascript:alert(1)" }
+  ],
+  "skills": ["Node.js", "Python", "PostgreSQL", "Docker", "k3s", "GitHub Actions"],
+  "experience": [
+    {
+      "title": "Backend Engineer",
+      "company": "Example Labs",
+      "start": "Jan 2023",
+      "end": "Present",
+      "bullets": ["Built CI pipelines for 6 services", "Cut deploy time from 20 to 6 minutes"]
+    }
+  ],
+  "education": [{ "school": "Example University", "degree": "B.Sc. in CSE", "year": "2022" }],
+  "highlights": ["Built CI pipelines for 6 services", "Cut deploy time from 20 to 6 minutes", "Shipped a survey product used by 200+ people"]
+}
