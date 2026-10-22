@@ -98,7 +98,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `answersRepo.ts` except `incrementAnswerUse`.
 - **Files:** `src/db/repositories/answersRepo.ts`, test.
 - **Depends on:** T-004.
-- **Acceptance:** upsert matches the question case-insensitively after collapsing whitespace ("What is your  notice period?" updates "what is your notice period?"). Length limits → EMPTY/TOO_LONG. Ordering `use_count DESC, updated_at DESC`.
+- **Acceptance:**
+  - [x] upsert matches the question case-insensitively after collapsing whitespace ("What is your  notice period?" updates "what is your notice period?"). Length limits → EMPTY/TOO_LONG. Ordering `use_count DESC, updated_at DESC`.
 - **Verify:** `npm run verify && npx jest src/db`
 
 ### T-010 Applications repository
