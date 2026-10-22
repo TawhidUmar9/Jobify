@@ -188,8 +188,11 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `useAiSettings`, `AiSettingsForm`, `/onboarding/ai`.
 - **Files:** `src/features/settings/useAiSettings.ts`, `src/components/forms/AiSettingsForm.tsx`, `src/app/onboarding/ai.tsx`, tests.
 - **Depends on:** T-003, T-016, T-017.
-- **Acceptance:** provider switch resets model/baseUrl and keeps the key. Test connection shows "Connected" or the exact error copy. Continue saves (the test is not required). Skip saves nothing. Field errors per the hook doc. The key field is secure with a show/hide toggle.
-- **Manual (mock):** OpenAI-compatible, base `http://10.0.2.2:8787/v1`, model `mock`, key `k` → Test → "Connected".
+- **Acceptance:**
+  - [x] provider switch resets model/baseUrl and keeps the key. Test connection shows "Connected" or the exact error copy.
+  - [x] Continue saves (the test is not required). Skip saves nothing. Field errors per the hook doc. The key field is secure with a show/hide toggle.
+- **Manual (mock):**
+  - [ ] OpenAI-compatible, base `http://10.0.2.2:8787/v1`, model `mock`, key `k` → Test → "Connected". MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/features/settings src/components/forms`
 
 ### T-019 Profile step and resume import
