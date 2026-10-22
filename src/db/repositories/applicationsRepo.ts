@@ -199,10 +199,13 @@ export async function attachTailorText(
   jobUrl: string,
   text: { coverNote: string; coldDm: string },
 ): Promise<void> {
-  // TODO(T-034): implement (empty strings stored as NULL).
-  void db;
-  void jobUrl;
-  void text;
+  const coverNote = text.coverNote.trim() === "" ? null : text.coverNote;
+  const coldDm = text.coldDm.trim() === "" ? null : text.coldDm;
+  await db.runAsync("UPDATE applications SET cover_note = ?, cold_dm = ? WHERE job_url = ?", [
+    coverNote,
+    coldDm,
+    jobUrl,
+  ]);
 }
 
 export async function deleteApplication(db: SQLiteDatabase, id: number): Promise<void> {

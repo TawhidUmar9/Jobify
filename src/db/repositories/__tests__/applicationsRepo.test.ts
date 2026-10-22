@@ -2,7 +2,7 @@ import { createFakeDb } from '../../../../tests/helpers/fakeDb';
 import { logger } from '../../../lib/logger';
 import type { NewApplication } from '../../../types/domain';
 import type { ApplicationRow } from '../../schema';
-import { insertApplication, listApplications, listFollowUpsDue } from '../applicationsRepo';
+import { attachTailorText, insertApplication, listApplications, listFollowUpsDue } from '../applicationsRepo';
 
 function draft(partial: Partial<NewApplication> = {}): NewApplication {
   return {
@@ -126,5 +126,15 @@ describe('applicationsRepo', () => {
     expect(fake.calls[0]?.sql).toContain('ORDER BY follow_up_at ASC');
     expect(fake.calls[0]?.params).toEqual(['2026-10-22 15:04:05']);
     expect(due).toHaveLength(1);
+  });
+
+  it("attaches tailor text to an application, storing empty strings as NULL", async () => {
+    const fake = createFakeDb();
+    await attachTailorText(fake.db, "https://example.com/jobs/1", {
+      coverNote: "  My cover note.  ",
+      coldDm: "   ",
+    });
+    expect(fake.calls[0]?.sql).toBe("UPDATE applications SET cover_note = ?, cold_dm = ? WHERE job_url = ?");
+    expect(fake.calls[0]?.params).toEqual(["  My cover note.  ", null, "https://example.com/jobs/1"]);
   });
 });

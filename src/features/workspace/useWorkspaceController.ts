@@ -1,3 +1,4 @@
+import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -9,10 +10,10 @@ import { SCRAPE_PAGE_JS } from '../../bridge/scrapePageScript';
 import type { WebViewHandle } from '../../components/workspace/PortalWebView';
 import { useSnackbar } from '../../components/ui/Snackbar';
 import { incrementAnswerUse, listAnswers, upsertAnswer } from '../../db/repositories/answersRepo';
-import { insertApplication } from '../../db/repositories/applicationsRepo';
+import { attachTailorText, insertApplication } from '../../db/repositories/applicationsRepo';
 import { getPreferences, getProfile } from '../../db/repositories/profileRepo';
 import { listResumes } from '../../db/repositories/resumesRepo';
-import { analyzeJob, createProvider } from '../../services/ai/aiClient';
+import { analyzeJob, createProvider, tailorApplication } from '../../services/ai/aiClient';
 import { loadAiConfig } from '../../services/ai/config';
 import type { AiProvider } from '../../services/ai/types';
 import { getApiKey } from '../../services/secrets';
@@ -87,7 +88,7 @@ export interface WorkspaceController {
  * - contextKey change: abort, clear timers, CONTEXT_CHANGED. Unmount: abort and clear timers.
  */
 export function useWorkspaceController(params: WorkspaceControllerParams): WorkspaceController {
-  // TODO(T-034): tailor + copyText. TODO(T-036): stage.
+  // TODO(T-036): stage.
   const db = useSQLiteContext();
   const { show } = useSnackbar();
   const [state, dispatch] = useReducer(workspaceReducer, initialWorkspaceState);
@@ -306,6 +307,45 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     }, BRIDGE_TIMEOUT_MS);
   }, [params.currentUrl, show]);
 
+  const tailor = useCallback(async () => {
+    const current = stateRef.current;
+    if (current.phase !== 'ready' && current.phase !== 'filling') return;
+    if (current.tailor.status === 'loading') return;
+    if (current.session === null) return;
+    const session = current.session;
+    dispatch({ type: 'TAILOR_REQUESTED' });
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const profile = await getProfile(db);
+    if (controller.signal.aborted) return;
+    if (profile === null) {
+      dispatch({ type: 'TAILOR_FAILED', code: 'BAD_REQUEST' });
+      return;
+    }
+    const result = await tailorApplication(
+      providerRef.current,
+      {
+        profile,
+        resume: recommendedResume,
+        analysis: session.analysis,
+        pageText: session.pageText,
+      },
+      controller.signal,
+    );
+    if (controller.signal.aborted) return;
+    if (!result.ok) {
+      dispatch({ type: 'TAILOR_FAILED', code: result.error.code });
+      return;
+    }
+    dispatch({ type: 'TAILOR_SUCCEEDED', result: result.value });
+    if (stateRef.current.loggedApplicationId !== null) {
+      await attachTailorText(db, session.sourceUrl, {
+        coverNote: result.value.coverNote,
+        coldDm: result.value.coldDm,
+      });
+    }
+  }, [db, recommendedResume]);
+
   const saveAnswer = useCallback(
     async (mapping: FieldMapping) => {
       const result = await upsertAnswer(db, {
@@ -353,6 +393,14 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [db, logging, recommendedResume, show]);
 
+  const copyText = useCallback(
+    async (text: string) => {
+      await Clipboard.setStringAsync(text);
+      show('Copied');
+    },
+    [show],
+  );
+
   const closeSheet = useCallback(() => {
     stopInFlight();
     dispatch({ type: 'SHEET_CLOSED' });
@@ -375,11 +423,11 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     onAnalyzePress,
     reanalyze,
     autoFill,
-    tailor: noop,
+    tailor,
     saveAnswer,
     logApplication,
     stageRecommendedResume: asyncNoop,
-    copyText: asyncNoop,
+    copyText,
     closeSheet,
   };
 }

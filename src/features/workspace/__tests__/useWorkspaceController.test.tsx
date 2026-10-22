@@ -5,11 +5,12 @@ import { SCRAPE_PAGE_JS } from '../../../bridge/scrapePageScript';
 import type { WebViewHandle } from '../../../components/workspace/PortalWebView';
 import { createFakeDb } from '../../../../tests/helpers/fakeDb';
 import { incrementAnswerUse, listAnswers, upsertAnswer } from '../../../db/repositories/answersRepo';
-import { insertApplication } from '../../../db/repositories/applicationsRepo';
-import { analyzeJob, createProvider } from '../../../services/ai/aiClient';
+import * as Clipboard from 'expo-clipboard';
+import { attachTailorText, insertApplication } from '../../../db/repositories/applicationsRepo';
+import { analyzeJob, createProvider, tailorApplication } from '../../../services/ai/aiClient';
 import { clearAiConfig, saveAiConfig } from '../../../services/ai/config';
 import { setApiKey } from '../../../services/secrets';
-import type { JobAnalysis, JobBoard } from '../../../types/domain';
+import type { JobAnalysis, JobBoard, TailorResult } from '../../../types/domain';
 import { useWorkspaceController } from '../useWorkspaceController';
 import { BRIDGE_TIMEOUT_MS } from '../workspaceReducer';
 
@@ -40,6 +41,7 @@ jest.mock('../../../components/ui/Snackbar', () => ({
 
 jest.mock('../../../db/repositories/applicationsRepo', () => ({
   insertApplication: jest.fn(),
+  attachTailorText: jest.fn(),
 }));
 
 jest.mock('../../../db/repositories/answersRepo', () => ({
@@ -51,11 +53,14 @@ jest.mock('../../../db/repositories/answersRepo', () => ({
 jest.mock('../../../services/ai/aiClient', () => ({
   createProvider: jest.fn(),
   analyzeJob: jest.fn(),
+  tailorApplication: jest.fn(),
 }));
 
 const createProviderMock = createProvider as jest.Mock;
 const analyzeJobMock = analyzeJob as jest.Mock;
 const insertApplicationMock = insertApplication as jest.Mock;
+const attachTailorTextMock = attachTailorText as jest.Mock;
+const tailorApplicationMock = tailorApplication as jest.Mock;
 const listAnswersMock = listAnswers as jest.Mock;
 const upsertAnswerMock = upsertAnswer as jest.Mock;
 const incrementAnswerUseMock = incrementAnswerUse as jest.Mock;
@@ -445,5 +450,97 @@ describe('useWorkspaceController', () => {
       await result.current.saveAnswer(analysisWithMappings.fieldMappings[0]!);
     });
     expect(mockShow).toHaveBeenCalledWith('Could not save answer');
+  });
+  it('tailors application, stores text when already logged, and handles errors', async () => {
+    await saveAiConfig({ provider: 'gemini', model: 'gemini-3.8-flash', baseUrl: 'https://generativelanguage.googleapis.com' });
+    await setApiKey('test-key');
+    createProviderMock.mockReturnValue({ kind: 'gemini' });
+    analyzeJobMock.mockResolvedValue({ ok: true, value: analysisWithMappings });
+    mockDb.queue('getFirstAsync', { data_json: JSON.stringify({ fullName: 'Alex Rahman' }) });
+
+    const sampleTailor: TailorResult = {
+      emphasize: ['Docker experience'],
+      bulletRewrites: [{ original: 'Built APIs', suggested: 'Built Node APIs', reason: 'Match' }],
+      coverNote: 'My cover note',
+      coldDm: 'My cold dm',
+    };
+
+    const { result } = await mount();
+    result.current.webViewRef.current = handle();
+    await act(async () => {
+      result.current.onAnalyzePress();
+      result.current.onBridgeMessage(pageMessage(200));
+    });
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+
+    // First log the application
+    insertApplicationMock.mockResolvedValue({ ok: true, value: { id: 7 } });
+    await act(async () => {
+      await result.current.logApplication();
+    });
+    expect(result.current.state.loggedApplicationId).toBe(7);
+
+    // Now tailor
+    tailorApplicationMock.mockResolvedValueOnce({ ok: true, value: sampleTailor });
+    mockDb.queue('getFirstAsync', { data_json: JSON.stringify({ fullName: 'Alex Rahman' }) });
+    await act(async () => {
+      result.current.tailor();
+    });
+    await waitFor(() => expect(result.current.state.tailor.status).toBe('ready'));
+    expect(attachTailorTextMock).toHaveBeenCalledWith(mockDb.db, 'https://example.com/job', {
+      coverNote: 'My cover note',
+      coldDm: 'My cold dm',
+    });
+
+    // Error test
+    tailorApplicationMock.mockResolvedValueOnce({ ok: false, error: { code: 'RATE_LIMITED' } });
+    mockDb.queue('getFirstAsync', { data_json: JSON.stringify({ fullName: 'Alex Rahman' }) });
+    await act(async () => {
+      result.current.tailor();
+    });
+    await waitFor(() => expect(result.current.state.tailor).toEqual({ status: 'error', code: 'RATE_LIMITED' }));
+  });
+
+  it('aborts tailor and resets to idle when sheet is closed during loading', async () => {
+    await saveAiConfig({ provider: 'gemini', model: 'gemini-3.8-flash', baseUrl: 'https://generativelanguage.googleapis.com' });
+    await setApiKey('test-key');
+    createProviderMock.mockReturnValue({ kind: 'gemini' });
+    analyzeJobMock.mockResolvedValue({ ok: true, value: analysisWithMappings });
+    mockDb.queue('getFirstAsync', { data_json: JSON.stringify({ fullName: 'Alex Rahman' }) });
+
+    const captured: { signal: AbortSignal | null } = { signal: null };
+    tailorApplicationMock.mockImplementation((_p: unknown, _a: unknown, signal: AbortSignal) => {
+      captured.signal = signal;
+      return new Promise(() => {});
+    });
+
+    const { result } = await mount();
+    result.current.webViewRef.current = handle();
+    await act(async () => {
+      result.current.onAnalyzePress();
+      result.current.onBridgeMessage(pageMessage(200));
+    });
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+
+    mockDb.queue('getFirstAsync', { data_json: JSON.stringify({ fullName: 'Alex Rahman' }) });
+    await act(async () => {
+      result.current.tailor();
+    });
+    expect(result.current.state.tailor.status).toBe('loading');
+
+    await act(async () => {
+      result.current.closeSheet();
+    });
+    expect(result.current.state.tailor.status).toBe('idle');
+    expect(captured.signal?.aborted).toBe(true);
+  });
+
+  it('copies text to clipboard and shows snackbar', async () => {
+    const { result } = await mount();
+    await act(async () => {
+      await result.current.copyText('Hello world');
+    });
+    expect(Clipboard.setStringAsync).toHaveBeenCalledWith('Hello world');
+    expect(mockShow).toHaveBeenCalledWith('Copied');
   });
 });

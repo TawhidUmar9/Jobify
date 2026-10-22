@@ -470,7 +470,8 @@ true;
 - **Goal:** `tailor`, `copyText`, TailorCard, `attachTailorText`.
 - **Files:** `useWorkspaceController.ts`, `TailorCard.tsx`, `CopilotSheet.tsx`, `applicationsRepo.ts` (`attachTailorText`), tests.
 - **Depends on:** T-033.
-- **Acceptance:** idle/loading/error/ready UI. Copy → clipboard + "Copied". Tailoring after logging stores the cover note and DM. Closing the sheet during loading resets to idle (no late result).
+- **Acceptance:**
+  - [x] idle/loading/error/ready UI. Copy → clipboard + "Copied". Tailoring after logging stores the cover note and DM. Closing the sheet during loading resets to idle (no late result).
 - **Verify:** `npm run verify && npx jest src/features/workspace src/components/copilot src/db`
 
 ### T-035 Resume staging service
