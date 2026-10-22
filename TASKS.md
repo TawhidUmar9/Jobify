@@ -114,7 +114,8 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `getInsights`.
 - **Files:** `src/db/repositories/insightsRepo.ts`, test.
 - **Depends on:** T-010.
-- **Acceptance:** SQL aggregates only. byResume/byBoard exclude SAVED, '' → "No resume", max 10, sorted. 8 zero-filled Monday-start UTC weeks, oldest first (test with a fixed `now`). Response/interview definitions per `domain.ts`.
+- **Acceptance:**
+  - [x] SQL aggregates only. byResume/byBoard exclude SAVED, '' → "No resume", max 10, sorted. 8 zero-filled Monday-start UTC weeks, oldest first (test with a fixed `now`). Response/interview definitions per `domain.ts`.
 - **Verify:** `npm run verify && npx jest src/db`
 
 ---
