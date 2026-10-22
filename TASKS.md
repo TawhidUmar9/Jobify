@@ -199,8 +199,11 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `useProfileData` (load + saveProfile), `useResumeImport`, `resumeFiles.ts` (except delete), `ProfileForm` + `validateProfile`, `/onboarding/profile`.
 - **Files:** `src/features/settings/useProfileData.ts`, `src/features/onboarding/useResumeImport.ts`, `src/services/resumeFiles.ts`, `src/components/forms/ProfileForm.tsx`, `src/app/onboarding/profile.tsx`, tests.
 - **Depends on:** T-006, T-007, T-016, T-018.
-- **Acceptance:** pick errors map to copy. Import PDF is hidden for openai_compatible or when AI is skipped. Paste text works with any configured provider. The merge never overwrites non-empty fields. Time zone and country default from expo-localization. Continue blocked with field errors.
-- **Manual (mock, Gemini base URL `http://10.0.2.2:8787`):** paste `e2e/fixtures/resume-alex-rahman.txt` → the form shows Alex Rahman. Import `resume-alex-rahman.pdf` (push it with `adb push e2e/fixtures/resume-alex-rahman.pdf /sdcard/Download/`) → the resume is stored with a file.
+- **Acceptance:**
+  - [x] pick errors map to copy. Import PDF is hidden for openai_compatible or when AI is skipped. Paste text works with any configured provider.
+  - [x] The merge never overwrites non-empty fields. Time zone and country default from expo-localization. Continue blocked with field errors.
+- **Manual (mock, Gemini base URL `http://10.0.2.2:8787`):**
+  - [ ] paste `e2e/fixtures/resume-alex-rahman.txt` → the form shows Alex Rahman. Import `resume-alex-rahman.pdf` (push it with `adb push e2e/fixtures/resume-alex-rahman.pdf /sdcard/Download/`) → the resume is stored with a file. MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/features src/services src/components/forms`
 
 ### T-020 Preferences step and finish
