@@ -210,8 +210,10 @@ Milestones: **M0** baseline · **M1** data layer · **M2** AI layer · **M3** on
 - **Goal:** `PreferencesForm`, `savePreferences`, `/onboarding/preferences`.
 - **Files:** `src/components/forms/PreferencesForm.tsx`, `src/features/settings/useProfileData.ts` (savePreferences), `src/app/onboarding/preferences.tsx`, tests.
 - **Depends on:** T-019.
-- **Acceptance:** all fields per the doc. Countries normalize to upper-case 2 letters. Finish → `markCompleted` → tabs (Workspace).
-- **Manual:** a full onboarding run on a device lands in Workspace with the 8 board pills (after T-023; before T-023, the stub screen).
+- **Acceptance:**
+  - [x] all fields per the doc. Countries normalize to upper-case 2 letters. Finish → `markCompleted` → tabs (Workspace).
+- **Manual:**
+  - [ ] a full onboarding run on a device lands in Workspace with the 8 board pills (after T-023; before T-023, the stub screen). MANUAL PENDING (device)
 - **Verify:** `npm run verify && npx jest src/components/forms src/features`
 
 ---

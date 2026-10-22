@@ -50,4 +50,17 @@ describe('useProfileData', () => {
     });
     expect(saved).toBe(false);
   });
+
+  it('savePreferences writes the preferences row', async () => {
+    const { result } = await renderHook(() => useProfileData());
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    const next = { ...result.current.preferences, workAuthorizedCountries: ['BD'], openToSponsorship: true };
+    let saved = false;
+    await act(async () => {
+      saved = await result.current.savePreferences(next);
+    });
+    expect(saved).toBe(true);
+    expect(result.current.preferences.workAuthorizedCountries).toEqual(['BD']);
+    expect(mockDb.calls.some((call) => call.sql.includes('INSERT INTO preferences'))).toBe(true);
+  });
 });

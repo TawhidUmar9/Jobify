@@ -2,7 +2,12 @@ import { getCalendars, getLocales } from 'expo-localization';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
 
-import { getPreferences, getProfile, saveProfile as persistProfile } from '../../db/repositories/profileRepo';
+import {
+  getPreferences,
+  getProfile,
+  savePreferences as persistPreferences,
+  saveProfile as persistProfile,
+} from '../../db/repositories/profileRepo';
 import { DEFAULT_PREFERENCES, EMPTY_PROFILE, type CandidateProfile, type JobPreferences } from '../../types/domain';
 
 export interface ProfileDataState {
@@ -77,8 +82,18 @@ export function useProfileData(): ProfileDataState {
     [db],
   );
 
-  // TODO(T-020): savePreferences.
-  const savePreferences = useCallback(async () => false, []);
+  const savePreferences = useCallback(
+    async (next: JobPreferences) => {
+      try {
+        await persistPreferences(db, next);
+        setPreferences(next);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [db],
+  );
 
   return { status, profile, preferences, saveProfile, savePreferences };
 }
