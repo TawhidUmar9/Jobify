@@ -560,7 +560,8 @@ true;
 - **Goal:** `updateLastVisitedUrl`, `recordVisit`, and restoring `lastVisitedUrl`.
 - **Files:** `boardsRepo.ts`, `useBoards.ts`, `src/app/(tabs)/index.tsx`, tests.
 - **Depends on:** T-023.
-- **Acceptance:** debounced 1 write/s. Other hosts ignored. Shared links never overwrite a board's page.
+- **Acceptance:**
+  - [x] debounced 1 write/s. Other hosts ignored. Shared links never overwrite a board's page.
 - **Verify:** `npm run verify && npx jest src/features/workspace src/db`
 
 ### T-046 WebView resilience

@@ -40,7 +40,7 @@ export default function WorkspaceScreen() {
   const { colors } = useTheme();
   const boards = useBoards();
   const requestedUrl = typeof params.url === 'string' ? params.url : undefined;
-  const { openUrl } = boards;
+  const { openUrl, recordVisit } = boards;
   useEffect(() => {
     if (!isHttpUrl(requestedUrl)) return;
     openUrl(requestedUrl);
@@ -73,7 +73,16 @@ export default function WorkspaceScreen() {
     }, [state.sheetOpen, controller, nav.canGoBack]),
   );
 
-  // TODO(T-045): recordVisit.
+  const handleNavStateChange = useCallback(
+    (nextNav: WebNavState) => {
+      setNav(nextNav);
+      if (!nextNav.loading && nextNav.url) {
+        recordVisit(nextNav.url);
+      }
+    },
+    [recordVisit],
+  );
+
   const showEmpty = boards.boards.length === 0 && boards.targetUrl === '';
 
   return (
@@ -115,7 +124,7 @@ export default function WorkspaceScreen() {
             <PortalWebView
               webViewRef={controller.webViewRef}
               url={boards.targetUrl}
-              onNavStateChange={setNav}
+              onNavStateChange={handleNavStateChange}
               onLoadProgress={setProgress}
               onMessage={controller.onBridgeMessage}
             />

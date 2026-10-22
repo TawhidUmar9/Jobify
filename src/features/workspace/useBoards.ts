@@ -1,8 +1,8 @@
 import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { listBoards } from '../../db/repositories/boardsRepo';
+import { listBoards, updateLastVisitedUrl } from '../../db/repositories/boardsRepo';
 import { isHttpUrl } from '../../lib/url';
 import { KV_KEYS, kvGet, kvSet } from '../../services/kvStore';
 import type { JobBoard } from '../../types/domain';
@@ -52,6 +52,15 @@ export function useBoards(): BoardsState {
   const activeUrlRef = useRef<string>('');
   /** Set by openUrl so an in-flight or later reload does not replace a shared/typed link. */
   const customUrlRef = useRef<string | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -79,7 +88,7 @@ export function useBoards(): BoardsState {
       if (!next) {
         setTargetUrl('');
       } else if (previousId !== next.id || previousUrl !== next.url || previousId === null) {
-        setTargetUrl(next.url);
+        setTargetUrl(next.lastVisitedUrl ?? next.url);
         await kvSet(KV_KEYS.activeBoardId, String(next.id));
       }
       setStatus('ready');
@@ -115,10 +124,43 @@ export function useBoards(): BoardsState {
     setContextKey((current) => current + 1);
   }, []);
 
-  // TODO(T-045): recordVisit + restore.
-  const recordVisit = useCallback((_url: string) => {
-    void _url;
-  }, []);
+  const recordVisit = useCallback(
+    (url: string) => {
+      if (!isHttpUrl(url)) return;
+      if (!activeBoard || customUrlRef.current !== null) return;
+
+      let visitHost = '';
+      let boardHost = '';
+      try {
+        visitHost = new URL(url).hostname.toLowerCase();
+        boardHost = new URL(activeBoard.url).hostname.toLowerCase();
+      } catch {
+        return;
+      }
+      if (visitHost !== boardHost) return;
+
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+
+      const boardId = activeBoard.id;
+      debounceTimer.current = setTimeout(async () => {
+        debounceTimer.current = null;
+        try {
+          await updateLastVisitedUrl(db, boardId, url);
+          setBoards((current) =>
+            current.map((b) => (b.id === boardId ? { ...b, lastVisitedUrl: url } : b)),
+          );
+          setActiveBoard((current) =>
+            current && current.id === boardId ? { ...current, lastVisitedUrl: url } : current,
+          );
+        } catch {
+          // ignore
+        }
+      }, 1000);
+    },
+    [activeBoard, db],
+  );
 
   return {
     status,

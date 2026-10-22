@@ -1,6 +1,6 @@
 import { createFakeDb } from '../../../../tests/helpers/fakeDb';
 import type { JobBoardRow } from '../../schema';
-import { addBoard, deleteBoard, reorderBoards, updateBoard } from '../boardsRepo';
+import { addBoard, deleteBoard, reorderBoards, updateBoard, updateLastVisitedUrl } from '../boardsRepo';
 
 function board(partial: Partial<JobBoardRow> & Pick<JobBoardRow, 'id'>): JobBoardRow {
   return {
@@ -88,5 +88,13 @@ describe('boardsRepo', () => {
     incomplete.queue('getAllAsync', [{ id: 1 }, { id: 2 }]);
     await reorderBoards(incomplete.db, [1]);
     expect(incomplete.calls.some((call) => call.method === 'runAsync')).toBe(false);
+  });
+
+  it('updates last_visited_url directly', async () => {
+    const fake = createFakeDb();
+    await updateLastVisitedUrl(fake.db, 5, 'https://example.com/page');
+    expect(fake.calls).toHaveLength(1);
+    expect(fake.calls[0].sql).toContain('UPDATE job_boards SET last_visited_url = ? WHERE id = ?');
+    expect(fake.calls[0].params).toEqual(['https://example.com/page', 5]);
   });
 });

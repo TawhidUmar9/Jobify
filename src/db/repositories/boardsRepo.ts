@@ -160,8 +160,5 @@ export async function reorderBoards(db: SQLiteDatabase, orderedIds: readonly num
 
 /** Sets last_visited_url. Resolves even if the id does not exist. */
 export async function updateLastVisitedUrl(db: SQLiteDatabase, id: number, url: string): Promise<void> {
-  // TODO(T-045): implement.
-  void db;
-  void id;
-  void url;
+  await db.runAsync('UPDATE job_boards SET last_visited_url = ? WHERE id = ?', [url, id]);
 }

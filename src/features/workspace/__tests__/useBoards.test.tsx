@@ -75,6 +75,7 @@ describe('useBoards', () => {
       expect(second.result.current.status).toBe('ready');
       expect(second.result.current.activeBoard?.id).toBe(4);
     });
+    expect(second.result.current.targetUrl).toBe('https://wellfound.example/jobs');
     await act(async () => {
       second.unmount();
     });
@@ -130,5 +131,56 @@ describe('useBoards', () => {
     mockDb.fail('getAllAsync');
     const { result } = await renderHook(() => useBoards());
     await waitFor(() => expect(result.current.status).toBe('error'));
+  });
+
+  it('debounces recordVisit 1000ms and updates last_visited_url', async () => {
+    jest.useFakeTimers();
+    mockDb.queue('getAllAsync', [row(wellfound)]);
+    const { result, unmount } = await renderHook(() => useBoards());
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    expect(result.current.activeBoard?.id).toBe(4);
+
+    await act(async () => {
+      result.current.recordVisit('javascript:alert(1)');
+      jest.advanceTimersByTime(1500);
+    });
+    expect(mockDb.calls.some((c) => c.sql.includes('UPDATE job_boards SET last_visited_url'))).toBe(false);
+
+    await act(async () => {
+      result.current.recordVisit('https://different.example/page');
+      jest.advanceTimersByTime(1500);
+    });
+    expect(mockDb.calls.some((c) => c.sql.includes('UPDATE job_boards SET last_visited_url'))).toBe(false);
+
+    await act(async () => {
+      result.current.recordVisit('https://wellfound.example/jobs/1');
+      result.current.recordVisit('https://wellfound.example/jobs/2');
+      result.current.recordVisit('https://wellfound.example/jobs/3');
+      jest.advanceTimersByTime(500);
+    });
+    expect(mockDb.calls.some((c) => c.sql.includes('UPDATE job_boards SET last_visited_url'))).toBe(false);
+
+    await act(async () => {
+      jest.advanceTimersByTime(600);
+    });
+    const updateCall = mockDb.calls.find((c) => c.sql.includes('UPDATE job_boards SET last_visited_url'));
+    expect(updateCall).toBeTruthy();
+    expect(updateCall?.params).toEqual(['https://wellfound.example/jobs/3', 4]);
+
+    mockDb.calls.length = 0;
+    await act(async () => {
+      result.current.openUrl('https://wellfound.example/shared');
+    });
+    expect(result.current.activeBoard).toBeNull();
+    await act(async () => {
+      result.current.recordVisit('https://wellfound.example/shared/page');
+      jest.advanceTimersByTime(1500);
+    });
+    expect(mockDb.calls.some((c) => c.sql.includes('UPDATE job_boards SET last_visited_url'))).toBe(false);
+
+    await act(async () => {
+      unmount();
+    });
+    jest.useRealTimers();
   });
 });
