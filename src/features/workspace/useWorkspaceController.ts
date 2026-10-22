@@ -184,16 +184,7 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     stopInFlight();
     setRecommendedResume(null);
     dispatch({ type: 'ANALYZE_REQUESTED' });
-    stateRef.current = {
-      phase: 'scraping',
-      sheetOpen: true,
-      session: null,
-      error: null,
-      lastFill: null,
-      loggedApplicationId: null,
-      tailor: { status: 'idle' },
-      savedAnswerClawIds: [],
-    };
+    stateRef.current = workspaceReducer(stateRef.current, { type: 'ANALYZE_REQUESTED' });
     webViewRef.current?.injectJavaScript(SCRAPE_PAGE_JS);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     scrapeTimer.current = setTimeout(() => {

@@ -14,6 +14,10 @@ module.exports = {
       displayName: 'rn',
       preset: 'jest-expo',
       setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+      // lucide's react-native entry is .mjs, which the preset's transform does not match; use its CJS build.
+      moduleNameMapper: {
+        '^lucide-react-native$': '<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
+      },
       testPathIgnorePatterns: [...ignore, '\\.dom\\.test\\.ts$'],
       transformIgnorePatterns: [
         'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|react-native-svg|lucide-react-native|@gorhom/.*)',

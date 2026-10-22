@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react-native';
+import { BookmarkCheck, BookmarkPlus, FileDown, Zap } from 'lucide-react-native';
 import { useContext } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
@@ -21,22 +21,6 @@ export interface CopilotActionsProps {
 
 /** Below this width the row keeps labels and drops icons. */
 const ICON_MIN_WIDTH = 360;
-
-/**
- * Loaded on demand. A static import breaks the Jest harness: lucide ships ESM that this
- * project's transformIgnorePatterns does not compile, and tests/contracts renders this row.
- */
-function lucideIcon(name: string): LucideIcon | undefined {
-  try {
-    // Static import breaks the Jest harness: lucide ships untransformed ESM.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const icons = require('lucide-react-native') as Record<string, LucideIcon>;
-    const icon = icons[name];
-    return typeof icon === 'function' ? icon : undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 /**
  * Bottom action row inside the sheet footer. UI_DIRECTIVES.md §4.4 "Copilot actions".
@@ -62,7 +46,7 @@ export function CopilotActions(props: CopilotActionsProps) {
       <View style={styles.slot}>
         <Button
           label="Auto-fill"
-          icon={showIcons ? lucideIcon('Zap') : undefined}
+          icon={showIcons ? Zap : undefined}
           testID={TestIds.copilot.autoFill}
           onPress={props.onAutoFill}
           disabled={!props.canAutoFill}
@@ -74,7 +58,7 @@ export function CopilotActions(props: CopilotActionsProps) {
         <Button
           label="Stage CV"
           variant="secondary"
-          icon={showIcons ? lucideIcon('FileDown') : undefined}
+          icon={showIcons ? FileDown : undefined}
           testID={TestIds.copilot.stageResume}
           onPress={props.onStageResume}
           loading={props.staging}
@@ -85,7 +69,7 @@ export function CopilotActions(props: CopilotActionsProps) {
         <Button
           label={props.logged ? 'Logged' : 'Log'}
           variant="secondary"
-          icon={showIcons ? lucideIcon(props.logged ? 'BookmarkCheck' : 'BookmarkPlus') : undefined}
+          icon={showIcons ? (props.logged ? BookmarkCheck : BookmarkPlus) : undefined}
           testID={TestIds.copilot.logApplication}
           onPress={props.onLogApplication}
           disabled={props.logged}
