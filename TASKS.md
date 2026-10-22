@@ -504,7 +504,8 @@ true;
 - **Goal:** `useInsights`, StatTile, RateTable, WeeklyBars, `/insights`.
 - **Files:** `src/features/insights/useInsights.ts`, `src/components/insights/*.tsx`, `src/app/insights.tsx`, tests.
 - **Depends on:** T-011, T-031.
-- **Acceptance:** empty state at total 0. Percentages rounded. "Too few to compare" under 3. Weekly accessibility label lists all weeks. "–" when applied is 0.
+- **Acceptance:**
+  - [x] empty state at total 0. Percentages rounded. "Too few to compare" under 3. Weekly accessibility label lists all weeks. "–" when applied is 0.
 - **Verify:** `npm run verify && npx jest src/features/insights src/components/insights`
 
 ### T-039 Settings hub, AI, profile, preferences, resumes

@@ -1,4 +1,7 @@
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+
+import { useTheme } from '../../theme/ThemeProvider';
+import { radii, spacing, typography } from '../../theme/tokens';
 
 export interface StatTileProps {
   label: string;
@@ -11,11 +14,41 @@ export interface StatTileProps {
 
 /** Tile: surface, radius md, padding 16, value typography.score, label + caption textSecondary. Two per row. */
 export function StatTile(props: StatTileProps) {
-  // TODO(T-038): implement.
+  const { colors } = useTheme();
+  const accLabel = props.caption
+    ? `${props.label}: ${props.value}, ${props.caption}`
+    : `${props.label}: ${props.value}`;
+
   return (
-    <View testID={props.testID} accessible accessibilityLabel={`${props.label}: ${props.value}`}>
-      <Text>{props.value}</Text>
-      <Text>{props.label}</Text>
+    <View
+      testID={props.testID}
+      accessible
+      accessibilityLabel={accLabel}
+      style={[styles.tile, { backgroundColor: colors.surface }]}
+    >
+      <Text style={[styles.value, { color: colors.textPrimary }]}>{props.value}</Text>
+      <Text style={[styles.label, { color: colors.textSecondary }]}>{props.label}</Text>
+      {props.caption ? (
+        <Text style={[styles.caption, { color: colors.textSecondary }]}>{props.caption}</Text>
+      ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  tile: {
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: radii.md,
+    gap: spacing.xs,
+  },
+  value: {
+    ...typography.score,
+  },
+  label: {
+    ...typography.bodyStrong,
+  },
+  caption: {
+    ...typography.caption,
+  },
+});
