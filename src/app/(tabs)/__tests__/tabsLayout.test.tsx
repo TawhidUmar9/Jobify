@@ -1,5 +1,6 @@
 import { render, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import * as ReactNative from 'react-native';
 import { Text, type TextProps } from 'react-native';
 
 import { ThemeProvider } from '../../../theme/ThemeProvider';
@@ -27,7 +28,7 @@ jest.mock('expo-router', () => {
   };
 });
 
-describe('TabsLayout (T-046e E2)', () => {
+describe('TabsLayout (T-046e E2, T-046f G3)', () => {
   beforeEach(() => {
     capturedScreenOptions = {};
   });
@@ -60,5 +61,49 @@ describe('TabsLayout (T-046e E2)', () => {
     const settingsElement = renderLabel({ color: '#4A5A59', children: 'Settings' });
     expect(settingsElement.props.maxFontSizeMultiplier).toBe(fontScaleCaps.compact);
     expect(settingsElement.props.children).toBe('Settings');
+  });
+
+  it('computes default tabBarStyle.height at fontScale 1.0 (T-046f G3)', async () => {
+    const spy = jest.spyOn(ReactNative.Dimensions, 'get').mockReturnValue({
+      fontScale: 1.0,
+      width: 360,
+      height: 640,
+      scale: 2,
+    });
+
+    await render(
+      <ThemeProvider>
+        <TabsLayout />
+      </ThemeProvider>,
+    );
+
+    await waitFor(() => {
+      expect(capturedScreenOptions.tabBarStyle).toBeDefined();
+    });
+    const style = capturedScreenOptions.tabBarStyle as { height: number; paddingBottom: number };
+    expect(style.height).toBe(50);
+    spy.mockRestore();
+  });
+
+  it('grows tabBarStyle.height at fontScale 2.0 (T-046f G3)', async () => {
+    const spy = jest.spyOn(ReactNative.Dimensions, 'get').mockReturnValue({
+      fontScale: 2.0,
+      width: 360,
+      height: 640,
+      scale: 2,
+    });
+
+    await render(
+      <ThemeProvider>
+        <TabsLayout />
+      </ThemeProvider>,
+    );
+
+    await waitFor(() => {
+      expect(capturedScreenOptions.tabBarStyle).toBeDefined();
+    });
+    const style = capturedScreenOptions.tabBarStyle as { height: number; paddingBottom: number };
+    expect(style.height).toBe(57);
+    spy.mockRestore();
   });
 });
