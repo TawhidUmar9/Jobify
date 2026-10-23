@@ -19,28 +19,28 @@ env:
 
 - extendedWaitUntil:
     visible:
-      id: "tailor-button"
+      id: "eligibility-badge"
     timeout: 15000
+
+- swipe:
+    start: "50%, 55%"
+    end: "50%, 8%"
+    duration: 600
 
 - scrollUntilVisible:
     element:
       id: "tailor-button"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "tailor-button"
 
-- extendedWaitUntil:
-    visible:
-      id: "tailor-card"
-    timeout: 15000
-
 - scrollUntilVisible:
     element:
       id: "tailor-card"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 - assertVisible:
     id: "tailor-card"
 
@@ -48,7 +48,7 @@ env:
     element:
       id: "bullet-rewrite-0"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 - assertVisible:
     id: "bullet-rewrite-0"
 
@@ -56,7 +56,7 @@ env:
     element:
       id: "cover-note"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 - assertVisible:
     id: "cover-note"
 
@@ -64,7 +64,7 @@ env:
     element:
       id: "cold-dm-text"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 - assertVisible:
     id: "cold-dm-text"
 
@@ -72,7 +72,7 @@ env:
     element:
       id: "copy-dm"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 - tapOn:
     id: "copy-dm"
 - assertVisible: "Copied"

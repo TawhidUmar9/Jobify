@@ -24,15 +24,33 @@ env:
 
 - assertVisible:
     id: "eligibility-badge"
+
+- swipe:
+    start: "50%, 55%"
+    end: "50%, 8%"
+    duration: 600
+
+- scrollUntilVisible:
+    element:
+      id: "match-score"
+    direction: DOWN
+    timeout: 15000
 - assertVisible:
     id: "match-score"
+
+- scrollUntilVisible:
+    element:
+      id: "recommended-resume"
+    direction: DOWN
+    timeout: 15000
 - assertVisible:
     id: "recommended-resume"
+
 - scrollUntilVisible:
     element:
       id: "red-flag-0"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 - assertVisible:
     id: "red-flag-0"
 

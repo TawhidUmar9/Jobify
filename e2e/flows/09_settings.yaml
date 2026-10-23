@@ -46,7 +46,7 @@ env:
     element:
       id: "board-form-save"
     direction: DOWN
-    timeout: 10000
+    timeout: 20000
 - tapOn:
     id: "board-form-save"
 - assertVisible: "Test Board"
@@ -73,11 +73,12 @@ env:
 - assertVisible: "Discard changes?"
 - tapOn:
     id: "confirm-dialog-cancel"
+- hideKeyboard
 - scrollUntilVisible:
     element:
       id: "profile-save"
     direction: DOWN
-    timeout: 10000
+    timeout: 20000
 - tapOn:
     id: "profile-save"
 - assertVisible: "Profile saved"

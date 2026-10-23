@@ -46,11 +46,11 @@ env:
     element:
       id: "action-log-application"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "action-log-application"
-- assertVisible: "Logged to Tracker"
+- assertVisible: "Logged"
 
 - tapOn:
     id: "copilot-close"

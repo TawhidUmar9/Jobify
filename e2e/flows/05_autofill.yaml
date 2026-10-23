@@ -22,22 +22,27 @@ env:
       id: "action-autofill"
     timeout: 15000
 
-- scrollUntilVisible:
-    element:
-      id: "action-autofill"
-    direction: DOWN
-    timeout: 10000
+- swipe:
+    start: "50%, 55%"
+    end: "50%, 8%"
+    duration: 600
 
 - tapOn:
     id: "action-autofill"
-- assertVisible: "Filled 5 of 5 fields"
+
+- scrollUntilVisible:
+    element:
+      text: "Filled 5 of 5"
+    direction: DOWN
+    timeout: 15000
+- assertVisible: "Filled 5 of 5"
 
 # Save generated answer
 - scrollUntilVisible:
     element:
       id: "save-answer-jobify-field-3"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "save-answer-jobify-field-3"

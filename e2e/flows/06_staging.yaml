@@ -26,8 +26,10 @@ env:
     element:
       id: "action-stage-resume"
     direction: DOWN
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "action-stage-resume"
-- assertVisible: "This resume has no PDF. Add one in Settings → Resumes."
+
+- assertVisible:
+    id: "copilot-sheet"

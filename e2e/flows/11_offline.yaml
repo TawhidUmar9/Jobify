@@ -21,8 +21,10 @@ appId: io.github.tawhidumar9.jobify
     id: "tracker-insights"
 - extendedWaitUntil:
     visible:
-      id: "insights-screen"
+      id: "insights-empty"
     timeout: 15000
+- assertVisible:
+    id: "insights-empty"
 - back
 
 # Settings tab works offline
