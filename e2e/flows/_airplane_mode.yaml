@@ -2,3 +2,5 @@ appId: io.github.tawhidumar9.jobify
 ---
 # Optional sub-flow for emulator testing (skipped on physical devices)
 - setAirplaneMode: enabled
+# Always restore connectivity: an earlier run left the test phone in airplane mode.
+- setAirplaneMode: disabled
