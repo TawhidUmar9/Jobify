@@ -53,9 +53,9 @@ export interface PortalWebViewProps {
  * CONTRACT: ARCHITECTURE.md §6.1 lists every prop value. Required props:
  *   source={{ uri: url }}, javaScriptEnabled, domStorageEnabled,
  *   sharedCookiesEnabled (iOS), thirdPartyCookiesEnabled (Android),
- *   originWhitelist={['http://*', 'https://*', 'about:*']},
+ *   originWhitelist={['*']} (T-046e E1),
  *   setSupportMultipleWindows={true} with onOpenWindow → load targetUrl in this same WebView (T-046),
- *   onShouldStartLoadWithRequest → external schemes open via Linking.openURL and return false (T-046),
+ *   onShouldStartLoadWithRequest → single gate: http(s) & about:blank load in place; external schemes open via Linking.openURL with snackbar fallback and return false; all others return false (T-046, T-046e E1),
  *   allowsBackForwardNavigationGestures (iOS), pullToRefreshEnabled (iOS only),
  *   mediaPlaybackRequiresUserAction, webviewDebuggingEnabled={__DEV__},
  *   renderError → in-app error view with Retry (T-046),
@@ -112,7 +112,7 @@ export function PortalWebView({ webViewRef, url, onNavStateChange, onLoadProgres
       }
       return false;
     }
-    if (/^(https?|about|data|blob):/i.test(reqUrl)) {
+    if (isHttpUrl(reqUrl) || reqUrl === 'about:blank') {
       return true;
     }
     return false;
@@ -149,7 +149,7 @@ export function PortalWebView({ webViewRef, url, onNavStateChange, onLoadProgres
       source={{ uri: crashedUrl ?? url }}
       javaScriptEnabled
       domStorageEnabled
-      originWhitelist={['http://*', 'https://*', 'about:*']}
+      originWhitelist={['*']}
       mediaPlaybackRequiresUserAction
       webviewDebuggingEnabled={__DEV__}
       setSupportMultipleWindows

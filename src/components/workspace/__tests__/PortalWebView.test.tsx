@@ -6,8 +6,29 @@ import { TestIds } from '../../../constants/testIds';
 import { ThemeProvider } from '../../../theme/ThemeProvider';
 import { PortalWebView, type WebViewHandle } from '../PortalWebView';
 
-let lastProps: Record<string, any> = {};
-const mockHandle = {
+interface MockWebViewProps {
+  source?: { uri: string };
+  javaScriptEnabled?: boolean;
+  domStorageEnabled?: boolean;
+  setSupportMultipleWindows?: boolean;
+  originWhitelist?: string[];
+  testID?: string;
+  onShouldStartLoadWithRequest?: (req: { url: string }) => boolean;
+  onOpenWindow?: (event: { nativeEvent: { targetUrl: string } }) => void;
+  renderError?: (errorDomain: string, errorCode: number, errorDesc: string) => React.ReactElement;
+  onNavigationStateChange?: (state: {
+    url: string;
+    title: string;
+    loading: boolean;
+    canGoBack: boolean;
+    canGoForward: boolean;
+  }) => void;
+  onRenderProcessGone?: () => void;
+  onContentProcessDidTerminate?: () => void;
+}
+
+let lastProps: MockWebViewProps = {};
+const mockHandle: WebViewHandle = {
   injectJavaScript: jest.fn(),
   goBack: jest.fn(),
   goForward: jest.fn(),
@@ -27,16 +48,18 @@ jest.mock('../../../components/ui/Snackbar', () => {
 jest.mock('react-native-webview', () => {
   const MockReact = jest.requireActual('react') as typeof import('react');
   const MockRN = jest.requireActual('react-native') as typeof import('react-native');
-  const WebView = MockReact.forwardRef((props: Record<string, any>, ref: any) => {
-    lastProps = props;
-    MockReact.useImperativeHandle(ref, () => mockHandle);
-    return MockReact.createElement(MockRN.View, { testID: props.testID });
-  });
+  const WebView = MockReact.forwardRef(
+    (props: MockWebViewProps, ref: React.ForwardedRef<WebViewHandle>) => {
+      lastProps = props;
+      MockReact.useImperativeHandle(ref, () => mockHandle);
+      return MockReact.createElement(MockRN.View, { testID: props.testID });
+    },
+  );
   WebView.displayName = 'MockWebView';
   return { __esModule: true, default: WebView, WebView };
 });
 
-describe('PortalWebView resilience (T-046)', () => {
+describe('PortalWebView resilience (T-046, T-046e E1)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     lastProps = {};
@@ -62,7 +85,7 @@ describe('PortalWebView resilience (T-046)', () => {
     expect(lastProps.javaScriptEnabled).toBe(true);
     expect(lastProps.domStorageEnabled).toBe(true);
     expect(lastProps.setSupportMultipleWindows).toBe(true);
-    expect(lastProps.originWhitelist).toEqual(['http://*', 'https://*', 'about:*']);
+    expect(lastProps.originWhitelist).toEqual(['*']);
   });
 
   describe('onShouldStartLoadWithRequest', () => {
@@ -81,16 +104,16 @@ describe('PortalWebView resilience (T-046)', () => {
         </ThemeProvider>,
       );
 
-      const mailResult = lastProps.onShouldStartLoadWithRequest({ url: 'mailto:hr@example.com' });
+      const mailResult = lastProps.onShouldStartLoadWithRequest?.({ url: 'mailto:hr@example.com' });
       expect(mailResult).toBe(false);
       expect(openSpy).toHaveBeenCalledWith('mailto:hr@example.com');
 
-      const telResult = lastProps.onShouldStartLoadWithRequest({ url: 'tel:+15551234567' });
+      const telResult = lastProps.onShouldStartLoadWithRequest?.({ url: 'tel:+15551234567' });
       expect(telResult).toBe(false);
       expect(openSpy).toHaveBeenCalledWith('tel:+15551234567');
     });
 
-    it('shows snackbar when opening external link fails (T-046b F7)', async () => {
+    it('shows snackbar when opening external link fails (T-046b F7, T-046e E1)', async () => {
       jest.spyOn(Linking, 'openURL').mockRejectedValueOnce(new Error('No handler'));
       const webViewRef = createRef<WebViewHandle>();
       await render(
@@ -105,13 +128,13 @@ describe('PortalWebView resilience (T-046)', () => {
         </ThemeProvider>,
       );
 
-      const mailResult = lastProps.onShouldStartLoadWithRequest({ url: 'mailto:hr@example.com' });
+      const mailResult = lastProps.onShouldStartLoadWithRequest?.({ url: 'mailto:hr@example.com' });
       expect(mailResult).toBe(false);
       await Promise.resolve();
       expect(mockSnackbarShow).toHaveBeenCalledWith('No app on this phone can open this link.');
     });
 
-    it('allows web, about, data, and blob schemes', async () => {
+    it('allows http(s) and about:blank (T-046e E1)', async () => {
       const webViewRef = createRef<WebViewHandle>();
       await render(
         <ThemeProvider>
@@ -125,14 +148,12 @@ describe('PortalWebView resilience (T-046)', () => {
         </ThemeProvider>,
       );
 
-      expect(lastProps.onShouldStartLoadWithRequest({ url: 'https://example.com' })).toBe(true);
-      expect(lastProps.onShouldStartLoadWithRequest({ url: 'http://example.com' })).toBe(true);
-      expect(lastProps.onShouldStartLoadWithRequest({ url: 'about:blank' })).toBe(true);
-      expect(lastProps.onShouldStartLoadWithRequest({ url: 'data:text/html,...' })).toBe(true);
-      expect(lastProps.onShouldStartLoadWithRequest({ url: 'blob:https://example.com/uuid' })).toBe(true);
+      expect(lastProps.onShouldStartLoadWithRequest?.({ url: 'https://example.com' })).toBe(true);
+      expect(lastProps.onShouldStartLoadWithRequest?.({ url: 'http://example.com' })).toBe(true);
+      expect(lastProps.onShouldStartLoadWithRequest?.({ url: 'about:blank' })).toBe(true);
     });
 
-    it('rejects unsupported schemes and empty URLs', async () => {
+    it('rejects other schemes (file:, javascript:, data:, unknown) and empty URLs (T-046e E1)', async () => {
       const webViewRef = createRef<WebViewHandle>();
       await render(
         <ThemeProvider>
@@ -146,8 +167,12 @@ describe('PortalWebView resilience (T-046)', () => {
         </ThemeProvider>,
       );
 
-      expect(lastProps.onShouldStartLoadWithRequest({ url: 'javascript:alert(1)' })).toBe(false);
-      expect(lastProps.onShouldStartLoadWithRequest({ url: '' })).toBe(false);
+      expect(lastProps.onShouldStartLoadWithRequest?.({ url: 'javascript:alert(1)' })).toBe(false);
+      expect(lastProps.onShouldStartLoadWithRequest?.({ url: 'file:///path/to/file' })).toBe(false);
+      expect(lastProps.onShouldStartLoadWithRequest?.({ url: 'data:text/html,...' })).toBe(false);
+      expect(lastProps.onShouldStartLoadWithRequest?.({ url: 'blob:https://example.com/uuid' })).toBe(false);
+      expect(lastProps.onShouldStartLoadWithRequest?.({ url: 'custom:foo' })).toBe(false);
+      expect(lastProps.onShouldStartLoadWithRequest?.({ url: '' })).toBe(false);
     });
   });
 
@@ -166,7 +191,7 @@ describe('PortalWebView resilience (T-046)', () => {
         </ThemeProvider>,
       );
 
-      lastProps.onOpenWindow({
+      lastProps.onOpenWindow?.({
         nativeEvent: { targetUrl: 'https://wellfound.com/jobs/detail' },
       });
 
@@ -191,7 +216,8 @@ describe('PortalWebView resilience (T-046)', () => {
         </ThemeProvider>,
       );
 
-      const errorEl = lastProps.renderError('domain', 500, 'Error');
+      const errorEl = lastProps.renderError?.('domain', 500, 'Error');
+      if (!errorEl) throw new Error('renderError returned undefined');
       await render(
         <ThemeProvider>{errorEl}</ThemeProvider>,
       );
@@ -226,7 +252,7 @@ describe('PortalWebView resilience (T-046)', () => {
 
       // Navigate to a new page
       await act(async () => {
-        lastProps.onNavigationStateChange({
+        lastProps.onNavigationStateChange?.({
           url: 'https://wellfound.com/jobs/42',
           title: 'Job 42',
           loading: false,
@@ -240,7 +266,7 @@ describe('PortalWebView resilience (T-046)', () => {
 
       // Simulate renderer crash on Android
       await act(async () => {
-        lastProps.onRenderProcessGone();
+        lastProps.onRenderProcessGone?.();
       });
 
       // Remounted webview should have the navigated url as source
@@ -263,7 +289,7 @@ describe('PortalWebView resilience (T-046)', () => {
 
       // Simulate crash on iOS
       await act(async () => {
-        lastProps.onContentProcessDidTerminate();
+        lastProps.onContentProcessDidTerminate?.();
       });
 
       expect(lastProps.source).toEqual({ uri: 'https://remoteok.com' });
