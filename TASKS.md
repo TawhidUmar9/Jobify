@@ -612,11 +612,11 @@ true;
 - **Files:** `LICENSE` (owner's choice, A-40), `fastlane/metadata/android/en-US/{title.txt,short_description.txt,full_description.txt,changelogs/1.txt}`, `README.md` (build section), DECISIONS.md.
 - **Depends on:** T-048, and the owner's license choice.
 - **Acceptance:**
-  - [ ] `npx expo prebuild --platform android --clean && cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --max-workers=4 && ./gradlew --stop` succeeds (debug signing is fine for this check).
-  - [ ] `./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep -iE "gms|firebase|play-services|crashlytics"` → empty.
-  - [ ] Unzip the APK and `grep -rl "com/google/android/gms\|com/google/firebase" classes*.dex` → empty.
-  - [ ] Fastlane metadata written (≤80-char short description, full description from PRODUCT_SPEC §1–3, no marketing superlatives).
-  - [ ] README documents the "NonFreeNet" anti-feature (user-chosen AI provider).
+  - [ ] `npx expo prebuild --platform android --clean && cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --max-workers=4 && ./gradlew --stop` succeeds (debug signing is fine for this check). PENDING (tester).
+  - [ ] `./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep -iE "gms|firebase|play-services|crashlytics"` → empty. PENDING (tester).
+  - [ ] Unzip the APK and `grep -rl "com/google/android/gms\|com/google/firebase" classes*.dex` → empty. PENDING (tester).
+  - [x] Fastlane metadata written (≤80-char short description, full description from PRODUCT_SPEC §1–3, no marketing superlatives).
+  - [x] README documents the "NonFreeNet" anti-feature (user-chosen AI provider).
 - **Verify:** commands above + `npm run verify && npm run doctor`.
 
 ### ✅ Gate M6: hand to the tester

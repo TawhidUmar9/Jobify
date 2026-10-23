@@ -14,29 +14,52 @@
 - **Insights:** response and interview rates by resume version and by job board.
 - **Backup:** export and import everything as a JSON file.
 
-## Privacy
-Jobify has no servers and no account. Your data stays on your phone. When you use an AI feature, the job page and the relevant profile details go **directly to the AI provider you choose**, using **your own API key**, which is stored in the Android Keystore / iOS Keychain. There is no analytics or tracking.
+## Privacy and F-Droid Anti-Features
 
-F-Droid note: AI features rely on a third-party network service you select (anti-feature *NonFreeNet*). Browsing, tracking, follow-ups, and insights work without AI.
+Jobify has no servers and no account. All data stays on your phone in on-device SQLite. When you use an AI feature, the job page and the relevant profile details go **directly to the AI provider you choose**, using **your own API key**, which is stored in the Android Keystore / iOS Keychain. There is no analytics, tracking, or advertising.
+
+### F-Droid "NonFreeNet" Anti-Feature Explanation
+Jobify carries the F-Droid anti-feature **NonFreeNet** because its optional AI features (job fit analysis, bullet rewrites, form auto-fill drafting) depend on an external AI network service. The user chooses the AI provider and network service:
+- The user may configure **Google Gemini** or any **OpenAI-compatible** provider (OpenAI, OpenRouter, Groq, DeepSeek, Mistral).
+- Users who prefer a completely free and self-hosted setup can point the OpenAI-compatible endpoint to a local model runner such as **Ollama** or **LM Studio** on their local network.
+- Browsing job boards, managing resumes, tracking applications, reminders, and insights work fully offline without configuring any AI key or making any AI network calls.
 
 ## AI providers (bring your own key)
 - **Google Gemini:** free tier available ([get a key](https://aistudio.google.com/apikey)). Required for importing a resume from PDF.
 - **Any OpenAI-compatible API:** OpenAI, OpenRouter, Groq, DeepSeek, Mistral, or a local server such as **Ollama** or **LM Studio** (no key needed).
 
-## Develop
+## Develop and Build
 
-Requirements: Node 22, JDK 17/21, Android SDK (Gradle installs Platform 37 on first build), a device or emulator. 16 GB RAM is enough if you follow the build note.
+Requirements: Node 22, JDK 17 or 21, Android SDK, and a physical device or emulator.
 
+1. **Install dependencies:**
+   ```bash
+   npm ci
+   ```
+
+2. **Verify code and run tests (no device needed):**
+   ```bash
+   npm run verify          # runs typecheck, lint, and all test suites
+   ```
+
+3. **Development build on connected device:**
+   ```bash
+   npm run android         # compiles for connected device architecture and starts Metro
+   ```
+
+4. **Release APK build (clean prebuild and single-ABI build):**
+   ```bash
+   npx expo prebuild --platform android --clean
+   cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --max-workers=4 && ./gradlew --stop
+   ```
+
+> **Build safety note:** Never run a raw multi-ABI build (`./gradlew assembleRelease` or `./gradlew assembleDebug` without `-PreactNativeArchitectures=arm64-v8a --max-workers=4`), as compiling all four CPU architectures concurrently can exhaust 16 GB of RAM. Always stop the Gradle daemon when finished (`./gradlew --stop`).
+
+To try the app without a real AI key, start the mock server:
 ```bash
-npm ci
-npm run verify          # typecheck + lint + tests (no device needed)
-npm run android         # build for the connected device's CPU only, install, start Metro
-npm run mock:server     # fake AI provider + test job pages on :8787
+npm run mock:server     # mock AI provider and test job fixtures on :8787
 ```
-
-> **Build note:** use `npm run android`, not raw `./gradlew assembleDebug`. A raw Gradle build compiles all four CPU architectures and can exhaust 16 GB of RAM. Run `cd android && ./gradlew --stop` when you're done.
-
-To try the app without a real AI key, run `npm run mock:server`. Then in onboarding choose **OpenAI-compatible**, base URL `http://10.0.2.2:8787/v1` (emulator) or `http://<your-PC-LAN-IP>:8787/v1` (phone), model `mock`, key `k`.
+In onboarding choose **OpenAI-compatible**, base URL `http://10.0.2.2:8787/v1` (emulator) or `http://localhost:8787/v1` (physical device with `adb reverse tcp:8787 tcp:8787`), model `mock`, key `k`.
 
 ## Documentation
 | File | Purpose |

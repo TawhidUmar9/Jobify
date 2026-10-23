@@ -1,0 +1,14 @@
+Jobify is a local-first application that turns job search into a single workflow: browse job boards, check fit and red flags with your own AI key, fill application forms, and track applications.
+
+All application data is stored in SQLite on your device. Jobify has no user accounts, no backend servers, and no tracking.
+
+Features:
+• Job Board Workspace: Browse job boards in one place with saved session cookies, or share job links to Jobify from any browser.
+• Job Fit Analysis: Check eligibility, red flags (such as missing salary, time-zone mismatch, or work permit constraints), match scores, and skill overlap using your own Gemini or OpenAI-compatible API key.
+• Form Auto-Fill: Fill application fields on web forms from your profile and answer bank, with preview of all values before submission.
+• Resume Staging: Stage the recommended resume file so it appears first in the file picker when applying.
+• Tracker and Follow-Ups: Track application status (Saved, Applied, Interviewing, Offer, Rejected, Withdrawn) with scheduled follow-up reminders and notes.
+• Insights: View totals, response rates, weekly activity, and performance across resume versions and job boards.
+• Data Backup: Export and import your profile, resumes, boards, answers, and application history to JSON.
+
+Jobify works without an AI key for browsing, tracking, and insights. When an AI key is configured, network calls are sent directly to your chosen provider under that provider's terms.

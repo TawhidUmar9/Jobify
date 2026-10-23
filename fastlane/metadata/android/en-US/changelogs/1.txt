@@ -1,0 +1,7 @@
+Initial release of Jobify:
+• Browse job boards in persistent workspace
+• On-device fit and red-flag analysis with your own AI key
+• Form auto-fill from saved profile and answers
+• Application tracker with follow-up reminders
+• Insights on application progress
+• Local JSON backup and restore
