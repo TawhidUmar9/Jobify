@@ -65,7 +65,8 @@
           ],
           "disableIOS": true
         }
-      ]
+      ],
+      "./plugins/withAndroidReleaseFixes"
     ],
     "experiments": {
       "typedRoutes": true

@@ -28,6 +28,8 @@ Jobify carries the F-Droid anti-feature **NonFreeNet** because its optional AI f
 - **Google Gemini:** free tier available ([get a key](https://aistudio.google.com/apikey)). Required for importing a resume from PDF.
 - **Any OpenAI-compatible API:** OpenAI, OpenRouter, Groq, DeepSeek, Mistral, or a local server such as **Ollama** or **LM Studio** (no key needed).
 
+Release builds allow plain HTTP, for the in-app browser and local AI servers such as Ollama on the LAN.
+
 ## Develop and Build
 
 Requirements: Node 22, JDK 17 or 21, Android SDK, and a physical device or emulator.
