@@ -22,7 +22,7 @@ Jobify has no servers and no account. All data stays on your phone in on-device 
 Jobify carries the F-Droid anti-feature **NonFreeNet** because its optional AI features (job fit analysis, bullet rewrites, form auto-fill drafting) depend on an external AI network service. The user chooses the AI provider and network service:
 - The user may configure **Google Gemini** or any **OpenAI-compatible** provider (OpenAI, OpenRouter, Groq, DeepSeek, Mistral).
 - Users who prefer a completely free and self-hosted setup can point the OpenAI-compatible endpoint to a local model runner such as **Ollama** or **LM Studio** on their local network.
-- Browsing job boards, managing resumes, tracking applications, reminders, and insights work fully offline without configuring any AI key or making any AI network calls.
+- Managing resumes, tracking applications, reminders, and insights work without an AI key and without any AI network calls. Tracker, insights, settings and backup also work offline.
 
 ## AI providers (bring your own key)
 - **Google Gemini:** free tier available ([get a key](https://aistudio.google.com/apikey)). Required for importing a resume from PDF.
