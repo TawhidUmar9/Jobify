@@ -53,6 +53,8 @@ describe('TabsLayout (T-046e E2, T-046f G3)', () => {
     expect(labelElement.props.numberOfLines).toBe(1);
     expect(labelElement.props.maxFontSizeMultiplier).toBe(fontScaleCaps.compact);
     expect(labelElement.props.children).toBe('Workspace');
+    const labelStyle = ReactNative.StyleSheet.flatten(labelElement.props.style);
+    expect(labelStyle?.lineHeight).toBe(14);
 
     const trackerElement = renderLabel({ color: '#4A5A59', children: 'Tracker' });
     expect(trackerElement.props.maxFontSizeMultiplier).toBe(fontScaleCaps.compact);
@@ -81,7 +83,7 @@ describe('TabsLayout (T-046e E2, T-046f G3)', () => {
       expect(capturedScreenOptions.tabBarStyle).toBeDefined();
     });
     const style = capturedScreenOptions.tabBarStyle as { height: number; paddingBottom: number };
-    expect(style.height).toBe(50);
+    expect(style.height).toBe(52);
     spy.mockRestore();
   });
 
@@ -103,7 +105,16 @@ describe('TabsLayout (T-046e E2, T-046f G3)', () => {
       expect(capturedScreenOptions.tabBarStyle).toBeDefined();
     });
     const style = capturedScreenOptions.tabBarStyle as { height: number; paddingBottom: number };
-    expect(style.height).toBe(57);
+    expect(style.height).toBe(59);
+
+    const renderLabel = capturedScreenOptions.tabBarLabel as (props: {
+      color: string;
+      children: string;
+    }) => React.ReactElement<TextProps>;
+    const labelElement = renderLabel({ color: '#0F766E', children: 'Workspace' });
+    const labelStyle = ReactNative.StyleSheet.flatten(labelElement.props.style);
+    expect(labelStyle?.lineHeight).toBe(14);
+
     spy.mockRestore();
   });
 });

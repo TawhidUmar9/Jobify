@@ -20,7 +20,7 @@ export default function TabsLayout() {
   const bottomInset = insets?.bottom ?? 0;
   const effectiveScale = Math.min(Math.max(1, fontScale), fontScaleCaps.compact);
   const labelHeight = Math.round(14 * effectiveScale);
-  const tabBarHeight = 36 + labelHeight + bottomInset;
+  const tabBarHeight = 36 + labelHeight + bottomInset + 2;
 
   return (
     <Tabs
@@ -40,7 +40,7 @@ export default function TabsLayout() {
           <Text
             numberOfLines={1}
             maxFontSizeMultiplier={fontScaleCaps.compact}
-            style={[styles.tabBarLabel, { color, lineHeight: labelHeight }]}
+            style={[styles.tabBarLabel, { color, lineHeight: 14 }]}
           >
             {children}
           </Text>
