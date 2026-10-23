@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useContext, useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { TestIds } from '../../constants/testIds';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -17,6 +18,8 @@ export interface AnswerFormProps {
 
 function AnswerFormContent(props: AnswerFormProps) {
   const { colors } = useTheme();
+  const insets = useContext(SafeAreaInsetsContext);
+  const bottom = (insets?.bottom ?? 0) + spacing.md;
   const [question, setQuestion] = useState(props.initial?.question ?? '');
   const [answer, setAnswer] = useState(props.initial?.answer ?? '');
   const [clientError, setClientError] = useState<'EMPTY' | 'TOO_LONG' | null>(null);
@@ -52,8 +55,11 @@ function AnswerFormContent(props: AnswerFormProps) {
   }
 
   return (
-    <View style={[styles.modalOverlay, { backgroundColor: colors.scrim }]}>
-      <View style={[styles.panel, { backgroundColor: colors.surface }]}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={[styles.modalOverlay, { backgroundColor: colors.scrim }]}
+    >
+      <View style={[styles.panel, { backgroundColor: colors.surface, paddingBottom: Math.max(spacing.xl, bottom) }]}>
         <Text
           style={[styles.panelTitle, { color: colors.textPrimary }]}
           maxFontSizeMultiplier={fontScaleCaps.default}
@@ -104,7 +110,7 @@ function AnswerFormContent(props: AnswerFormProps) {
           </View>
         </ScrollView>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -132,7 +138,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     maxHeight: '85%',
-    paddingBottom: spacing.xl,
   },
   panelTitle: {
     ...typography.headline,

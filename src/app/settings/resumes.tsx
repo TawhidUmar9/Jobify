@@ -1,10 +1,12 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { Trash2, X } from 'lucide-react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,6 +27,7 @@ import { useResumeImport } from '../../features/onboarding/useResumeImport';
 import { useAiSettings } from '../../features/settings/useAiSettings';
 import { deleteResumePdf } from '../../services/resumeFiles';
 import { useTheme } from '../../theme/ThemeProvider';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { fontScaleCaps, radii, spacing, typography } from '../../theme/tokens';
 import type { Resume } from '../../types/domain';
 
@@ -41,6 +44,8 @@ export default function ResumesSettingsScreen() {
   const snackbar = useSnackbar();
   const ai = useAiSettings();
   const importer = useResumeImport();
+  const insets = useContext(SafeAreaInsetsContext);
+  const bottom = (insets?.bottom ?? 0) + spacing.md;
 
   const [loading, setLoading] = useState(true);
   const [resumes, setResumes] = useState<Resume[]>([]);
@@ -189,8 +194,11 @@ export default function ResumesSettingsScreen() {
           if (!busy) setPanelOpen(false);
         }}
       >
-        <View style={[styles.modalOverlay, { backgroundColor: colors.scrim }]}>
-          <View style={[styles.panel, { backgroundColor: colors.surface }]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={[styles.modalOverlay, { backgroundColor: colors.scrim }]}
+        >
+          <View style={[styles.panel, { backgroundColor: colors.surface, paddingBottom: Math.max(spacing.xl, bottom) }]}>
             <View style={styles.panelHeader}>
               <Text
                 style={[styles.panelTitle, { color: colors.textPrimary }]}
@@ -304,7 +312,7 @@ export default function ResumesSettingsScreen() {
               ) : null}
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -329,7 +337,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     maxHeight: '85%',
-    paddingBottom: spacing.xl,
   },
   panelHeader: {
     flexDirection: 'row',

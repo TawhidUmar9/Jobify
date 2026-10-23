@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { KeyboardAvoidingView } from 'react-native';
 
 import { TestIds } from '../../../constants/testIds';
 import { ThemeProvider } from '../../../theme/ThemeProvider';
@@ -65,6 +66,22 @@ describe('BoardForm', () => {
     await fireEvent.press(screen.getByTestId(TestIds.boards.formSave));
     expect(screen.getByText('Enter a full https:// address')).toBeTruthy();
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('renders panel content inside KeyboardAvoidingView', async () => {
+    await render(
+      <ThemeProvider>
+        <BoardForm
+          visible={true}
+          initial={null}
+          error={null}
+          onSave={jest.fn()}
+          onCancel={jest.fn()}
+        />
+      </ThemeProvider>,
+    );
+    const json = JSON.stringify(screen.toJSON());
+    expect(json).toContain('"paddingBottom":0');
   });
 
   it('displays server error passed via props', async () => {

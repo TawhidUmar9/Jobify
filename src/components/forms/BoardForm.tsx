@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useContext, useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { TestIds } from '../../constants/testIds';
 import { normalizeAddressInput } from '../../lib/url';
@@ -20,6 +21,8 @@ export interface BoardFormProps {
 
 function BoardFormContent(props: BoardFormProps) {
   const { colors } = useTheme();
+  const insets = useContext(SafeAreaInsetsContext);
+  const bottom = (insets?.bottom ?? 0) + spacing.md;
   const [name, setName] = useState(props.initial?.name ?? '');
   const [url, setUrl] = useState(props.initial?.url ?? '');
   const [clientError, setClientError] = useState<'INVALID_NAME' | 'INVALID_URL' | null>(null);
@@ -49,8 +52,11 @@ function BoardFormContent(props: BoardFormProps) {
   }
 
   return (
-    <View style={[styles.modalOverlay, { backgroundColor: colors.scrim }]}>
-      <View style={[styles.panel, { backgroundColor: colors.surface }]}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={[styles.modalOverlay, { backgroundColor: colors.scrim }]}
+    >
+      <View style={[styles.panel, { backgroundColor: colors.surface, paddingBottom: Math.max(spacing.xl, bottom) }]}>
         <Text
           style={[styles.panelTitle, { color: colors.textPrimary }]}
           maxFontSizeMultiplier={fontScaleCaps.default}
@@ -100,7 +106,7 @@ function BoardFormContent(props: BoardFormProps) {
           </View>
         </ScrollView>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -129,7 +135,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
     maxHeight: '85%',
-    paddingBottom: spacing.xl,
   },
   panelTitle: {
     ...typography.headline,
