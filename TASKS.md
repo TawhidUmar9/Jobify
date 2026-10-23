@@ -613,7 +613,7 @@ true;
 - **Files:** `src/components/workspace/PortalWebView.tsx`, `src/app/(tabs)/_layout.tsx`, `src/components/copilot/CopilotActions.tsx`, tests.
 - **Acceptance:**
   - [x] E1 External links: F7's snackbar never showed on device. react-native-webview's default `originWhitelist` (http/https) intercepts `mailto:`/`tel:` itself (`Linking.canOpenURL` → console.warn "Can't open url") before `onShouldStartLoadWithRequest` runs. Set `originWhitelist={['*']}` and make `handleShouldStartLoadWithRequest` the single gate: http(s) and `about:blank` → true; `isExternalSchemeUrl` → `Linking.openURL`, with the snackbar `No app on this phone can open this link.` on failure, return false; anything else (file:, javascript:, data:, unknown schemes) → false. Tests for each branch.
-  - [ ] E2 Font scale 2.0: the bottom tab labels are clipped. Cap them (`tabBarLabel` rendering a Text with `maxFontSizeMultiplier={fontScaleCaps.compact}`, or `tabBarLabelStyle` plus `tabBarAllowFontScaling` handling) so "Workspace", "Tracker" and "Settings" are fully visible at font_scale 2.0.
+  - [x] E2 Font scale 2.0: the bottom tab labels are clipped. Cap them (`tabBarLabel` rendering a Text with `maxFontSizeMultiplier={fontScaleCaps.compact}`, or `tabBarLabelStyle` plus `tabBarAllowFontScaling` handling) so "Workspace", "Tracker" and "Settings" are fully visible at font_scale 2.0.
   - [ ] E3 Font scale 2.0: copilot footer buttons wrap mid-word ("Auto-fi / ll", "Stage / CV"). Labels get `numberOfLines={1}` and `maxFontSizeMultiplier={fontScaleCaps.compact}`. If they still don't fit at 1.5, let the footer wrap buttons onto two rows instead of breaking words.
 - **Verify:** `npm run verify`. Device re-check by the tester.
 
