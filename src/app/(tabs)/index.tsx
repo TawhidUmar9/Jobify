@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
 import { BackHandler, View } from 'react-native';
@@ -34,7 +34,7 @@ const EMPTY_NAV: WebNavState = { url: '', title: '', loading: true, canGoBack: f
  * - boards.status loading → StateView "Loading job boards…"; error → StateView error + Retry (boards.reload).
  * - No boards and no targetUrl → StateView empty (TestIds.workspace.emptyBoards) "No job boards" /
  *   "Add one in Settings → Job boards, or tap the address bar to open a link." + button to /settings/boards.
- * - `url` param (T-025): http(s) → boards.openUrl(url) once, then router.setParams({ url: undefined }).
+ * - `url` param (T-025, D-012): http(s) → boards.openUrl(url) once, then navigation.setParams({ url: undefined }).
  * - Android back (T-044): sheet open → closeSheet; canGoBack → goBack; else default.
  * - onNavStateChange → setNav and, when !loading, boards.recordVisit(url) (T-045).
  * - FAB disabled when nav.loading or phase in scraping|analyzing|filling (never when aiMissing).
@@ -44,6 +44,7 @@ const EMPTY_NAV: WebNavState = { url: '', title: '', loading: true, canGoBack: f
  */
 export default function WorkspaceScreen() {
   const params = useLocalSearchParams<WorkspaceParams>();
+  const navigation = useNavigation<{ setParams: (params: Partial<WorkspaceParams>) => void }>();
   const { colors } = useTheme();
   const db = useSQLiteContext();
   const { show } = useSnackbar();
@@ -53,8 +54,8 @@ export default function WorkspaceScreen() {
   useEffect(() => {
     if (!isHttpUrl(requestedUrl)) return;
     openUrl(requestedUrl);
-    router.setParams({ url: undefined });
-  }, [openUrl, requestedUrl]);
+    navigation.setParams({ url: undefined });
+  }, [navigation, openUrl, requestedUrl]);
   const [nav, setNav] = useState<WebNavState>(EMPTY_NAV);
   const [progress, setProgress] = useState(0);
   const [saved, setSaved] = useState(false);

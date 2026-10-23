@@ -6,12 +6,21 @@ import { createFakeDb } from '../../../../tests/helpers/fakeDb';
 import { SnackbarProvider } from '../../../components/ui/Snackbar';
 import { TestIds } from '../../../constants/testIds';
 import { ThemeProvider } from '../../../theme/ThemeProvider';
+import * as useBoardsModule from '../../../features/workspace/useBoards';
 import WorkspaceScreen from '../index';
 
 const mockDb = createFakeDb();
 const mockPush = jest.fn();
-const mockSetParams = jest.fn();
+const mockRouterSetParams = jest.fn();
+const mockNavSetParams = jest.fn();
+const mockOpenUrl = jest.fn();
 let mockParams: { url?: string } = {};
+const mockNavigation = {
+  setParams: (params: { url?: string }) => {
+    mockNavSetParams(params);
+    mockParams = { ...mockParams, ...params };
+  },
+};
 
 jest.mock('lucide-react-native', () => {
   const React = jest.requireActual('react') as typeof import('react');
@@ -47,8 +56,9 @@ jest.mock('expo-router', () => {
   return {
     router: {
       push: (...args: unknown[]) => mockPush(...args),
-      setParams: (...args: unknown[]) => mockSetParams(...args),
+      setParams: (...args: unknown[]) => mockRouterSetParams(...args),
     },
+    useNavigation: () => mockNavigation,
     useLocalSearchParams: () => mockParams,
     useFocusEffect: (effect: () => void | (() => void)) => {
       React.useEffect(() => {
@@ -84,9 +94,31 @@ describe('WorkspaceScreen', () => {
   beforeEach(() => {
     mockDb.calls.length = 0;
     mockPush.mockClear();
-    mockSetParams.mockClear();
+    mockRouterSetParams.mockClear();
+    mockNavSetParams.mockClear();
+    mockOpenUrl.mockClear();
     mockParams = {};
     backListeners.length = 0;
+
+    const actualUseBoards = jest.requireActual('../../../features/workspace/useBoards').useBoards;
+    const React = jest.requireActual('react') as typeof import('react');
+    jest.spyOn(useBoardsModule, 'useBoards').mockImplementation(() => {
+      const real = actualUseBoards();
+      const openUrl = React.useCallback(
+        (url: string) => {
+          mockOpenUrl(url);
+          return real.openUrl(url);
+        },
+        [real.openUrl],
+      );
+      return React.useMemo(
+        () => ({
+          ...real,
+          openUrl,
+        }),
+        [real, openUrl],
+      );
+    });
 
     jest.spyOn(BackHandler, 'addEventListener').mockImplementation((event, handler) => {
       if (event === 'hardwareBackPress') {
@@ -137,7 +169,9 @@ describe('WorkspaceScreen', () => {
     const view = await renderWorkspace();
     expect(await screen.findByTestId(TestIds.workspace.emptyBoards)).toBeTruthy();
     expect(screen.queryByTestId(TestIds.workspace.webview)).toBeNull();
-    expect(mockSetParams).not.toHaveBeenCalled();
+    expect(mockOpenUrl).not.toHaveBeenCalled();
+    expect(mockNavSetParams).not.toHaveBeenCalled();
+    expect(mockRouterSetParams).not.toHaveBeenCalled();
 
     mockParams = { url: 'http://10.0.2.2:8787/fixtures/job-remote-form.html' };
     view.rerender(
@@ -150,9 +184,13 @@ describe('WorkspaceScreen', () => {
       </SafeAreaProvider>,
     );
     expect(await screen.findByTestId(TestIds.workspace.webview)).toBeTruthy();
+    expect(mockOpenUrl).toHaveBeenCalledTimes(1);
+    expect(mockOpenUrl).toHaveBeenCalledWith('http://10.0.2.2:8787/fixtures/job-remote-form.html');
     await waitFor(() =>
-      expect(mockSetParams).toHaveBeenCalledWith({ url: undefined }),
+      expect(mockNavSetParams).toHaveBeenCalledWith({ url: undefined }),
     );
+    expect(mockNavSetParams).toHaveBeenCalledTimes(1);
+    expect(mockRouterSetParams).not.toHaveBeenCalled();
   });
 
   it('handles hardware back button: default returns false when neither sheet open nor canGoBack', async () => {
