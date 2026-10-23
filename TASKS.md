@@ -313,7 +313,7 @@ true;
 - **Acceptance:**
   - [x] props per table (platform-specific ones only on their platform). `isHttpUrl` true for https and `http://10.0.2.2:8787/x`, false for `mailto:`, `javascript:`, `''`, `null`, and plain text.
 - **Manual (A-20):**
-  - [ ] log in to one board, force-stop, relaunch → still logged in. MANUAL PENDING (needs internet on the test phone)
+  - [x] log in to one board, force-stop, relaunch → still logged in. (passed 2026-10-24 on SM-G935F, release APK, Wellfound)
 - **Verify:** `npm run verify && npx jest src/lib`
 
 ### T-025 Workspace composition, deep link, share intent
