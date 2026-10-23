@@ -30,6 +30,14 @@ env:
 
 - tapOn:
     id: "action-stage-resume"
+# First Android use shows the folder explainer before the resume check; dismiss it if present.
+- runFlow:
+    when:
+      visible:
+        id: "staging-explainer"
+    commands:
+      - tapOn:
+          id: "staging-explainer-cancel"
 
 - assertVisible:
     id: "copilot-sheet"

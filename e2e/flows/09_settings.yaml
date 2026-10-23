@@ -73,7 +73,7 @@ env:
 - assertVisible: "Discard changes?"
 - tapOn:
     id: "confirm-dialog-cancel"
-- hideKeyboard
+# No hideKeyboard here: with no keyboard open it acts as Back on Android and leaves the screen.
 - scrollUntilVisible:
     element:
       id: "profile-save"
@@ -83,7 +83,17 @@ env:
     id: "profile-save"
 - assertVisible: "Profile saved"
 
-- back
+# Saving already returns to Settings; only go back if still on the profile form.
+- runFlow:
+    when:
+      visible:
+        id: "profile-save"
+    commands:
+      - back
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 10000
 
 # AT-37: Settings -> Resumes deletion
 - scrollUntilVisible:
