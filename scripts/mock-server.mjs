@@ -43,6 +43,7 @@ const ANALYSIS_SCENARIOS = {
   'job-slow.html': { kind: 'slow', delayMs: 35000, file: 'analysis-remote-ok.json' },
   'job-malformed.html': { kind: 'malformed' },
   'job-blocked.html': { kind: 'blocked' },
+  'not-a-job.html': { kind: 'ok', file: 'analysis-not-a-job.json' },
 };
 
 const requests = [];

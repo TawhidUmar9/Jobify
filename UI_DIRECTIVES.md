@@ -115,7 +115,7 @@ Each screen lists purpose, layout, data, and **all states**. "n/a" means the sta
 
 ### 4.1 Workspace (`/`)
 **Purpose:** browse job boards and start the copilot.
-**Layout:** board bar (56, pills) → browser toolbar (48: back, forward, host/address button, reload, plus a 2 px progress bar) → WebView (flex) → Analyze FAB (bottom-right, 16 from the edges, above the tab bar; accent; Sparkles + "Analyze & Fill"; with no AI configured: Settings2 + "Set up AI") → copilot sheet overlay.
+**Layout:** board bar (56, pills) → browser toolbar (48: back, forward, host/address button, save-for-later bookmark (BookmarkPlus / BookmarkCheck, D-009), reload, plus a 2 px progress bar) → WebView (flex) → Analyze FAB (bottom-right, 16 from the edges, above the tab bar; accent; Sparkles + "Analyze & Fill"; with no AI configured: Settings2 + "Set up AI") → copilot sheet overlay.
 **Address bar:** tapping the host turns the toolbar into an input (url keyboard, prefilled, select-all) + Go + Cancel. Invalid input → inline "Enter a web address".
 **Data:** `useBoards`, `WebNavState`, controller.
 
@@ -248,6 +248,8 @@ Tiles (2 per row): Applications, Response rate ("18%", caption "8 of 42"), Inter
 | Fill complete | `Filled ${filled} of ${filled + missing} fields` |
 | Fill failed | `Auto-fill failed on this page` |
 | Log ok / duplicate / error | `Logged to Tracker` / `Already in Tracker` / `Could not save. Try again.` |
+| Save for later ok / duplicate / error (D-009) | `Saved to Tracker` / `Already in Tracker` / `Could not save. Try again.` |
+| Not a job post (D-008) | card `copilot-not-job`: "This doesn't look like a job post" / "Open a single job and tap Analyze again. Login pages, search results and home pages can't be checked." |
 | Copy | `Copied` |
 | Answer saved / failed | `Saved to answer bank` / `Could not save answer` |
 | Stage ok (Android) | `Resume saved to your Jobify folder. Cover note copied.` (drop the 2nd sentence if no cover note or the clipboard failed) |

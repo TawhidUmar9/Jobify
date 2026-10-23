@@ -1,0 +1,14 @@
+{
+  "isJobPosting": false,
+  "companyName": "",
+  "roleTitle": "",
+  "eligibility": "UNCLEAR",
+  "eligibilityReason": "This is a sign-in page, not a job posting.",
+  "redFlags": [],
+  "matchScore": 0,
+  "recommendedResumeId": -1,
+  "resumeReason": "",
+  "matchedSkills": [],
+  "missingSkills": [],
+  "fieldMappings": []
+}

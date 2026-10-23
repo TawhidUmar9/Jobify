@@ -590,6 +590,24 @@ true;
   - [x] F8 Small copy/UI: Insights weekly bar accessibility label says `1 application` (singular) for 1. The application detail screen does not render an empty eligibility reason line (EligibilityBadge with `reason=""` should render no reason text).
 - **Verify:** `npm run verify`. Device re-check is done by the tester.
 
+### T-046c Not-a-job-post detection
+- **Goal:** D-008.
+- **Files:** `src/types/domain.ts`, `src/services/ai/{schemas,validate,prompts}.ts`, `src/constants/testIds.ts`, `src/components/copilot/{CopilotSheet,NotJobPostCard}.tsx`, `src/features/workspace/useWorkspaceController.ts`, tests.
+- **Acceptance:**
+  - [ ] validator: `isJobPosting` false kept; missing → true. Schema lists it as required boolean.
+  - [ ] not-a-job analysis → `copilot-not-job` card with the D-008 copy; Auto-fill, Stage CV, Log disabled; no tailor.
+  - [ ] Manual (mock): deep-link `not-a-job.html` → Analyze → the card. `job-remote-form.html` → normal result.
+- **Verify:** `npm run verify`
+
+### T-046d Save for later
+- **Goal:** D-009.
+- **Files:** `src/db/repositories/applicationsRepo.ts`, `src/constants/testIds.ts`, `src/components/workspace/BrowserToolbar.tsx`, `src/app/(tabs)/index.tsx`, tests.
+- **Acceptance:**
+  - [ ] repo: insert SAVED; later insert APPLIED with the same url promotes the row (status, analysis fields, status_changed_at, follow_up_at +7 d; notes and created_at kept); other duplicates still DUPLICATE; findApplicationByUrl.
+  - [ ] toolbar-save: BookmarkPlus/BookmarkCheck, labels, disabled while loading or on non-http pages; snackbars `Saved to Tracker` / `Already in Tracker`.
+  - [ ] Manual (mock): Fixtures board → Save → Tracker shows the page with status Saved, not counted in Insights. Open it, Analyze, Log → same row, now Applied with match score.
+- **Verify:** `npm run verify`
+
 ### T-047 Accessibility and large text
 - **Files:** components/screens (accessibility props, font caps, focus management only).
 - **Depends on:** T-046.
