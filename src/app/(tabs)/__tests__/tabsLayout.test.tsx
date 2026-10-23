@@ -4,7 +4,7 @@ import * as ReactNative from 'react-native';
 import { Text, type TextProps } from 'react-native';
 
 import { ThemeProvider } from '../../../theme/ThemeProvider';
-import { fontScaleCaps } from '../../../theme/tokens';
+import { fontScaleCaps, lightColors } from '../../../theme/tokens';
 import TabsLayout from '../_layout';
 
 let capturedScreenOptions: Record<string, unknown> = {};
@@ -48,7 +48,7 @@ describe('TabsLayout (T-046e E2, T-046f G3)', () => {
       children: string;
     }) => React.ReactElement<TextProps>;
 
-    const labelElement = renderLabel({ color: '#0F766E', children: 'Workspace' });
+    const labelElement = renderLabel({ color: lightColors.primary, children: 'Workspace' });
     expect(labelElement.type).toBe(Text);
     expect(labelElement.props.numberOfLines).toBe(1);
     expect(labelElement.props.maxFontSizeMultiplier).toBe(fontScaleCaps.compact);
@@ -56,11 +56,11 @@ describe('TabsLayout (T-046e E2, T-046f G3)', () => {
     const labelStyle = ReactNative.StyleSheet.flatten(labelElement.props.style);
     expect(labelStyle?.lineHeight).toBe(14);
 
-    const trackerElement = renderLabel({ color: '#4A5A59', children: 'Tracker' });
+    const trackerElement = renderLabel({ color: lightColors.textSecondary, children: 'Tracker' });
     expect(trackerElement.props.maxFontSizeMultiplier).toBe(fontScaleCaps.compact);
     expect(trackerElement.props.children).toBe('Tracker');
 
-    const settingsElement = renderLabel({ color: '#4A5A59', children: 'Settings' });
+    const settingsElement = renderLabel({ color: lightColors.textSecondary, children: 'Settings' });
     expect(settingsElement.props.maxFontSizeMultiplier).toBe(fontScaleCaps.compact);
     expect(settingsElement.props.children).toBe('Settings');
   });
@@ -111,7 +111,7 @@ describe('TabsLayout (T-046e E2, T-046f G3)', () => {
       color: string;
       children: string;
     }) => React.ReactElement<TextProps>;
-    const labelElement = renderLabel({ color: '#0F766E', children: 'Workspace' });
+    const labelElement = renderLabel({ color: lightColors.primary, children: 'Workspace' });
     const labelStyle = ReactNative.StyleSheet.flatten(labelElement.props.style);
     expect(labelStyle?.lineHeight).toBe(14);
 

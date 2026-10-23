@@ -3,10 +3,12 @@ import React, { createRef } from 'react';
 import { Linking } from 'react-native';
 
 import { TestIds } from '../../../constants/testIds';
+import { resetUiPrefsForTests, setWebZoom } from '../../../features/settings/useUiPrefs';
 import { ThemeProvider } from '../../../theme/ThemeProvider';
 import { PortalWebView, type WebViewHandle } from '../PortalWebView';
 
 interface MockWebViewProps {
+  textZoom?: number;
   source?: { uri: string };
   javaScriptEnabled?: boolean;
   domStorageEnabled?: boolean;
@@ -86,6 +88,43 @@ describe('PortalWebView resilience (T-046, T-046e E1)', () => {
     expect(lastProps.domStorageEnabled).toBe(true);
     expect(lastProps.setSupportMultipleWindows).toBe(true);
     expect(lastProps.originWhitelist).toEqual(['*']);
+    expect(lastProps.textZoom).toBe(100);
+  });
+
+  it('receives textZoom from theme preferences and updates live', async () => {
+    resetUiPrefsForTests();
+    const webViewRef = createRef<WebViewHandle>();
+    const { rerender } = await render(
+      <ThemeProvider>
+        <PortalWebView
+          webViewRef={webViewRef}
+          url="https://wellfound.com/jobs"
+          onNavStateChange={jest.fn()}
+          onLoadProgress={jest.fn()}
+          onMessage={jest.fn()}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(lastProps.textZoom).toBe(100);
+
+    await act(async () => {
+      await setWebZoom(150);
+    });
+
+    rerender(
+      <ThemeProvider>
+        <PortalWebView
+          webViewRef={webViewRef}
+          url="https://wellfound.com/jobs"
+          onNavStateChange={jest.fn()}
+          onLoadProgress={jest.fn()}
+          onMessage={jest.fn()}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(lastProps.textZoom).toBe(150);
   });
 
   describe('onShouldStartLoadWithRequest', () => {
