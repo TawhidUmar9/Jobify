@@ -56,6 +56,12 @@ describe('result cards', () => {
     );
   });
 
+  it('omits reason text when reason is empty (T-046b F8)', async () => {
+    await theme(<EligibilityBadge eligibility="ELIGIBLE" reason="" />);
+    expect(screen.getByTestId(TestIds.copilot.eligibilityBadge)).toBeTruthy();
+    expect(screen.queryByTestId(TestIds.copilot.eligibilityReason)).toBeNull();
+  });
+
   it('lists red-flag titles and the empty state', async () => {
     const view = await theme(
       <RedFlagList flags={[{ code: 'NO_SALARY_INFO', detail: 'The post does not mention pay.' }]} />,

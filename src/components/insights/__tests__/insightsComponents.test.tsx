@@ -84,6 +84,7 @@ describe('WeeklyBars', () => {
     expect(screen.getByTestId('weekly-bars')).toBeTruthy();
     const currentWeekButton = screen.getByLabelText('20 Oct: 4 applications');
     expect(currentWeekButton).toBeTruthy();
+    expect(screen.getByLabelText('8 Sep: 1 application')).toBeTruthy();
 
     // Tap bar to show tooltip
     await fireEvent.press(currentWeekButton);

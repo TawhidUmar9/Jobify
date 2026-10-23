@@ -50,9 +50,11 @@ export function EligibilityBadge({ eligibility, reason }: EligibilityBadgeProps)
         <Icon size={iconSizes.sm} strokeWidth={iconStrokeWidth} color={tone.icon} accessible={false} />
         <Text style={[styles.pillLabel, { color: tone.text }]}>{presentation.label}</Text>
       </View>
-      <Text testID={TestIds.copilot.eligibilityReason} style={[styles.reason, { color: colors.textSecondary }]}>
-        {reason}
-      </Text>
+      {reason.trim().length > 0 ? (
+        <Text testID={TestIds.copilot.eligibilityReason} style={[styles.reason, { color: colors.textSecondary }]}>
+          {reason}
+        </Text>
+      ) : null}
     </View>
   );
 }

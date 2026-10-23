@@ -57,6 +57,7 @@ export function WeeklyBars({ weeks, testID }: WeeklyBarsProps) {
           const height =
             week.count > 0 ? Math.max(2, Math.round((week.count / maxCount) * (CHART_HEIGHT - 24))) : 2;
           const isSelected = selectedIdx === idx;
+          const appText = week.count === 1 ? 'application' : 'applications';
 
           return (
             <Pressable
@@ -64,7 +65,7 @@ export function WeeklyBars({ weeks, testID }: WeeklyBarsProps) {
               style={styles.column}
               onPress={() => setSelectedIdx(isSelected ? null : idx)}
               accessibilityRole="button"
-              accessibilityLabel={`${formatWeekLabel(week.weekStart)}: ${week.count} applications`}
+              accessibilityLabel={`${formatWeekLabel(week.weekStart)}: ${week.count} ${appText}`}
             >
               <View style={styles.barArea}>
                 {isSelected ? (

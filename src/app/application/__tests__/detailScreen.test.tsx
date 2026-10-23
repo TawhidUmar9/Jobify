@@ -98,6 +98,8 @@ describe('ApplicationDetailScreen', () => {
     expect(screen.getByTestId(TestIds.detail.company)).toBeTruthy();
     expect(screen.getByText('Acme Corp')).toBeTruthy();
     expect(screen.getByText('Senior Dev')).toBeTruthy();
+    expect(screen.getByTestId(TestIds.copilot.eligibilityBadge)).toBeTruthy();
+    expect(screen.queryByTestId(TestIds.copilot.eligibilityReason)).toBeNull();
     expect(screen.getByText('Sample cover note')).toBeTruthy();
     expect(screen.getByText('Sample cold dm')).toBeTruthy();
 
