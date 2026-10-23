@@ -1,8 +1,8 @@
 Initial release of Jobify:
 • Browse job boards in a built-in browser that keeps your logins
-• Check eligibility, red flags and fit using the AI provider you choose (Gemini, an OpenAI-compatible service, or your own Ollama/LM Studio server)
+• Check eligibility, red flags and fit with the AI provider you choose (Gemini, OpenAI-compatible, or your own Ollama/LM Studio)
 • Auto-fill application forms from your profile and saved answers
-• Save jobs for later and track applications with follow-up reminders
-• Insights on your application progress
-• Light and dark themes, text size, page zoom and reduced motion settings
-• Local JSON backup and restore
+• Save jobs for later and track applications with reminders
+• Insights on your progress
+• Themes, text size, page zoom and reduced motion settings
+• Local backup and restore
