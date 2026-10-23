@@ -8,6 +8,17 @@ import { ThemeProvider } from '../../../theme/ThemeProvider';
 import type { JobAnalysis } from '../../../types/domain';
 import { CopilotSheet } from '../CopilotSheet';
 
+jest.mock('@gorhom/bottom-sheet', () => {
+  const React = jest.requireActual('react') as typeof import('react');
+  const mock = jest.requireActual('@gorhom/bottom-sheet/mock') as Record<string, unknown>;
+  return {
+    __esModule: true,
+    ...mock,
+    BottomSheetFooter: ({ children }: { children?: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
+  };
+});
+
 jest.mock('lucide-react-native', () => {
   const React = jest.requireActual('react') as typeof import('react');
   const { View } = jest.requireActual('react-native') as typeof import('react-native');
@@ -210,5 +221,45 @@ describe('CopilotSheet', () => {
     ).toBeTruthy();
     expect(screen.queryByTestId(TestIds.copilot.tailorButton)).toBeNull();
     expect(screen.queryByTestId(TestIds.copilot.eligibilityBadge)).toBeNull();
+  });
+
+  it('renders footer with every action disabled when isJobPosting is false (T-046f G2)', async () => {
+    const renderSpy = jest.spyOn(BottomSheet.prototype, 'render');
+    const notJobAnalysis: JobAnalysis = {
+      ...analysis,
+      isJobPosting: false,
+    };
+    await renderSheet(
+      state({
+        phase: 'ready',
+        session: {
+          analysis: notJobAnalysis,
+          sourceUrl: 'https://example.com/login',
+          boardName: 'LinkedIn',
+          scrapedInputCount: 0,
+          pageText: 'Please log in to continue.',
+        },
+      }),
+    );
+    const lastInstance = renderSpy.mock.instances[renderSpy.mock.instances.length - 1] as unknown as {
+      props: { footerComponent: (props: { animatedFooterPosition: unknown }) => React.ReactNode };
+    };
+    expect(lastInstance.props.footerComponent).toBeDefined();
+    const Footer = () =>
+      lastInstance.props.footerComponent({ animatedFooterPosition: { value: 0 } }) as React.ReactElement;
+    const footerRender = await render(
+      <ThemeProvider>
+        <Footer />
+      </ThemeProvider>,
+    );
+
+    const autoFill = footerRender.getByTestId(TestIds.copilot.autoFill);
+    const stageResume = footerRender.getByTestId(TestIds.copilot.stageResume);
+    const logApp = footerRender.getByTestId(TestIds.copilot.logApplication);
+
+    expect(autoFill.props.accessibilityState).toEqual({ disabled: true, busy: false });
+    expect(stageResume.props.accessibilityState).toEqual({ disabled: true, busy: false });
+    expect(logApp.props.accessibilityState).toEqual({ disabled: true, busy: false });
+    renderSpy.mockRestore();
   });
 });

@@ -64,6 +64,9 @@ describe('CopilotActions', () => {
   });
 
   it('disables all buttons when disabled is true (D-008)', async () => {
+    const onAutoFill = jest.fn();
+    const onStageResume = jest.fn();
+    const onLogApplication = jest.fn();
     await render(
       <SafeAreaProvider initialMetrics={safeMetrics}>
         <ThemeProvider>
@@ -74,9 +77,9 @@ describe('CopilotActions', () => {
             logged={false}
             logging={false}
             disabled
-            onAutoFill={jest.fn()}
-            onStageResume={jest.fn()}
-            onLogApplication={jest.fn()}
+            onAutoFill={onAutoFill}
+            onStageResume={onStageResume}
+            onLogApplication={onLogApplication}
           />
         </ThemeProvider>
       </SafeAreaProvider>,
@@ -93,6 +96,14 @@ describe('CopilotActions', () => {
       disabled: true,
       busy: false,
     });
+
+    // T-046f G2: Tapping disabled buttons must not trigger callbacks
+    await fireEvent.press(screen.getByTestId(TestIds.copilot.autoFill));
+    await fireEvent.press(screen.getByTestId(TestIds.copilot.stageResume));
+    await fireEvent.press(screen.getByTestId(TestIds.copilot.logApplication));
+    expect(onAutoFill).not.toHaveBeenCalled();
+    expect(onStageResume).not.toHaveBeenCalled();
+    expect(onLogApplication).not.toHaveBeenCalled();
   });
 
   it('caps button labels at fontScaleCaps.compact and sets numberOfLines to 1 (T-046e E3)', async () => {

@@ -136,8 +136,9 @@ export function CopilotSheet(props: CopilotSheetProps) {
       const isJobPosting = props.state.session?.analysis.isJobPosting ?? true;
       const mappings = props.state.session?.analysis.fieldMappings.length ?? 0;
       return (
-        <BottomSheetFooter {...footerProps}>
+        <BottomSheetFooter key={`footer-${isJobPosting}`} {...footerProps}>
           <CopilotActions
+            key={`actions-${isJobPosting}`}
             canAutoFill={isJobPosting && props.state.phase === 'ready' && props.isOnSourcePage && mappings > 0}
             filling={props.state.phase === 'filling'}
             staging={props.staging}
