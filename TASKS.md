@@ -627,6 +627,16 @@ true;
   - [x] G4 Insights: the "Applications" tile showed 1 when the only row was a SAVED job (save for later). Show `applied` (status ≠ SAVED) in that tile, and use `applied === 0` for the empty state. If there are saved jobs, add the caption `N saved for later` under the tile (singular `1 saved for later`). Update the insights tests.
 - **Verify:** `npm run verify`. Device re-check by the tester.
 
+### T-046g Release-build fixes
+- **Goal:** D-010, D-011, D-012 (found on the first release APK, 2026-10-23).
+- **Files:** `app.json`, `plugins/withAndroidReleaseFixes.js` (new), `src/app/(tabs)/index.tsx`, tests, README (one line on cleartext).
+- **Acceptance:**
+  - [ ] H1 (D-010) app.json: `allowBackup: false`, three more blocked permissions.
+  - [ ] H2 (D-011) config plugin: cleartext allowed, `fontScale|density` in MainActivity configChanges. A Jest test (node, no device) that runs the plugin's manifest mod on a minimal manifest object and checks both attributes, including no duplicate configChanges entries.
+  - [ ] H3 (D-012) Workspace clears the `url` param via its own navigation; test that a `url` param calls openUrl once and clears the param without the global router.
+  - [ ] Tester: after prebuild, the merged release manifest has no SYSTEM_ALERT_WINDOW/USE_BIOMETRIC/USE_FINGERPRINT, `allowBackup="false"`, `usesCleartextTraffic="true"`; deep link after a font-size change opens the page. MANUAL PENDING (tester)
+- **Verify:** `npm run verify`
+
 ### T-047 Accessibility and large text
 - **Files:** components/screens (accessibility props, font caps, focus management only).
 - **Depends on:** T-046.

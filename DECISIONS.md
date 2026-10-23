@@ -14,6 +14,26 @@ Template:
 
 ---
 
+## D-011 2026-10-23: Release build allows cleartext HTTP and keeps the activity on font changes
+- Task: T-046g
+- Change: new local config plugin `plugins/withAndroidReleaseFixes.js` (uses `withAndroidManifest` from `expo/config-plugins`; no new dependency), listed in `app.json` `plugins`. It sets `android:usesCleartextTraffic="true"` on `<application>` and adds `fontScale|density` to MainActivity's `android:configChanges` (keeping the existing values, no duplicates).
+- Why: on the release APK (2026-10-23) every `http://` load failed with `net::ERR_CLEARTEXT_NOT_PERMITTED`. Debug builds allow cleartext, release builds don't. That breaks local OpenAI-compatible servers (the AI settings suggest `http://192.168.1.5:11434/v1`, e.g. Ollama on the LAN), plain-http job pages, and the mock-server test setup. Separately, a font-size change recreated the activity, mounted a second React root ("configured linking in multiple places") and a following deep link crashed the Workspace screen (see D-012).
+- Impact: README (note that the in-app browser and local AI servers may use plain HTTP); F-Droid metadata unaffected.
+- Approved by: architect
+
+## D-012 2026-10-23: Workspace clears its url param through its own navigation object
+- Task: T-046g
+- Change: `src/app/(tabs)/index.tsx`: after `openUrl(requestedUrl)`, clear the param with the screen's own navigation (`useNavigation()` → `navigation.setParams({ url: undefined })`, typed correctly) instead of the global imperative `router.setParams`. No other change to the T-025 behaviour.
+- Why: on the release APK, a deep link right after an activity recreation threw "The imperative router is unavailable before the first render has finished." inside WorkspaceScreen and showed the error screen. The global router belonged to a root that had not finished rendering.
+- Approved by: architect
+
+## D-010 2026-10-23: Release hardening: no backup, no extra permissions
+- Task: T-046g
+- Change: `app.json`: `android.allowBackup: false`; add `android.permission.SYSTEM_ALERT_WINDOW`, `android.permission.USE_BIOMETRIC`, `android.permission.USE_FINGERPRINT` to `android.blockedPermissions`.
+- Why: the release APK requested "display over other apps" (React Native dev-menu permission, merged into release) and biometric permissions (expo-secure-store's optional auth, unused). `allowBackup=true` lets Android copy the SQLite database (profile, resumes, applications) to cloud or device-to-device backup, which contradicts the privacy statement ("stored only on this device"). The app has its own backup (D-006).
+- Impact: none in JS. Re-check the merged release manifest after prebuild.
+- Approved by: architect
+
 ## D-009 2026-10-23: "Save for later" bookmark in the browser toolbar
 - Task: T-046d
 - Change:
