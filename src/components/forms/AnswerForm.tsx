@@ -1,5 +1,5 @@
-import { useContext, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { AccessibilityInfo, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { TestIds } from '../../constants/testIds';
@@ -119,11 +119,32 @@ function AnswerFormContent(props: AnswerFormProps) {
  * "123 / 4000"), Cancel / Save. Errors: EMPTY "Fill in both fields"; TOO_LONG "Too long".
  */
 export function AnswerForm(props: AnswerFormProps) {
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const pending = AccessibilityInfo.isReduceMotionEnabled();
+    if (typeof pending?.then === 'function') {
+      pending
+        .then((enabled) => {
+          if (active) setReduceMotion(enabled);
+        })
+        .catch(() => {});
+    }
+    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (enabled: boolean) => {
+      setReduceMotion(enabled);
+    });
+    return () => {
+      active = false;
+      subscription?.remove();
+    };
+  }, []);
+
   if (!props.visible) return null;
   const initialKey = props.initial ? `${props.initial.question}-${props.initial.answer.slice(0, 10)}` : 'add';
 
   return (
-    <Modal visible={props.visible} transparent onRequestClose={props.onCancel} animationType="slide">
+    <Modal visible={props.visible} transparent onRequestClose={props.onCancel} animationType={reduceMotion ? 'none' : 'slide'}>
       <AnswerFormContent key={initialKey} {...props} />
     </Modal>
   );

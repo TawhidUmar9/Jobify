@@ -6,7 +6,7 @@ import BottomSheet, {
   type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet';
 import { RefreshCw, X } from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useRef, type ComponentRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { AccessibilityInfo, StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
@@ -97,11 +97,32 @@ export function CopilotSheet(props: CopilotSheetProps) {
   const snapPoints = useMemo(() => ['50%', '92%'], []);
   const busy = props.state.phase === 'scraping' || props.state.phase === 'analyzing' || props.state.phase === 'filling';
   const open = props.state.sheetOpen;
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const pending = AccessibilityInfo.isReduceMotionEnabled();
+    if (typeof pending?.then === 'function') {
+      pending
+        .then((enabled) => {
+          if (active) setReduceMotion(enabled);
+        })
+        .catch(() => {});
+    }
+    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (enabled: boolean) => {
+      setReduceMotion(enabled);
+    });
+    return () => {
+      active = false;
+      subscription?.remove();
+    };
+  }, []);
 
   const snapOpen = useCallback(() => {
-    if (open) sheetRef.current?.snapToIndex(0);
-    else sheetRef.current?.close();
-  }, [open]);
+    const config = reduceMotion ? { duration: 0 } : undefined;
+    if (open) sheetRef.current?.snapToIndex(0, config);
+    else sheetRef.current?.close(config);
+  }, [open, reduceMotion]);
 
   useEffect(() => {
     snapOpen();
@@ -142,6 +163,8 @@ export function CopilotSheet(props: CopilotSheetProps) {
       index={open ? 0 : -1}
       snapPoints={snapPoints}
       enablePanDownToClose
+      animateOnMount={!reduceMotion}
+      animationConfigs={reduceMotion ? { duration: 0 } : undefined}
       accessibilityViewIsModal={open}
       aria-modal={open}
       onClose={props.onClose}

@@ -601,7 +601,10 @@ true;
 ### T-048 Reduced motion and dark mode
 - **Files:** components with animation or color (fixes only).
 - **Depends on:** T-047.
-- **Acceptance:** reduced motion → instant sheet/panels/dialogs. `adb shell cmd uimode night yes` → every screen is readable. `grep -rnE "#[0-9A-Fa-f]{6}" src --include=*.tsx` → none outside `theme/tokens.ts` (the bridge outline color lives in a `.ts` script).
+- **Acceptance:**
+  - [x] reduced motion → instant sheet/panels/dialogs (honours AccessibilityInfo.isReduceMotionEnabled).
+  - [x] `grep -rnE "#[0-9A-Fa-f]{6}" src --include=*.tsx` → none outside `theme/tokens.ts` (0 found).
+  - [ ] `adb shell cmd uimode night yes` → every screen is readable. MANUAL PENDING (tester).
 - **Verify:** `npm run verify`.
 
 ### T-049 F-Droid readiness and release build

@@ -1,5 +1,5 @@
-import { useContext, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { AccessibilityInfo, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { TestIds } from '../../constants/testIds';
@@ -116,11 +116,32 @@ function BoardFormContent(props: BoardFormProps) {
  * Errors: INVALID_NAME "Use 1–16 characters"; INVALID_URL "Enter a full https:// address".
  */
 export function BoardForm(props: BoardFormProps) {
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const pending = AccessibilityInfo.isReduceMotionEnabled();
+    if (typeof pending?.then === 'function') {
+      pending
+        .then((enabled) => {
+          if (active) setReduceMotion(enabled);
+        })
+        .catch(() => {});
+    }
+    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (enabled: boolean) => {
+      setReduceMotion(enabled);
+    });
+    return () => {
+      active = false;
+      subscription?.remove();
+    };
+  }, []);
+
   if (!props.visible) return null;
   const initialKey = props.initial ? `${props.initial.name}-${props.initial.url}` : 'add';
 
   return (
-    <Modal visible={props.visible} transparent onRequestClose={props.onCancel} animationType="slide">
+    <Modal visible={props.visible} transparent onRequestClose={props.onCancel} animationType={reduceMotion ? 'none' : 'slide'}>
       <BoardFormContent key={initialKey} {...props} />
     </Modal>
   );
