@@ -46,7 +46,7 @@ export default function AboutScreen() {
           maxFontSizeMultiplier={fontScaleCaps.default}
           style={[styles.license, { color: colors.textSecondary }]}
         >
-          License: to be announced
+          License: GPL-3.0-or-later
         </Text>
       </View>
 

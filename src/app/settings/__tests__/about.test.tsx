@@ -34,7 +34,7 @@ describe('AboutScreen', () => {
     expect(screen.getByTestId(TestIds.about.screen)).toBeTruthy();
     expect(screen.getByText('Jobify')).toBeTruthy();
     expect(screen.getByText('Version 1.0.0')).toBeTruthy();
-    expect(screen.getByText('License: to be announced')).toBeTruthy();
+    expect(screen.getByText('License: GPL-3.0-or-later')).toBeTruthy();
     expect(screen.getByText(PRIVACY_STATEMENT)).toBeTruthy();
   });
 
