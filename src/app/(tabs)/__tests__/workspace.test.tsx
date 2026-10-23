@@ -3,6 +3,7 @@ import { BackHandler } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { createFakeDb } from '../../../../tests/helpers/fakeDb';
+import { SnackbarProvider } from '../../../components/ui/Snackbar';
 import { TestIds } from '../../../constants/testIds';
 import { ThemeProvider } from '../../../theme/ThemeProvider';
 import WorkspaceScreen from '../index';
@@ -24,6 +25,8 @@ jest.mock('lucide-react-native', () => {
     ChevronLeft: Icon,
     ChevronRight: Icon,
     RotateCw: Icon,
+    BookmarkPlus: Icon,
+    BookmarkCheck: Icon,
   };
 });
 
@@ -67,7 +70,9 @@ async function renderWorkspace() {
   return render(
     <SafeAreaProvider initialMetrics={safeMetrics}>
       <ThemeProvider>
-        <WorkspaceScreen />
+        <SnackbarProvider>
+          <WorkspaceScreen />
+        </SnackbarProvider>
       </ThemeProvider>
     </SafeAreaProvider>,
   );
@@ -138,7 +143,9 @@ describe('WorkspaceScreen', () => {
     view.rerender(
       <SafeAreaProvider initialMetrics={safeMetrics}>
         <ThemeProvider>
-          <WorkspaceScreen />
+          <SnackbarProvider>
+            <WorkspaceScreen />
+          </SnackbarProvider>
         </ThemeProvider>
       </SafeAreaProvider>,
     );
@@ -154,5 +161,91 @@ describe('WorkspaceScreen', () => {
     expect(backListeners.length).toBeGreaterThan(0);
     const lastHandler = backListeners[backListeners.length - 1];
     expect(lastHandler({} as Parameters<typeof lastHandler>[0])).toBe(false);
+  });
+
+  it('saves job for later via toolbar-save button and handles duplicate', async () => {
+    mockParams = { url: 'http://10.0.2.2:8787/fixtures/job-remote-form.html' };
+    mockDb.queue('getAllAsync', [
+      { id: 1, name: 'Fixtures', base_url: 'http://10.0.2.2:8787/fixtures', sort_order: 0, created_at: '' },
+    ]);
+    // findApplicationByUrl initially returns null
+    mockDb.queue('getFirstAsync', null);
+
+    await renderWorkspace();
+    expect(await screen.findByTestId(TestIds.workspace.webview)).toBeTruthy();
+
+    // Queue for checkSaved on nav url change:
+    mockDb.queue('getFirstAsync', null);
+
+    const webview = screen.getByTestId(TestIds.workspace.webview);
+    fireEvent(webview, 'navigationStateChange', {
+      url: 'http://10.0.2.2:8787/fixtures/job-remote-form.html',
+      title: 'Job Posting',
+      loading: false,
+      canGoBack: false,
+      canGoForward: false,
+    });
+
+    await waitFor(() => {
+      const btn = screen.getByTestId(TestIds.toolbar.save);
+      expect(btn.props.accessibilityState).toEqual({ disabled: false });
+    });
+
+    // Now press save:
+    // 1. handleSave calls findApplicationByUrl -> null
+    // 2. insertApplication checks existing -> null
+    // 3. insertApplication runs insert -> { changes: 1, lastInsertRowId: 10 }
+    // 4. insertApplication getApplication -> row
+    mockDb.queue('getFirstAsync', null); // findApplicationByUrl in handleSave
+    mockDb.queue('getFirstAsync', null); // insertApplication precheck
+    mockDb.queue('runAsync', { changes: 1, lastInsertRowId: 10 });
+    mockDb.queue('getFirstAsync', {
+      id: 10,
+      company_name: '10.0.2.2:8787',
+      role_title: 'Saved job',
+      board_name: 'Fixtures',
+      job_url: 'http://10.0.2.2:8787/fixtures/job-remote-form.html',
+      resume_id: null,
+      resume_label: '',
+      match_score: null,
+      eligibility: null,
+      red_flags_json: '[]',
+      cover_note: null,
+      cold_dm: null,
+      notes: '',
+      status: 'SAVED',
+      follow_up_at: null,
+      created_at: '2026-10-23 12:00:00',
+      status_changed_at: '2026-10-23 12:00:00',
+    });
+
+    const saveButton = screen.getByTestId(TestIds.toolbar.save);
+    await fireEvent.press(saveButton);
+
+    expect(await screen.findByText('Saved to Tracker')).toBeTruthy();
+
+    // Now press again: handleSave finds existing application
+    mockDb.queue('getFirstAsync', {
+      id: 10,
+      company_name: '10.0.2.2:8787',
+      role_title: 'Saved job',
+      board_name: 'Fixtures',
+      job_url: 'http://10.0.2.2:8787/fixtures/job-remote-form.html',
+      resume_id: null,
+      resume_label: '',
+      match_score: null,
+      eligibility: null,
+      red_flags_json: '[]',
+      cover_note: null,
+      cold_dm: null,
+      notes: '',
+      status: 'SAVED',
+      follow_up_at: null,
+      created_at: '2026-10-23 12:00:00',
+      status_changed_at: '2026-10-23 12:00:00',
+    });
+
+    await fireEvent.press(saveButton);
+    expect(await screen.findByText('Already in Tracker')).toBeTruthy();
   });
 });

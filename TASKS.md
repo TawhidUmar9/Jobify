@@ -603,9 +603,9 @@ true;
 - **Goal:** D-009.
 - **Files:** `src/db/repositories/applicationsRepo.ts`, `src/constants/testIds.ts`, `src/components/workspace/BrowserToolbar.tsx`, `src/app/(tabs)/index.tsx`, tests.
 - **Acceptance:**
-  - [ ] repo: insert SAVED; later insert APPLIED with the same url promotes the row (status, analysis fields, status_changed_at, follow_up_at +7 d; notes and created_at kept); other duplicates still DUPLICATE; findApplicationByUrl.
-  - [ ] toolbar-save: BookmarkPlus/BookmarkCheck, labels, disabled while loading or on non-http pages; snackbars `Saved to Tracker` / `Already in Tracker`.
-  - [ ] Manual (mock): Fixtures board → Save → Tracker shows the page with status Saved, not counted in Insights. Open it, Analyze, Log → same row, now Applied with match score.
+  - [x] repo: insert SAVED; later insert APPLIED with the same url promotes the row (status, analysis fields, status_changed_at, follow_up_at +7 d; notes and created_at kept); other duplicates still DUPLICATE; findApplicationByUrl.
+  - [x] toolbar-save: BookmarkPlus/BookmarkCheck, labels, disabled while loading or on non-http pages; snackbars `Saved to Tracker` / `Already in Tracker`.
+  - [ ] Manual (mock): Fixtures board → Save → Tracker shows the page with status Saved, not counted in Insights. Open it, Analyze, Log → same row, now Applied with match score. MANUAL PENDING (tester).
 - **Verify:** `npm run verify`
 
 ### T-046e Round-2 device fixes (font scale, external links)

@@ -11,9 +11,12 @@ async function renderToolbar(props: Partial<BrowserToolbarProps> = {}) {
     progress: 0,
     loading: false,
     url: 'https://wellfound.com/jobs',
+    saved: false,
+    canSave: false,
     onBack: jest.fn(),
     onForward: jest.fn(),
     onReload: jest.fn(),
+    onSave: jest.fn(),
     onOpenAddress: jest.fn(),
     ...props,
   };
@@ -62,9 +65,12 @@ describe('BrowserToolbar', () => {
           progress={0}
           loading={false}
           url="https://wellfound.com/jobs"
+          saved={false}
+          canSave={false}
           onBack={onBack}
           onForward={onForward}
           onReload={onReload}
+          onSave={jest.fn()}
           onOpenAddress={jest.fn()}
         />
       </ThemeProvider>,
@@ -82,6 +88,48 @@ describe('BrowserToolbar', () => {
 
     await fireEvent.press(screen.getByTestId(TestIds.workspace.toolbarForward));
     expect(onForward).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders save button with correct icon label, disabled state, and handles onSave', async () => {
+    const onSave = jest.fn();
+    const view = await renderToolbar({
+      saved: false,
+      canSave: false,
+      onSave,
+    });
+
+    const saveButton = screen.getByTestId(TestIds.toolbar.save);
+    expect(saveButton.props.accessibilityLabel).toBe('Save job for later');
+    expect(saveButton.props.accessibilityState).toEqual({ disabled: true });
+
+    await fireEvent.press(saveButton);
+    expect(onSave).not.toHaveBeenCalled();
+
+    await view.rerender(
+      <ThemeProvider>
+        <BrowserToolbar
+          canGoBack={false}
+          canGoForward={false}
+          progress={0}
+          loading={false}
+          url="https://wellfound.com/jobs"
+          saved={true}
+          canSave={true}
+          onBack={jest.fn()}
+          onForward={jest.fn()}
+          onReload={jest.fn()}
+          onSave={onSave}
+          onOpenAddress={jest.fn()}
+        />
+      </ThemeProvider>,
+    );
+
+    const savedButton = screen.getByTestId(TestIds.toolbar.save);
+    expect(savedButton.props.accessibilityLabel).toBe('Saved in Tracker');
+    expect(savedButton.props.accessibilityState).toEqual({ disabled: false });
+
+    await fireEvent.press(savedButton);
+    expect(onSave).toHaveBeenCalledTimes(1);
   });
 
   it('displays host text and toggles address bar input', async () => {
@@ -150,9 +198,12 @@ describe('BrowserToolbar', () => {
           progress={0.65}
           loading={true}
           url="https://wellfound.com"
+          saved={false}
+          canSave={false}
           onBack={jest.fn()}
           onForward={jest.fn()}
           onReload={jest.fn()}
+          onSave={jest.fn()}
           onOpenAddress={jest.fn()}
         />
       </ThemeProvider>,

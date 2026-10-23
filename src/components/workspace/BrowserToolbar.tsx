@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, RotateCw, X } from 'lucide-react-native';
+import { BookmarkCheck, BookmarkPlus, ChevronLeft, ChevronRight, RotateCw, X } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
@@ -17,18 +17,23 @@ export interface BrowserToolbarProps {
   loading: boolean;
   /** Current page URL; shown as displayHost(url). */
   url: string;
+  saved: boolean;
+  canSave: boolean;
   onBack: () => void;
   onForward: () => void;
   onReload: () => void;
+  onSave: () => void;
   /** Called with a normalized http(s) URL typed into the address bar. */
   onOpenAddress: (url: string) => void;
 }
 
 /**
- * Row under the board bar, height 48. UI_DIRECTIVES.md §4.1 "Browser toolbar".
+ * Row under the board bar, height 48. UI_DIRECTIVES.md §4.1 "Browser toolbar", DECISIONS.md D-009.
  * [Back ChevronLeft toolbarBack "Back"] [Forward ChevronRight toolbarForward "Forward"]
  * [host button (toolbarAddress, flex 1, caption textSecondary, ellipsize middle,
- *  label "Address: <host>. Double tap to type a link")] [Reload RotateCw toolbarReload "Reload page"].
+ *  label "Address: <host>. Double tap to type a link")]
+ * [Save for later BookmarkPlus/BookmarkCheck TestIds.toolbar.save ("Save job for later" / "Saved in Tracker")]
+ * [Reload RotateCw toolbarReload "Reload page"].
  * Tapping the host replaces the row with an address bar: TextField-like input (TestIds.workspace.addressInput,
  * keyboardType url, autoFocus, prefilled with the full URL, selectTextOnFocus) + "Go" (addressGo) + Cancel X.
  * Submit: normalizeAddressInput(text) → onOpenAddress(url) and close; null → inline error "Enter a web address".
@@ -148,6 +153,13 @@ export function BrowserToolbar(props: BrowserToolbarProps) {
               {host}
             </Text>
           </Pressable>
+          <IconButton
+            icon={props.saved ? BookmarkCheck : BookmarkPlus}
+            testID={TestIds.toolbar.save}
+            accessibilityLabel={props.saved ? 'Saved in Tracker' : 'Save job for later'}
+            disabled={!props.canSave}
+            onPress={props.onSave}
+          />
           <IconButton
             icon={RotateCw}
             testID={TestIds.workspace.toolbarReload}

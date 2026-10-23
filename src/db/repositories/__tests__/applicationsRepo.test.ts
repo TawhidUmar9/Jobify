@@ -2,7 +2,15 @@ import { createFakeDb } from '../../../../tests/helpers/fakeDb';
 import { logger } from '../../../lib/logger';
 import type { NewApplication } from '../../../types/domain';
 import type { ApplicationRow } from '../../schema';
-import { attachTailorText, deleteApplication, insertApplication, listApplications, listFollowUpsDue, patchApplication } from '../applicationsRepo';
+import {
+  attachTailorText,
+  deleteApplication,
+  findApplicationByUrl,
+  insertApplication,
+  listApplications,
+  listFollowUpsDue,
+  patchApplication,
+} from '../applicationsRepo';
 
 function draft(partial: Partial<NewApplication> = {}): NewApplication {
   return {
@@ -47,7 +55,7 @@ function stored(partial: Partial<ApplicationRow> = {}): ApplicationRow {
 describe('applicationsRepo', () => {
   it('maps a pre-check and a UNIQUE violation to DUPLICATE', async () => {
     const pre = createFakeDb();
-    pre.queue('getFirstAsync', { id: 1 });
+    pre.queue('getFirstAsync', { id: 1, status: 'APPLIED' });
     const existing = await insertApplication(pre.db, draft());
     expect(existing.ok).toBe(false);
     if (!existing.ok) expect(existing.error).toBe('DUPLICATE');
@@ -59,6 +67,65 @@ describe('applicationsRepo', () => {
     const raced = await insertApplication(unique.db, draft());
     expect(raced.ok).toBe(false);
     if (!raced.ok) expect(raced.error).toBe('DUPLICATE');
+  });
+
+  it('promotes a SAVED application to APPLIED keeping notes and created_at (D-009)', async () => {
+    const fake = createFakeDb();
+    fake.queue('getFirstAsync', { id: 10, status: 'SAVED' });
+    fake.queue('runAsync', { changes: 1 });
+    fake.queue(
+      'getFirstAsync',
+      stored({
+        id: 10,
+        notes: 'User note that must stay',
+        created_at: '2026-10-01 10:00:00',
+        status: 'APPLIED',
+      }),
+    );
+
+    const result = await insertApplication(
+      fake.db,
+      draft({ companyName: 'Promoted Corp', roleTitle: 'Senior Lead' }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.id).toBe(10);
+      expect(result.value.notes).toBe('User note that must stay');
+      expect(result.value.createdAt).toBe('2026-10-01 10:00:00');
+      expect(result.value.status).toBe('APPLIED');
+    }
+
+    const updateCall = fake.calls.find((c) => c.method === 'runAsync');
+    expect(updateCall).toBeDefined();
+    expect(updateCall?.sql).toContain('UPDATE applications SET');
+    expect(updateCall?.sql).not.toContain('notes =');
+    expect(updateCall?.sql).not.toContain('created_at =');
+    expect(updateCall?.sql).toContain("datetime('now', '+7 days')");
+    expect(updateCall?.params).toContain('Promoted Corp');
+    expect(updateCall?.params).toContain('Senior Lead');
+    expect(updateCall?.params).toContain(10);
+  });
+
+  it('returns DUPLICATE when existing status is SAVED and input status is SAVED (D-009)', async () => {
+    const fake = createFakeDb();
+    fake.queue('getFirstAsync', { id: 10, status: 'SAVED' });
+    const result = await insertApplication(fake.db, draft({ status: 'SAVED' }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('DUPLICATE');
+    expect(fake.calls.some((c) => c.method === 'runAsync')).toBe(false);
+  });
+
+  it('finds an application by its job URL or returns null (D-009)', async () => {
+    const fake = createFakeDb();
+    fake.queue('getFirstAsync', stored({ id: 8, job_url: 'https://example.com/job/8' }));
+    const found = await findApplicationByUrl(fake.db, 'https://example.com/job/8');
+    expect(found).not.toBeNull();
+    expect(found?.id).toBe(8);
+    expect(fake.calls[0]?.sql).toBe('SELECT * FROM applications WHERE job_url = ?');
+    expect(fake.calls[0]?.params).toEqual(['https://example.com/job/8']);
+
+    const missing = await findApplicationByUrl(fake.db, 'https://example.com/job/unknown');
+    expect(missing).toBeNull();
   });
 
   it('logs only the error code for other failures', async () => {
@@ -128,68 +195,69 @@ describe('applicationsRepo', () => {
     expect(due).toHaveLength(1);
   });
 
-  it("attaches tailor text to an application, storing empty strings as NULL", async () => {
+  it('attaches tailor text to an application, storing empty strings as NULL', async () => {
     const fake = createFakeDb();
-    await attachTailorText(fake.db, "https://example.com/jobs/1", {
-      coverNote: "  My cover note.  ",
-      coldDm: "   ",
+    await attachTailorText(fake.db, 'https://example.com/jobs/1', {
+      coverNote: '  My cover note.  ',
+      coldDm: '   ',
     });
-    expect(fake.calls[0]?.sql).toBe("UPDATE applications SET cover_note = ?, cold_dm = ? WHERE job_url = ?");
-    expect(fake.calls[0]?.params).toEqual(["  My cover note.  ", null, "https://example.com/jobs/1"]);
+    expect(fake.calls[0]?.sql).toBe('UPDATE applications SET cover_note = ?, cold_dm = ? WHERE job_url = ?');
+    expect(fake.calls[0]?.params).toEqual(['  My cover note.  ', null, 'https://example.com/jobs/1']);
   });
-  it("patches status, notes, follow-up, and truncates notes to 5000", async () => {
-    const fake = createFakeDb();
-    fake.queue("getFirstAsync", stored()); // existing
-    fake.queue("runAsync", { changes: 1 });
-    fake.queue("getFirstAsync", stored({ status: "INTERVIEWING", notes: "new note" })); // after patch
 
-    const longNote = "a".repeat(6000);
+  it('patches status, notes, follow-up, and truncates notes to 5000', async () => {
+    const fake = createFakeDb();
+    fake.queue('getFirstAsync', stored()); // existing
+    fake.queue('runAsync', { changes: 1 });
+    fake.queue('getFirstAsync', stored({ status: 'INTERVIEWING', notes: 'new note' })); // after patch
+
+    const longNote = 'a'.repeat(6000);
     const patched = await patchApplication(fake.db, 5, {
-      status: "INTERVIEWING",
+      status: 'INTERVIEWING',
       notes: longNote,
     });
-    expect(patched?.status).toBe("INTERVIEWING");
-    const update = fake.calls.find((call) => call.method === "runAsync");
-    expect(update?.sql).toContain("status = ?");
-    expect(update?.sql).toContain("status_changed_at = CURRENT_TIMESTAMP");
-    expect(update?.sql).toContain("notes = ?");
-    expect(update?.params[0]).toBe("INTERVIEWING");
+    expect(patched?.status).toBe('INTERVIEWING');
+    const update = fake.calls.find((call) => call.method === 'runAsync');
+    expect(update?.sql).toContain('status = ?');
+    expect(update?.sql).toContain('status_changed_at = CURRENT_TIMESTAMP');
+    expect(update?.sql).toContain('notes = ?');
+    expect(update?.params[0]).toBe('INTERVIEWING');
     expect(update?.params[1]).toHaveLength(5000);
   });
 
-  it("clears follow-up when status changes to OFFER, REJECTED, or WITHDRAWN unless specified", async () => {
+  it('clears follow-up when status changes to OFFER, REJECTED, or WITHDRAWN unless specified', async () => {
     const fake = createFakeDb();
-    fake.queue("getFirstAsync", stored({ status: "APPLIED", follow_up_at: "2026-10-30 00:00:00" }));
-    fake.queue("runAsync", { changes: 1 });
-    fake.queue("getFirstAsync", stored({ status: "OFFER", follow_up_at: null }));
+    fake.queue('getFirstAsync', stored({ status: 'APPLIED', follow_up_at: '2026-10-30 00:00:00' }));
+    fake.queue('runAsync', { changes: 1 });
+    fake.queue('getFirstAsync', stored({ status: 'OFFER', follow_up_at: null }));
 
-    await patchApplication(fake.db, 5, { status: "OFFER" });
-    const update = fake.calls.find((call) => call.method === "runAsync");
-    expect(update?.sql).toContain("follow_up_at = ?");
+    await patchApplication(fake.db, 5, { status: 'OFFER' });
+    const update = fake.calls.find((call) => call.method === 'runAsync');
+    expect(update?.sql).toContain('follow_up_at = ?');
     expect(update?.params).toContain(null);
 
     // If followUpAt is explicitly passed, it keeps it
     const fake2 = createFakeDb();
-    fake2.queue("getFirstAsync", stored({ status: "APPLIED" }));
-    fake2.queue("runAsync", { changes: 1 });
-    fake2.queue("getFirstAsync", stored({ status: "REJECTED", follow_up_at: "2026-11-01 00:00:00" }));
-    await patchApplication(fake2.db, 5, { status: "REJECTED", followUpAt: "2026-11-01 00:00:00" });
-    const update2 = fake2.calls.find((call) => call.method === "runAsync");
-    expect(update2?.params).toContain("2026-11-01 00:00:00");
+    fake2.queue('getFirstAsync', stored({ status: 'APPLIED' }));
+    fake2.queue('runAsync', { changes: 1 });
+    fake2.queue('getFirstAsync', stored({ status: 'REJECTED', follow_up_at: '2026-11-01 00:00:00' }));
+    await patchApplication(fake2.db, 5, { status: 'REJECTED', followUpAt: '2026-11-01 00:00:00' });
+    const update2 = fake2.calls.find((call) => call.method === 'runAsync');
+    expect(update2?.params).toContain('2026-11-01 00:00:00');
   });
 
-  it("returns null when patching non-existent application", async () => {
+  it('returns null when patching non-existent application', async () => {
     const fake = createFakeDb();
-    fake.queue("getFirstAsync", null);
-    const result = await patchApplication(fake.db, 999, { status: "INTERVIEWING" });
+    fake.queue('getFirstAsync', null);
+    const result = await patchApplication(fake.db, 999, { status: 'INTERVIEWING' });
     expect(result).toBeNull();
   });
 
-  it("deletes an application by id", async () => {
+  it('deletes an application by id', async () => {
     const fake = createFakeDb();
-    fake.queue("runAsync", { changes: 1 });
+    fake.queue('runAsync', { changes: 1 });
     await deleteApplication(fake.db, 5);
-    expect(fake.calls[0]?.sql).toBe("DELETE FROM applications WHERE id = ?");
+    expect(fake.calls[0]?.sql).toBe('DELETE FROM applications WHERE id = ?');
     expect(fake.calls[0]?.params).toEqual([5]);
   });
 });

@@ -89,6 +89,9 @@ export const TestIds = {
     analyzeFab: 'analyze-fab',
     emptyBoards: 'workspace-no-boards',
   },
+  toolbar: {
+    save: 'toolbar-save',
+  },
   copilot: {
     sheet: 'copilot-sheet',
     loading: 'copilot-loading',

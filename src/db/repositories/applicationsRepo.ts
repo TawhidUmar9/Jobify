@@ -88,22 +88,77 @@ function formatUtcTimestamp(now: Date): string {
 }
 
 /**
- * Inserts an application.
- * - Same job_url already stored → err('DUPLICATE') (UNIQUE index; check first, also catch the constraint).
+ * Inserts or promotes an application. DECISIONS.md D-009, TASKS.md T-046d.
+ * - When a row with the same job_url exists:
+ *   - If its status is 'SAVED' and input.status !== 'SAVED': promotes the row in place via
+ *     a single parameterized UPDATE with ? parameters. Sets all NewApplication fields from input,
+ *     status = input.status ?? 'APPLIED', status_changed_at = CURRENT_TIMESTAMP,
+ *     follow_up_at = datetime('now', '+7 days') when new status is 'APPLIED' else NULL,
+ *     and keeps existing notes and created_at. Returns the updated row.
+ *   - Any other existing row -> err('DUPLICATE') (UNIQUE index; check first, also catch the constraint).
  * - matchScore rounded + clamped 0–100; null stays null. redFlags stored as JSON.
- * - status defaults to 'APPLIED'. follow_up_at = now + DEFAULT_FOLLOW_UP_DAYS days when status is
+ * - status defaults to 'APPLIED'. follow_up_at = now + 7 days when status is
  *   APPLIED, else NULL (SQL: datetime('now', '+7 days')).
- * - Other exceptions → err('DB_ERROR') (logger.error with the code only).
+ * - Other exceptions -> err('DB_ERROR') (logger.error with the code only).
  * - Returns the stored row.
  */
 export async function insertApplication(
   db: SQLiteDatabase,
   input: NewApplication,
 ): Promise<Result<Application, InsertApplicationError>> {
-  const existing = await db.getFirstAsync<{ id: number }>('SELECT id FROM applications WHERE job_url = ?', [
-    input.jobUrl,
-  ]);
-  if (existing) return err('DUPLICATE');
+  const existing = await db.getFirstAsync<{ id: number; status: string }>(
+    'SELECT id, status FROM applications WHERE job_url = ?',
+    [input.jobUrl],
+  );
+  if (existing) {
+    if (existing.status === 'SAVED' && input.status !== 'SAVED') {
+      const status = input.status ?? 'APPLIED';
+      const matchScore = clampScore(input.matchScore);
+      try {
+        await db.runAsync(
+          `UPDATE applications SET
+            company_name = ?,
+            role_title = ?,
+            board_name = ?,
+            resume_id = ?,
+            resume_label = ?,
+            match_score = ?,
+            eligibility = ?,
+            red_flags_json = ?,
+            cover_note = ?,
+            cold_dm = ?,
+            status = ?,
+            status_changed_at = CURRENT_TIMESTAMP,
+            follow_up_at = CASE WHEN ? = 'APPLIED' THEN datetime('now', '+7 days') ELSE NULL END
+          WHERE id = ?`,
+          [
+            input.companyName,
+            input.roleTitle,
+            input.boardName,
+            input.resumeId,
+            input.resumeLabel,
+            matchScore,
+            input.eligibility,
+            JSON.stringify(input.redFlags),
+            input.coverNote,
+            input.coldDm,
+            status,
+            status,
+            existing.id,
+          ],
+        );
+        const stored = await getApplication(db, existing.id);
+        if (!stored) return err('DB_ERROR');
+        return ok(stored);
+      } catch (error) {
+        if (isUniqueViolation(error)) return err('DUPLICATE');
+        logger.error('applications', 'DB_ERROR');
+        return err('DB_ERROR');
+      }
+    }
+    return err('DUPLICATE');
+  }
+
   const status = input.status ?? 'APPLIED';
   const matchScore = clampScore(input.matchScore);
   try {
@@ -156,6 +211,17 @@ export async function getApplication(db: SQLiteDatabase, id: number): Promise<Ap
   return row ? mapApplication(row) : null;
 }
 
+/** Finds an application by its job URL, or null if none exists. DECISIONS.md D-009. */
+export async function findApplicationByUrl(
+  db: SQLiteDatabase,
+  jobUrl: string,
+): Promise<Application | null> {
+  const row = await db.getFirstAsync<ApplicationRow>('SELECT * FROM applications WHERE job_url = ?', [
+    jobUrl,
+  ]);
+  return row ? mapApplication(row) : null;
+}
+
 /**
  * Applications whose follow_up_at <= now and status in (APPLIED, INTERVIEWING),
  * ordered by follow_up_at ASC.
@@ -177,7 +243,7 @@ export async function listFollowUpsDue(db: SQLiteDatabase, now: Date): Promise<A
 }
 
 /**
- * Applies a patch. status change → also sets status_changed_at = CURRENT_TIMESTAMP, and when the new
+ * Applies a patch. status change -> also sets status_changed_at = CURRENT_TIMESTAMP, and when the new
  * status is OFFER, REJECTED or WITHDRAWN sets follow_up_at = NULL (unless the patch sets it).
  * notes max 5000 chars (truncate). Returns the updated row or null if the id does not exist.
  */
@@ -237,9 +303,9 @@ export async function attachTailorText(
   jobUrl: string,
   text: { coverNote: string; coldDm: string },
 ): Promise<void> {
-  const coverNote = text.coverNote.trim() === "" ? null : text.coverNote;
-  const coldDm = text.coldDm.trim() === "" ? null : text.coldDm;
-  await db.runAsync("UPDATE applications SET cover_note = ?, cold_dm = ? WHERE job_url = ?", [
+  const coverNote = text.coverNote.trim() === '' ? null : text.coverNote;
+  const coldDm = text.coldDm.trim() === '' ? null : text.coldDm;
+  await db.runAsync('UPDATE applications SET cover_note = ?, cold_dm = ? WHERE job_url = ?', [
     coverNote,
     coldDm,
     jobUrl,
