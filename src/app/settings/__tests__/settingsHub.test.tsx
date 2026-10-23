@@ -96,7 +96,7 @@ describe('SettingsHubScreen', () => {
   });
 
   it('displays populated subtitles when data is available', async () => {
-    mockAiConfig = { provider: 'gemini', model: 'gemini-3.8-flash', baseUrl: 'https://generativelanguage.googleapis.com' };
+    mockAiConfig = { provider: 'gemini', model: 'gemini-3.5-flash-lite', baseUrl: 'https://generativelanguage.googleapis.com' };
     mockProfile = { fullName: 'Alex Rahman' };
     mockPreferences = { workModes: ['REMOTE'], targetRoles: ['Backend Engineer', 'Platform Engineer', 'Systems Engineer'] };
     mockResumesCount = 2;
@@ -109,7 +109,7 @@ describe('SettingsHubScreen', () => {
       </ThemeProvider>,
     );
 
-    expect(await screen.findByText('Gemini · gemini-3.8-flash')).toBeTruthy();
+    expect(await screen.findByText('Gemini · gemini-3.5-flash-lite')).toBeTruthy();
     expect(screen.getByText('Alex Rahman')).toBeTruthy();
     expect(screen.getByText('2 resumes')).toBeTruthy();
     expect(screen.getByText('Remote · 3 roles')).toBeTruthy();

@@ -14,7 +14,7 @@ export type AiProviderKind = (typeof AI_PROVIDER_KINDS)[number];
 /** Non-secret settings, stored in kv-store. The key itself lives in expo-secure-store. */
 export interface AiConfig {
   provider: AiProviderKind;
-  /** Model id sent to the provider, e.g. "gemini-3.8-flash", "gpt-5-mini", "llama3.1". */
+  /** Model id sent to the provider, e.g. "gemini-3.5-flash-lite", "gpt-5-mini", "llama3.1". */
   model: string;
   /** Scheme + host (+ path prefix), no trailing slash.
    *  gemini default "https://generativelanguage.googleapis.com";
@@ -23,7 +23,7 @@ export interface AiConfig {
 }
 
 export const AI_DEFAULTS: Record<AiProviderKind, AiConfig> = {
-  gemini: { provider: 'gemini', model: 'gemini-3.8-flash', baseUrl: 'https://generativelanguage.googleapis.com' },
+  gemini: { provider: 'gemini', model: 'gemini-3.5-flash-lite', baseUrl: 'https://generativelanguage.googleapis.com' },
   openai_compatible: { provider: 'openai_compatible', model: '', baseUrl: 'https://api.openai.com/v1' },
 };
 

@@ -34,7 +34,7 @@ let mockHasSaved = false;
 let mockDirty = false;
 const mockDefaultConfig = {
   provider: 'gemini' as const,
-  model: 'gemini-3.8-flash',
+  model: 'gemini-3.5-flash-lite',
   baseUrl: 'https://generativelanguage.googleapis.com',
 };
 
