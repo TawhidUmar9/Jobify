@@ -11,6 +11,10 @@ env:
 - tapOn:
     id: "board-pill-4"
 - launchApp
+- extendedWaitUntil:
+    visible:
+      id: "board-pill-4"
+    timeout: 15000
 - assertVisible:
     id: "board-pill-4"
 
@@ -19,21 +23,22 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 # AT-10: Address bar navigation
 - tapOn:
     id: "toolbar-address"
 - tapOn:
     id: "address-input"
-- eraseText: 60
+- eraseText: 80
 - inputText: "http://localhost:8787/fixtures/job-local-only.html"
+- hideKeyboard
 - tapOn:
     id: "address-go"
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 # AT-13: Toolbar reload, back, and forward
 - tapOn:

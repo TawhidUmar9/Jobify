@@ -12,7 +12,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "analyze-fab"
@@ -21,6 +21,12 @@ env:
     visible:
       id: "action-log-application"
     timeout: 15000
+
+- scrollUntilVisible:
+    element:
+      id: "action-log-application"
+    direction: DOWN
+    timeout: 10000
 
 - tapOn:
     id: "action-log-application"
@@ -33,26 +39,51 @@ env:
 - tapOn:
     id: "tab-tracker"
 - extendedWaitUntil:
+    visible:
+      id: "tracker-screen"
+    timeout: 15000
+- extendedWaitUntil:
     visible: "Senior Backend Engineer"
-    timeout: 10000
+    timeout: 15000
 
 - tapOn: "Senior Backend Engineer"
 - extendedWaitUntil:
     visible:
       id: "application-detail-screen"
-    timeout: 10000
+    timeout: 15000
 
 # Change status to Interviewing
+- scrollUntilVisible:
+    element:
+      id: "detail-change-status"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "detail-change-status"
+- extendedWaitUntil:
+    visible:
+      id: "status-option-INTERVIEWING"
+    timeout: 15000
 - tapOn:
     id: "status-option-INTERVIEWING"
 - assertVisible: "Interviewing"
 
 # Save notes
+- scrollUntilVisible:
+    element:
+      id: "detail-notes"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "detail-notes"
+- eraseText: 80
 - inputText: "Interview scheduled for Monday"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "detail-save-notes"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "detail-save-notes"
 - assertVisible: "Notes saved"

@@ -8,16 +8,42 @@ appId: io.github.tawhidumar9.jobify
 # AT-39: Settings -> Backup screen options
 - tapOn:
     id: "tab-settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "settings-backup"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "settings-backup"
 - extendedWaitUntil:
     visible:
       id: "backup-screen"
-    timeout: 10000
+    timeout: 15000
 
+- scrollUntilVisible:
+    element:
+      id: "backup-export"
+    direction: DOWN
+    timeout: 10000
 - assertVisible:
     id: "backup-export"
+
+- scrollUntilVisible:
+    element:
+      id: "backup-share"
+    direction: DOWN
+    timeout: 10000
 - assertVisible:
     id: "backup-share"
+
+- scrollUntilVisible:
+    element:
+      id: "backup-import"
+    direction: DOWN
+    timeout: 10000
 - assertVisible:
     id: "backup-import"

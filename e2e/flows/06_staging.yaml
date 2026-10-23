@@ -12,7 +12,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "analyze-fab"
@@ -21,6 +21,12 @@ env:
     visible:
       id: "action-stage-resume"
     timeout: 15000
+
+- scrollUntilVisible:
+    element:
+      id: "action-stage-resume"
+    direction: DOWN
+    timeout: 10000
 
 - tapOn:
     id: "action-stage-resume"

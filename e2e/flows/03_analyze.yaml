@@ -12,7 +12,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "analyze-fab"
@@ -28,6 +28,11 @@ env:
     id: "match-score"
 - assertVisible:
     id: "recommended-resume"
+- scrollUntilVisible:
+    element:
+      id: "red-flag-0"
+    direction: DOWN
+    timeout: 10000
 - assertVisible:
     id: "red-flag-0"
 
@@ -39,7 +44,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "analyze-fab"
@@ -60,7 +65,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "analyze-fab"

@@ -10,16 +10,43 @@ env:
 # AT-35: Settings -> Job boards management
 - tapOn:
     id: "tab-settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "settings-boards"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "settings-boards"
+- extendedWaitUntil:
+    visible:
+      id: "boards-screen"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "boards-add"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "boards-add"
 - tapOn:
     id: "board-form-name"
+- eraseText: 80
 - inputText: "Test Board"
+- hideKeyboard
 - tapOn:
     id: "board-form-url"
+- eraseText: 80
 - inputText: "http://localhost:8787/fixtures/job-remote-form.html"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "board-form-save"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "board-form-save"
 - assertVisible: "Test Board"
@@ -27,15 +54,30 @@ env:
 - back
 
 # AT-36: Settings -> Profile edit and discard confirmation
+- scrollUntilVisible:
+    element:
+      id: "settings-profile"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "settings-profile"
+- extendedWaitUntil:
+    visible:
+      id: "profile-headline"
+    timeout: 15000
 - tapOn:
     id: "profile-headline"
 - inputText: " Senior"
+- hideKeyboard
 - back
 - assertVisible: "Discard changes?"
 - tapOn:
     id: "confirm-dialog-cancel"
+- scrollUntilVisible:
+    element:
+      id: "profile-save"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "profile-save"
 - assertVisible: "Profile saved"
@@ -43,8 +85,22 @@ env:
 - back
 
 # AT-37: Settings -> Resumes deletion
+- scrollUntilVisible:
+    element:
+      id: "settings-resumes"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "settings-resumes"
+- extendedWaitUntil:
+    visible:
+      id: "resumes-screen"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "resume-delete-1"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "resume-delete-1"
 - assertVisible:

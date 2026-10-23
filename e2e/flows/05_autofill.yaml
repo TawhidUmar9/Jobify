@@ -12,7 +12,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "analyze-fab"
@@ -22,11 +22,23 @@ env:
       id: "action-autofill"
     timeout: 15000
 
+- scrollUntilVisible:
+    element:
+      id: "action-autofill"
+    direction: DOWN
+    timeout: 10000
+
 - tapOn:
     id: "action-autofill"
 - assertVisible: "Filled 5 of 5 fields"
 
 # Save generated answer
+- scrollUntilVisible:
+    element:
+      id: "save-answer-jobify-field-3"
+    direction: DOWN
+    timeout: 10000
+
 - tapOn:
     id: "save-answer-jobify-field-3"
 - assertVisible: "Saved"

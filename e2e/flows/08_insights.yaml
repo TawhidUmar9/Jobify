@@ -8,12 +8,16 @@ appId: io.github.tawhidumar9.jobify
 # AT-34: Open Insights screen from Tracker
 - tapOn:
     id: "tab-tracker"
+- extendedWaitUntil:
+    visible:
+      id: "tracker-screen"
+    timeout: 15000
 - tapOn:
     id: "tracker-insights"
 - extendedWaitUntil:
     visible:
       id: "insights-screen"
-    timeout: 10000
+    timeout: 15000
 
 - assertVisible:
     id: "insights-empty"

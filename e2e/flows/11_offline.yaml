@@ -9,6 +9,10 @@ appId: io.github.tawhidumar9.jobify
 # Tracker tab works offline
 - tapOn:
     id: "tab-tracker"
+- extendedWaitUntil:
+    visible:
+      id: "tracker-screen"
+    timeout: 15000
 - assertVisible:
     id: "tracker-empty"
 
@@ -18,18 +22,35 @@ appId: io.github.tawhidumar9.jobify
 - extendedWaitUntil:
     visible:
       id: "insights-screen"
-    timeout: 10000
+    timeout: 15000
 - back
 
 # Settings tab works offline
 - tapOn:
     id: "tab-settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 15000
 - assertVisible:
     id: "settings-screen"
+- scrollUntilVisible:
+    element:
+      id: "settings-preferences"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "settings-preferences"
+- extendedWaitUntil:
+    visible:
+      id: "prefs-work-mode-remote"
+    timeout: 15000
 - assertVisible:
     id: "prefs-work-mode-remote"
 - back
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 15000
 - assertVisible:
     id: "settings-screen"

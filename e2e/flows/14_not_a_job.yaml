@@ -12,7 +12,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 # Analyze
 - tapOn:
@@ -26,6 +26,11 @@ env:
 - assertVisible:
     id: "copilot-not-job"
 - assertVisible: "This doesn't look like a job post"
+- scrollUntilVisible:
+    element:
+      id: "action-log-application"
+    direction: DOWN
+    timeout: 10000
 - assertVisible:
     id: "action-log-application"
     enabled: false

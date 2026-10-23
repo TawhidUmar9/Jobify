@@ -6,46 +6,86 @@ env:
 # Shared sub-flow: onboarding Alex Rahman with mock OpenAI-compatible AI provider
 - tapOn:
     id: "onboarding-start"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-ai"
+    timeout: 15000
 
 # Step 1: AI Provider
 - tapOn:
     id: "ai-provider-openai"
 - tapOn:
     id: "ai-base-url"
-- eraseText: 50
+- eraseText: 80
 - inputText: "${MOCK_API}"
+- hideKeyboard
 - tapOn:
     id: "ai-model"
-- eraseText: 50
+- eraseText: 80
 - inputText: "mock"
+- hideKeyboard
 - tapOn:
     id: "ai-api-key"
-- eraseText: 50
+- eraseText: 80
 - inputText: "k"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "ai-test"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "ai-test"
+- extendedWaitUntil:
+    visible: "Connected"
+    timeout: 15000
 - assertVisible: "Connected"
+- scrollUntilVisible:
+    element:
+      id: "onboarding-next"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "onboarding-next"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-profile"
+    timeout: 15000
 
 # Step 2: Profile (paste resume text)
 - tapOn:
     id: "resume-label"
-- eraseText: 30
+- eraseText: 80
 - inputText: "Main"
+- hideKeyboard
 - tapOn:
     id: "resume-paste-toggle"
 - tapOn:
     id: "resume-paste-text"
 - inputText: "Alex Rahman\nalex.rahman@example.com | +880 1700 000000 | Dhaka, Bangladesh\nhttps://alex.example.com\nBackend engineer who builds Node.js and Python services.\nSkills: Node.js, Python, PostgreSQL, Docker, k3s, GitHub Actions"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "resume-paste-submit"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "resume-paste-submit"
 - extendedWaitUntil:
     visible:
       id: "profile-full-name"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "onboarding-next"
+    direction: DOWN
     timeout: 10000
 - tapOn:
     id: "onboarding-next"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-preferences"
+    timeout: 15000
 
 # Step 3: Preferences
 - tapOn:
@@ -53,8 +93,14 @@ env:
 - tapOn:
     id: "prefs-authorized-countries-input"
 - inputText: "BD"
+- hideKeyboard
 - tapOn:
     id: "prefs-authorized-countries-add"
+- scrollUntilVisible:
+    element:
+      id: "onboarding-finish"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "onboarding-finish"
 
@@ -62,4 +108,4 @@ env:
 - extendedWaitUntil:
     visible:
       id: "tab-workspace"
-    timeout: 10000
+    timeout: 15000

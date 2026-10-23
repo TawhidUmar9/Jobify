@@ -14,52 +14,98 @@ env:
 
 - tapOn:
     id: "onboarding-start"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-ai"
+    timeout: 15000
 
 # AT-02: AI configuration & validation
 - tapOn:
     id: "ai-provider-openai"
 - tapOn:
     id: "ai-base-url"
-- eraseText: 50
+- eraseText: 80
 - inputText: "${MOCK_API}"
+- hideKeyboard
 - tapOn:
     id: "ai-model"
-- eraseText: 50
+- eraseText: 80
 - inputText: "mock"
+- hideKeyboard
 # Test empty key rejection
+- scrollUntilVisible:
+    element:
+      id: "ai-test"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "ai-test"
 - assertVisible: "The AI provider rejected your API key. Check it in Settings → AI provider."
 # Enter valid key and test success
 - tapOn:
     id: "ai-api-key"
+- eraseText: 80
 - inputText: "k"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "ai-test"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "ai-test"
+- extendedWaitUntil:
+    visible: "Connected"
+    timeout: 15000
 - assertVisible: "Connected"
+- scrollUntilVisible:
+    element:
+      id: "onboarding-next"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "onboarding-next"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-profile"
+    timeout: 15000
 
 # AT-04: Profile step & resume paste
 - tapOn:
     id: "resume-label"
-- eraseText: 30
+- eraseText: 80
 - inputText: "Main"
+- hideKeyboard
 - tapOn:
     id: "resume-paste-toggle"
 - tapOn:
     id: "resume-paste-text"
 - inputText: "Alex Rahman\nalex.rahman@example.com | +880 1700 000000 | Dhaka, Bangladesh\nhttps://alex.example.com\nBackend engineer who builds Node.js and Python services.\nSkills: Node.js, Python, PostgreSQL, Docker, k3s, GitHub Actions"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "resume-paste-submit"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "resume-paste-submit"
 - extendedWaitUntil:
     visible:
       id: "profile-full-name"
-    timeout: 10000
+    timeout: 15000
 - assertVisible:
     id: "profile-email"
+- scrollUntilVisible:
+    element:
+      id: "onboarding-next"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "onboarding-next"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-preferences"
+    timeout: 15000
 
 # AT-05: Preferences step & finish
 - tapOn:
@@ -67,8 +113,14 @@ env:
 - tapOn:
     id: "prefs-authorized-countries-input"
 - inputText: "BD"
+- hideKeyboard
 - tapOn:
     id: "prefs-authorized-countries-add"
+- scrollUntilVisible:
+    element:
+      id: "onboarding-finish"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "onboarding-finish"
 
@@ -76,11 +128,15 @@ env:
 - extendedWaitUntil:
     visible:
       id: "tab-workspace"
-    timeout: 10000
+    timeout: 15000
 - assertVisible:
     id: "board-bar"
 
 # Relaunch persistence check
 - launchApp
+- extendedWaitUntil:
+    visible:
+      id: "tab-workspace"
+    timeout: 15000
 - assertVisible:
     id: "tab-workspace"

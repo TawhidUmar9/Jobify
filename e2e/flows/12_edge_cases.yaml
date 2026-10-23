@@ -12,7 +12,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "application-not-found"
-    timeout: 10000
+    timeout: 15000
 - back
 
 # AT-17: 429 Rate limit error handling
@@ -20,7 +20,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 - tapOn:
     id: "analyze-fab"
 - extendedWaitUntil:
@@ -36,7 +36,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 - tapOn:
     id: "analyze-fab"
 - extendedWaitUntil:

@@ -12,7 +12,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "analyze-fab"
@@ -22,6 +22,12 @@ env:
       id: "tailor-button"
     timeout: 15000
 
+- scrollUntilVisible:
+    element:
+      id: "tailor-button"
+    direction: DOWN
+    timeout: 10000
+
 - tapOn:
     id: "tailor-button"
 
@@ -30,13 +36,43 @@ env:
       id: "tailor-card"
     timeout: 15000
 
+- scrollUntilVisible:
+    element:
+      id: "tailor-card"
+    direction: DOWN
+    timeout: 10000
+- assertVisible:
+    id: "tailor-card"
+
+- scrollUntilVisible:
+    element:
+      id: "bullet-rewrite-0"
+    direction: DOWN
+    timeout: 10000
 - assertVisible:
     id: "bullet-rewrite-0"
+
+- scrollUntilVisible:
+    element:
+      id: "cover-note"
+    direction: DOWN
+    timeout: 10000
 - assertVisible:
     id: "cover-note"
+
+- scrollUntilVisible:
+    element:
+      id: "cold-dm-text"
+    direction: DOWN
+    timeout: 10000
 - assertVisible:
     id: "cold-dm-text"
 
+- scrollUntilVisible:
+    element:
+      id: "copy-dm"
+    direction: DOWN
+    timeout: 10000
 - tapOn:
     id: "copy-dm"
 - assertVisible: "Copied"

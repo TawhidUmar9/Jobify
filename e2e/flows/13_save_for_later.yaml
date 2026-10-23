@@ -12,7 +12,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "toolbar-save"
-    timeout: 10000
+    timeout: 15000
 
 # Tap toolbar-save and assert snackbar "Saved to Tracker"
 - tapOn:
@@ -24,7 +24,7 @@ env:
     id: "tab-tracker"
 - extendedWaitUntil:
     visible: "Saved"
-    timeout: 10000
+    timeout: 15000
 - assertVisible: "Saved"
 
 # Back to Workspace, Analyze, Log
@@ -33,7 +33,7 @@ env:
 - extendedWaitUntil:
     visible:
       id: "analyze-fab"
-    timeout: 10000
+    timeout: 15000
 
 - tapOn:
     id: "analyze-fab"
@@ -41,6 +41,12 @@ env:
     visible:
       id: "action-log-application"
     timeout: 15000
+
+- scrollUntilVisible:
+    element:
+      id: "action-log-application"
+    direction: DOWN
+    timeout: 10000
 
 - tapOn:
     id: "action-log-application"
@@ -54,5 +60,5 @@ env:
     id: "tab-tracker"
 - extendedWaitUntil:
     visible: "Applied"
-    timeout: 10000
+    timeout: 15000
 - assertVisible: "Applied"

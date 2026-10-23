@@ -24,7 +24,7 @@ This directory contains Maestro end-to-end test flows for Jobify, testing user f
    (On an Android emulator, `adb reverse` also allows `localhost:8787` to resolve to the host machine).
 
 4. **Install App on Device:**
-   Ensure the Jobify APK (`io.github.tawhidumar9.jobify`) is installed on the connected device.
+   Ensure the Jobify release or debug APK (`io.github.tawhidumar9.jobify`) is installed on the connected device.
 
 ## Running Tests
 
@@ -32,6 +32,7 @@ Run the full suite:
 ```bash
 maestro test e2e/flows
 ```
+Maestro uses `config.yaml` to select and run only the numbered test flows (`[0-9]*.yaml`), ignoring helper sub-flows prefixed with `_` (such as `_onboard.yaml`).
 
 Or run an individual flow:
 ```bash
@@ -41,7 +42,9 @@ maestro test e2e/flows/03_analyze.yaml
 
 ## Flow Overview
 
+- `config.yaml`: Maestro workspace configuration specifying `flows: ["[0-9]*.yaml"]` so only numbered flows execute directly.
 - `_onboard.yaml`: Shared sub-flow that completes initial setup (OpenAI-compatible mock AI, Alex Rahman profile text, remote BD preferences).
+- `_airplane_mode.yaml`: Optional sub-flow for emulator-only airplane mode toggling.
 - `01_onboarding.yaml`: Fresh install welcome, AI provider connection testing and validation, resume text parsing, preferences, and workspace launch.
 - `02_workspace.yaml`: Job board pills selection persistence, deep linking to job URLs, address bar editing, and navigation controls.
 - `03_analyze.yaml`: Fit and red-flag analysis on eligible, ineligible, and empty job pages.
@@ -53,7 +56,6 @@ maestro test e2e/flows/03_analyze.yaml
 - `09_settings.yaml`: Job boards management, profile editing with unsaved changes dialog, and resume deletion.
 - `10_backup.yaml`: Backup and restore screen controls.
 - `11_offline.yaml`: Offline functionality of Tracker, Insights, and Settings.
-- `_airplane_mode.yaml`: Optional sub-flow for emulator-only airplane mode toggling.
 - `12_edge_cases.yaml`: Error handling for 429 rate limit, 500 server error, and invalid application IDs.
 - `13_save_for_later.yaml`: Save job for later via toolbar-save, verifying in Tracker as Saved, and promoting to Applied via Analyze & Log.
 - `14_not_a_job.yaml`: Detection of non-job pages showing the not-a-job card and disabled Log action.
