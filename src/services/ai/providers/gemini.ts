@@ -3,7 +3,7 @@ import { toGeminiSchema } from '../geminiSchema';
 import { AI_TIMEOUT_MS, type AiError, type AiProvider, type AiRequest, type ProviderDeps } from '../types';
 
 /**
- * Gemini adapter. CONTRACT: ARCHITECTURE.md §5 API-G.
+ * Gemini adapter. CONTRACT: ARCHITECTURE.md §5 API-G, DECISIONS.md D-004.
  *
  * Request: POST `${config.baseUrl}/v1beta/models/${config.model}:generateContent`
  *   headers { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }   (never ?key= in the URL)
@@ -19,7 +19,9 @@ import { AI_TIMEOUT_MS, type AiError, type AiProvider, type AiRequest, type Prov
  *
  * Error mapping (first match wins):
  *   own timeout (req.timeoutMs ?? AI_TIMEOUT_MS) → TIMEOUT; req.signal aborted → re-throw AbortError;
- *   fetch throws → NETWORK; 400 → BAD_REQUEST; 401/403 → AUTH; 404 → MODEL_NOT_FOUND;
+ *   fetch throws → NETWORK;
+ *   400 with API_KEY_INVALID (D-004) → AUTH; other 400 → BAD_REQUEST;
+ *   401/403 → AUTH; 404 → MODEL_NOT_FOUND;
  *   429 → RATE_LIMITED; other non-2xx → SERVER; body not JSON → INVALID_JSON;
  *   promptFeedback.blockReason → BLOCKED; no candidates[0] → EMPTY_RESPONSE;
  *   finishReason ∈ SAFETY|RECITATION|BLOCKLIST|PROHIBITED_CONTENT|SPII → BLOCKED;
@@ -41,6 +43,16 @@ function asAbortError(error: unknown): Error {
   const created = new Error('The request was aborted.');
   created.name = 'AbortError';
   return created;
+}
+
+function isApiKeyInvalidBody(body: unknown): boolean {
+  if (!isRecord(body)) return false;
+  const errorObj = body.error;
+  if (!isRecord(errorObj)) return false;
+  if (errorObj.status !== 'INVALID_ARGUMENT') return false;
+  const details = errorObj.details;
+  if (!Array.isArray(details)) return false;
+  return details.some((entry) => isRecord(entry) && entry.reason === 'API_KEY_INVALID');
 }
 
 function httpError(status: number): AiError {
@@ -110,7 +122,21 @@ export function createGeminiProvider(deps: ProviderDeps): AiProvider {
           if (req.signal?.aborted || isAbortError(error)) throw asAbortError(error);
           return err({ code: 'NETWORK' });
         }
-        if (!response.ok) return err(httpError(response.status));
+        if (!response.ok) {
+          if (response.status === 400) {
+            let body: unknown;
+            try {
+              body = await response.json();
+            } catch {
+              return err({ code: 'BAD_REQUEST', httpStatus: 400 });
+            }
+            if (isApiKeyInvalidBody(body)) {
+              return err({ code: 'AUTH', httpStatus: 400 });
+            }
+            return err({ code: 'BAD_REQUEST', httpStatus: 400 });
+          }
+          return err(httpError(response.status));
+        }
         let payload: unknown;
         try {
           payload = await response.json();

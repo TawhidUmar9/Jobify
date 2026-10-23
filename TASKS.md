@@ -580,7 +580,7 @@ true;
 - **Goal:** fix what the M5 device pass found on the SM-G935F (2026-10-23). One commit per item, message `T-046b F<n>: <title>`. Contract changes are pre-approved in DECISIONS.md D-004…D-007; follow them exactly.
 - **Files:** as named per item, plus tests. `scripts/licenses.mjs` (new), `LICENSE`, `LICENSES.md`, README license section are allowed for F6.
 - **Acceptance:**
-  - [ ] F1 (D-004) Wrong Gemini key → "The AI provider rejected your API key…" (AUTH), not BAD_REQUEST. `src/services/ai/providers/gemini.ts` + tests.
+  - [x] F1 (D-004) Wrong Gemini key → "The AI provider rejected your API key…" (AUTH), not BAD_REQUEST. `src/services/ai/providers/gemini.ts` + tests.
   - [ ] F2 Settings → AI provider: unsaved-changes confirm on back, same pattern and copy as `settings/profile.tsx` ("Discard changes?"). Dirty = draft differs from the saved config or the key field was edited. `src/app/settings/ai.tsx` (+ `useAiSettings.ts` if it needs a `dirty` flag) + test.
   - [ ] F3 Bottom-panel modals with text fields stay above the keyboard. On device the keyboard covered the Add/Edit job board panel (name half hidden; URL, Save, Cancel fully hidden). Wrap the panel in `KeyboardAvoidingView` (`behavior` 'padding' on iOS, 'height' on Android, or the equivalent that works with edge-to-edge) in `src/components/forms/BoardForm.tsx`, and do the same for any other `Modal` panel containing a `TextField` (check `AnswerForm.tsx`, `FollowUpPicker.tsx`, the onboarding/AI forms). Test: the panel content is inside a KeyboardAvoidingView.
   - [ ] F4 (D-005) Default Gemini model `gemini-3.5-flash-lite`. `src/services/ai/types.ts` + tests/copy that name the old default.

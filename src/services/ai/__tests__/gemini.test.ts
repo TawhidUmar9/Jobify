@@ -153,6 +153,58 @@ describe('createGeminiProvider', () => {
     }
   });
 
+  it('maps HTTP 400 with API_KEY_INVALID to AUTH (D-004)', async () => {
+    const badKeyBody = {
+      error: {
+        code: 400,
+        message: 'API key not valid. Please pass a valid API key.',
+        status: 'INVALID_ARGUMENT',
+        details: [
+          {
+            '@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+            reason: 'API_KEY_INVALID',
+            domain: 'googleapis.com',
+          },
+        ],
+      },
+    };
+    const fetchImpl: typeof fetch = () => Promise.resolve(jsonResponse(400, badKeyBody));
+    const result = await createGeminiProvider(deps(fetchImpl)).generateJson(request);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('AUTH');
+      expect(result.error.httpStatus).toBe(400);
+    }
+  });
+
+  it('maps HTTP 400 without API_KEY_INVALID to BAD_REQUEST (D-004)', async () => {
+    const otherBody = {
+      error: {
+        code: 400,
+        message: 'Invalid model parameter',
+        status: 'INVALID_ARGUMENT',
+        details: [],
+      },
+    };
+    const fetchImpl: typeof fetch = () => Promise.resolve(jsonResponse(400, otherBody));
+    const result = await createGeminiProvider(deps(fetchImpl)).generateJson(request);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('BAD_REQUEST');
+      expect(result.error.httpStatus).toBe(400);
+    }
+  });
+
+  it('maps HTTP 400 with non-JSON body to BAD_REQUEST (D-004)', async () => {
+    const fetchImpl: typeof fetch = () => Promise.resolve(jsonResponse(400, 'plain error', true));
+    const result = await createGeminiProvider(deps(fetchImpl)).generateJson(request);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('BAD_REQUEST');
+      expect(result.error.httpStatus).toBe(400);
+    }
+  });
+
   it('maps a non-JSON body, a block, an empty candidate, unsafe finish, empty text, and bad JSON', async () => {
     const cases: { body: unknown; failJson?: boolean; code: string }[] = [
       { body: null, failJson: true, code: 'INVALID_JSON' },
