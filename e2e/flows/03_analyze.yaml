@@ -1,0 +1,76 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-14: Analysis on eligible job (job-remote-form.html)
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-remote-form.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+- tapOn:
+    id: "analyze-fab"
+
+- extendedWaitUntil:
+    visible:
+      id: "eligibility-badge"
+    timeout: 15000
+
+- assertVisible:
+    id: "eligibility-badge"
+- assertVisible:
+    id: "match-score"
+- assertVisible:
+    id: "recommended-resume"
+- assertVisible:
+    id: "red-flag-0"
+
+- tapOn:
+    id: "copilot-close"
+
+# AT-15: Analysis on ineligible job (job-local-only.html)
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-local-only.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+- tapOn:
+    id: "analyze-fab"
+
+- extendedWaitUntil:
+    visible:
+      id: "eligibility-badge"
+    timeout: 15000
+
+- assertVisible: "Likely not eligible"
+- assertVisible: "Location or work permit limit"
+
+- tapOn:
+    id: "copilot-close"
+
+# AT-16: Analysis on empty page (empty.html)
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fempty.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+- tapOn:
+    id: "analyze-fab"
+
+- extendedWaitUntil:
+    visible:
+      id: "copilot-sheet"
+    timeout: 15000
+
+- assertVisible: "Not enough text on this page"
+
+- tapOn:
+    id: "copilot-close"

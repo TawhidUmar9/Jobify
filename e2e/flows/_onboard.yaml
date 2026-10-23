@@ -1,0 +1,65 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+  MOCK_API: "http://localhost:8787/v1"
+---
+# Shared sub-flow: onboarding Alex Rahman with mock OpenAI-compatible AI provider
+- tapOn:
+    id: "onboarding-start"
+
+# Step 1: AI Provider
+- tapOn:
+    id: "ai-provider-openai"
+- tapOn:
+    id: "ai-base-url"
+- eraseText: 50
+- inputText: "${MOCK_API}"
+- tapOn:
+    id: "ai-model"
+- eraseText: 50
+- inputText: "mock"
+- tapOn:
+    id: "ai-api-key"
+- eraseText: 50
+- inputText: "k"
+- tapOn:
+    id: "ai-test"
+- assertVisible: "Connected"
+- tapOn:
+    id: "onboarding-next"
+
+# Step 2: Profile (paste resume text)
+- tapOn:
+    id: "resume-label"
+- eraseText: 30
+- inputText: "Main"
+- tapOn:
+    id: "resume-paste-toggle"
+- tapOn:
+    id: "resume-paste-text"
+- inputText: "Alex Rahman\nalex.rahman@example.com | +880 1700 000000 | Dhaka, Bangladesh\nhttps://alex.example.com\nBackend engineer who builds Node.js and Python services.\nSkills: Node.js, Python, PostgreSQL, Docker, k3s, GitHub Actions"
+- tapOn:
+    id: "resume-paste-submit"
+- extendedWaitUntil:
+    visible:
+      id: "profile-full-name"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-next"
+
+# Step 3: Preferences
+- tapOn:
+    id: "prefs-work-mode-remote"
+- tapOn:
+    id: "prefs-authorized-countries-input"
+- inputText: "BD"
+- tapOn:
+    id: "prefs-authorized-countries-add"
+- tapOn:
+    id: "onboarding-finish"
+
+# Verify landed on workspace
+- extendedWaitUntil:
+    visible:
+      id: "tab-workspace"
+    timeout: 10000

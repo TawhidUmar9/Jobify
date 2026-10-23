@@ -1,0 +1,27 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-28: Staging a text-only resume warns user to attach a PDF
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-remote-form.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+- tapOn:
+    id: "analyze-fab"
+
+- extendedWaitUntil:
+    visible:
+      id: "action-stage-resume"
+    timeout: 15000
+
+- tapOn:
+    id: "action-stage-resume"
+- assertVisible: "This resume has no PDF. Add one in Settings → Resumes."

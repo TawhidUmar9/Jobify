@@ -1,0 +1,54 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-35: Settings -> Job boards management
+- tapOn:
+    id: "tab-settings"
+- tapOn:
+    id: "settings-boards"
+- tapOn:
+    id: "boards-add"
+- tapOn:
+    id: "board-form-name"
+- inputText: "Test Board"
+- tapOn:
+    id: "board-form-url"
+- inputText: "http://localhost:8787/fixtures/job-remote-form.html"
+- tapOn:
+    id: "board-form-save"
+- assertVisible: "Test Board"
+
+- back
+
+# AT-36: Settings -> Profile edit and discard confirmation
+- tapOn:
+    id: "settings-profile"
+- tapOn:
+    id: "profile-headline"
+- inputText: " Senior"
+- back
+- assertVisible: "Discard changes?"
+- tapOn:
+    id: "confirm-dialog-cancel"
+- tapOn:
+    id: "profile-save"
+- assertVisible: "Profile saved"
+
+- back
+
+# AT-37: Settings -> Resumes deletion
+- tapOn:
+    id: "settings-resumes"
+- tapOn:
+    id: "resume-delete-1"
+- assertVisible:
+    id: "confirm-dialog-confirm"
+- tapOn:
+    id: "confirm-dialog-confirm"
+- assertNotVisible: "Main"

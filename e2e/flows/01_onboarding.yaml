@@ -1,0 +1,86 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+  MOCK_API: "http://localhost:8787/v1"
+---
+- launchApp:
+    clearState: true
+
+# AT-01: Welcome screen on fresh install
+- assertVisible:
+    id: "onboarding-welcome"
+- assertNotVisible:
+    id: "tab-workspace"
+
+- tapOn:
+    id: "onboarding-start"
+
+# AT-02: AI configuration & validation
+- tapOn:
+    id: "ai-provider-openai"
+- tapOn:
+    id: "ai-base-url"
+- eraseText: 50
+- inputText: "${MOCK_API}"
+- tapOn:
+    id: "ai-model"
+- eraseText: 50
+- inputText: "mock"
+# Test empty key rejection
+- tapOn:
+    id: "ai-test"
+- assertVisible: "The AI provider rejected your API key. Check it in Settings → AI provider."
+# Enter valid key and test success
+- tapOn:
+    id: "ai-api-key"
+- inputText: "k"
+- tapOn:
+    id: "ai-test"
+- assertVisible: "Connected"
+- tapOn:
+    id: "onboarding-next"
+
+# AT-04: Profile step & resume paste
+- tapOn:
+    id: "resume-label"
+- eraseText: 30
+- inputText: "Main"
+- tapOn:
+    id: "resume-paste-toggle"
+- tapOn:
+    id: "resume-paste-text"
+- inputText: "Alex Rahman\nalex.rahman@example.com | +880 1700 000000 | Dhaka, Bangladesh\nhttps://alex.example.com\nBackend engineer who builds Node.js and Python services.\nSkills: Node.js, Python, PostgreSQL, Docker, k3s, GitHub Actions"
+- tapOn:
+    id: "resume-paste-submit"
+- extendedWaitUntil:
+    visible:
+      id: "profile-full-name"
+    timeout: 10000
+- assertVisible:
+    id: "profile-email"
+- tapOn:
+    id: "onboarding-next"
+
+# AT-05: Preferences step & finish
+- tapOn:
+    id: "prefs-work-mode-remote"
+- tapOn:
+    id: "prefs-authorized-countries-input"
+- inputText: "BD"
+- tapOn:
+    id: "prefs-authorized-countries-add"
+- tapOn:
+    id: "onboarding-finish"
+
+# Workspace loaded with default board pills
+- extendedWaitUntil:
+    visible:
+      id: "tab-workspace"
+    timeout: 10000
+- assertVisible:
+    id: "board-bar"
+
+# Relaunch persistence check
+- launchApp
+- assertVisible:
+    id: "tab-workspace"

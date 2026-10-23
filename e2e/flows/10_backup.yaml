@@ -1,0 +1,23 @@
+appId: io.github.tawhidumar9.jobify
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-39: Settings -> Backup screen options
+- tapOn:
+    id: "tab-settings"
+- tapOn:
+    id: "settings-backup"
+- extendedWaitUntil:
+    visible:
+      id: "backup-screen"
+    timeout: 10000
+
+- assertVisible:
+    id: "backup-export"
+- assertVisible:
+    id: "backup-share"
+- assertVisible:
+    id: "backup-import"

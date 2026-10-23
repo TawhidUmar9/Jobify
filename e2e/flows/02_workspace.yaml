@@ -1,0 +1,44 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-08: Board pills selection and persistence
+- tapOn:
+    id: "board-pill-4"
+- launchApp
+- assertVisible:
+    id: "board-pill-4"
+
+# AT-09: Deep link opens fixture URL
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-remote-form.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+# AT-10: Address bar navigation
+- tapOn:
+    id: "toolbar-address"
+- tapOn:
+    id: "address-input"
+- eraseText: 60
+- inputText: "http://localhost:8787/fixtures/job-local-only.html"
+- tapOn:
+    id: "address-go"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+# AT-13: Toolbar reload, back, and forward
+- tapOn:
+    id: "toolbar-reload"
+- tapOn:
+    id: "toolbar-back"
+- tapOn:
+    id: "toolbar-forward"

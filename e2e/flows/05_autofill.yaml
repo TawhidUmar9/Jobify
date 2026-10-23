@@ -1,0 +1,32 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-23 & AT-25: Auto-fill form and save generated answer to answer bank
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-remote-form.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+- tapOn:
+    id: "analyze-fab"
+
+- extendedWaitUntil:
+    visible:
+      id: "action-autofill"
+    timeout: 15000
+
+- tapOn:
+    id: "action-autofill"
+- assertVisible: "Filled 5 of 5 fields"
+
+# Save generated answer
+- tapOn:
+    id: "save-answer-jobify-field-3"
+- assertVisible: "Saved"

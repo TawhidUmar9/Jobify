@@ -1,0 +1,19 @@
+appId: io.github.tawhidumar9.jobify
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-34: Open Insights screen from Tracker
+- tapOn:
+    id: "tab-tracker"
+- tapOn:
+    id: "tracker-insights"
+- extendedWaitUntil:
+    visible:
+      id: "insights-screen"
+    timeout: 10000
+
+- assertVisible:
+    id: "insights-empty"

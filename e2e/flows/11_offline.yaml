@@ -1,0 +1,35 @@
+appId: io.github.tawhidumar9.jobify
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# EC-03: Offline features work with no network connection
+# Tracker tab works offline
+- tapOn:
+    id: "tab-tracker"
+- assertVisible:
+    id: "tracker-empty"
+
+# Insights screen works offline
+- tapOn:
+    id: "tracker-insights"
+- extendedWaitUntil:
+    visible:
+      id: "insights-screen"
+    timeout: 10000
+- back
+
+# Settings tab works offline
+- tapOn:
+    id: "tab-settings"
+- assertVisible:
+    id: "settings-screen"
+- tapOn:
+    id: "settings-preferences"
+- assertVisible:
+    id: "prefs-work-mode-remote"
+- back
+- assertVisible:
+    id: "settings-screen"

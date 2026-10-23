@@ -1,0 +1,42 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-21: Improve application with tailored bullets, cover note, cold DM
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-remote-form.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+- tapOn:
+    id: "analyze-fab"
+
+- extendedWaitUntil:
+    visible:
+      id: "tailor-button"
+    timeout: 15000
+
+- tapOn:
+    id: "tailor-button"
+
+- extendedWaitUntil:
+    visible:
+      id: "tailor-card"
+    timeout: 15000
+
+- assertVisible:
+    id: "bullet-rewrite-0"
+- assertVisible:
+    id: "cover-note"
+- assertVisible:
+    id: "cold-dm-text"
+
+- tapOn:
+    id: "copy-dm"
+- assertVisible: "Copied"

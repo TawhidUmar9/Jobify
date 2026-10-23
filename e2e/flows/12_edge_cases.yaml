@@ -1,0 +1,48 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# EC-17: Deep link to non-existent application
+- openLink: "jobify:///application/999999"
+- extendedWaitUntil:
+    visible:
+      id: "application-not-found"
+    timeout: 10000
+- back
+
+# AT-17: 429 Rate limit error handling
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-error-429.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+- tapOn:
+    id: "analyze-fab"
+- extendedWaitUntil:
+    visible:
+      id: "copilot-error"
+    timeout: 15000
+- assertVisible: "Rate limit reached. Wait a minute and try again."
+- tapOn:
+    id: "copilot-close"
+
+# AT-17: 500 Server error handling
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-error-500.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+- tapOn:
+    id: "analyze-fab"
+- extendedWaitUntil:
+    visible:
+      id: "copilot-error"
+    timeout: 15000
+- assertVisible: "The AI provider is having problems. Try again in a minute."
+- tapOn:
+    id: "copilot-close"

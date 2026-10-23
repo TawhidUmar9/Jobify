@@ -1,0 +1,58 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-29: Log application from Copilot
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-remote-form.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+- tapOn:
+    id: "analyze-fab"
+
+- extendedWaitUntil:
+    visible:
+      id: "action-log-application"
+    timeout: 15000
+
+- tapOn:
+    id: "action-log-application"
+- assertVisible: "Logged to Tracker"
+
+- tapOn:
+    id: "copilot-close"
+
+# AT-32: View in Tracker, edit status and notes
+- tapOn:
+    id: "tab-tracker"
+- extendedWaitUntil:
+    visible: "Senior Backend Engineer"
+    timeout: 10000
+
+- tapOn: "Senior Backend Engineer"
+- extendedWaitUntil:
+    visible:
+      id: "application-detail-screen"
+    timeout: 10000
+
+# Change status to Interviewing
+- tapOn:
+    id: "detail-change-status"
+- tapOn:
+    id: "status-option-INTERVIEWING"
+- assertVisible: "Interviewing"
+
+# Save notes
+- tapOn:
+    id: "detail-notes"
+- inputText: "Interview scheduled for Monday"
+- tapOn:
+    id: "detail-save-notes"
+- assertVisible: "Notes saved"
