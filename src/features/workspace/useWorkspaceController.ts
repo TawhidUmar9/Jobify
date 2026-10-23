@@ -61,7 +61,7 @@ export interface WorkspaceController {
 /**
  * Coordinates Workspace state: scraping, AI analysis, auto-fill, tailor, staging, and logging.
  *
- * Exact behaviours (T-028, T-030, T-033, T-034, T-036):
+ * Exact behaviours (T-028, T-030, T-033, T-034, T-036, T-046c D-008):
  * - Focus: reload AI config. If no provider or no key, aiMissing=true.
  * - onAnalyzePress: if aiMissing, navigate /settings/ai. If ready and sheet closed and on the
  *   same URL, SHEET_OPENED. Otherwise reanalyze().
@@ -75,15 +75,15 @@ export interface WorkspaceController {
  *   AUTOFILL_COMPLETE -> FILL_COMPLETED + snackbar `Filled X of Y fields` + Haptics Success +
  *   incrementAnswerUse for ANSWER_BANK mappings that were filled (match answers by question text).
  *   AUTOFILL_ERROR -> FILL_FAILED + snackbar "Auto-fill failed on this page".
- * - autoFill: only phase 'ready' && isOnSourcePage && mappings > 0 -> FILL_REQUESTED,
+ * - autoFill: only phase 'ready' && isOnSourcePage && mappings > 0 && isJobPosting !== false -> FILL_REQUESTED,
  *   inject buildAutoFillScript(mappings), timer -> FILL_FAILED.
- * - tailor: TAILOR_REQUESTED -> tailorApplication(provider, {profile, resume: recommendedResume,
- *   analysis, pageText}) -> TAILOR_SUCCEEDED / TAILOR_FAILED. If already logged, attachTailorText.
+ * - tailor: only when isJobPosting !== false -> TAILOR_REQUESTED -> tailorApplication(provider, {profile,
+ *   resume: recommendedResume, analysis, pageText}) -> TAILOR_SUCCEEDED / TAILOR_FAILED. If already logged, attachTailorText.
  * - saveAnswer(mapping): upsertAnswer({question: mapping.fieldLabel, answer: mapping.value}) -> ok:
  *   ANSWER_SAVED + snackbar "Saved to answer bank"; err: snackbar "Could not save answer".
- * - logApplication: insertApplication with fields per ARCHITECTURE §7.3 table -> APPLICATION_LOGGED +
- *   snackbar "Logged to Tracker" | "Already in Tracker" | "Could not save. Try again."
- * - stageRecommendedResume: no recommendedResume -> snackbar "Add a resume in Settings first".
+ * - logApplication: only when isJobPosting !== false -> insertApplication with fields per ARCHITECTURE §7.3 table ->
+ *   APPLICATION_LOGGED + snackbar "Logged to Tracker" | "Already in Tracker" | "Could not save. Try again."
+ * - stageRecommendedResume: only when isJobPosting !== false; no recommendedResume -> snackbar "Add a resume in Settings first".
  *   Android first use -> explainer (KV stagingExplainerSeen); then stageResume(resume,
  *   tailor ready ? coverNote : '') with snackbars per UI_DIRECTIVES §6.
  * - copyText: Clipboard.setStringAsync + snackbar "Copied".
@@ -294,7 +294,14 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     const current = stateRef.current;
     const mappings = current.session?.analysis.fieldMappings ?? [];
     const isOnSourcePage = params.currentUrl === current.session?.sourceUrl;
-    if (current.phase !== 'ready' || !isOnSourcePage || mappings.length === 0) return;
+    if (
+      current.phase !== 'ready' ||
+      !isOnSourcePage ||
+      mappings.length === 0 ||
+      current.session?.analysis.isJobPosting === false
+    ) {
+      return;
+    }
     if (fillTimer.current !== null) {
       clearTimeout(fillTimer.current);
       fillTimer.current = null;
@@ -315,7 +322,7 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     const current = stateRef.current;
     if (current.phase !== 'ready' && current.phase !== 'filling') return;
     if (current.tailor.status === 'loading') return;
-    if (current.session === null) return;
+    if (current.session === null || current.session.analysis.isJobPosting === false) return;
     const session = current.session;
     dispatch({ type: 'TAILOR_REQUESTED' });
     const controller = new AbortController();
@@ -369,7 +376,13 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
   const logApplication = useCallback(async () => {
     const current = stateRef.current;
     if (logging || current.loggedApplicationId !== null) return;
-    if ((current.phase !== 'ready' && current.phase !== 'filling') || current.session === null) return;
+    if (
+      (current.phase !== 'ready' && current.phase !== 'filling') ||
+      current.session === null ||
+      current.session.analysis.isJobPosting === false
+    ) {
+      return;
+    }
     const session = current.session;
     const tailored = current.tailor.status === 'ready' ? current.tailor.result : null;
     setLogging(true);
@@ -409,42 +422,42 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
     async (resume: Resume) => {
       setStaging(true);
       const coverNote =
-        stateRef.current.tailor.status === "ready"
+        stateRef.current.tailor.status === 'ready'
           ? stateRef.current.tailor.result.coverNote
-          : "";
+          : '';
       const result = await stageResume(resume, coverNote);
       setStaging(false);
       if (result.ok) {
-        if (result.value.platform === "android") {
+        if (result.value.platform === 'android') {
           show(
             result.value.clipboardCopied
-              ? "Resume saved to your Jobify folder. Cover note copied."
-              : "Resume saved to your Jobify folder.",
+              ? 'Resume saved to your Jobify folder. Cover note copied.'
+              : 'Resume saved to your Jobify folder.',
           );
         } else {
           show(
             result.value.clipboardCopied
-              ? "Save the resume from the share sheet. Cover note copied."
-              : "Save the resume from the share sheet.",
+              ? 'Save the resume from the share sheet. Cover note copied.'
+              : 'Save the resume from the share sheet.',
           );
         }
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
         switch (result.error.code) {
-          case "NO_FILE":
-            show("This resume has no PDF. Add one in Settings → Resumes.");
+          case 'NO_FILE':
+            show('This resume has no PDF. Add one in Settings → Resumes.');
             break;
-          case "PERMISSION_DENIED":
-            show("Folder access was not granted. Tap Stage CV to try again.");
+          case 'PERMISSION_DENIED':
+            show('Folder access was not granted. Tap Stage CV to try again.');
             break;
-          case "FILE_MISSING":
-            show("The resume file is missing. Re-import it in Settings → Resumes.");
+          case 'FILE_MISSING':
+            show('The resume file is missing. Re-import it in Settings → Resumes.');
             break;
-          case "WRITE_FAILED":
-            show("Could not save the resume. Try again.");
+          case 'WRITE_FAILED':
+            show('Could not save the resume. Try again.');
             break;
-          case "SHARE_UNAVAILABLE":
-            show("Sharing is not available on this device.");
+          case 'SHARE_UNAVAILABLE':
+            show('Sharing is not available on this device.');
             break;
         }
       }
@@ -453,11 +466,13 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
   );
 
   const stageRecommendedResume = useCallback(async () => {
+    const current = stateRef.current;
+    if (current.session?.analysis.isJobPosting === false) return;
     if (!recommendedResume) {
-      show("Add a resume in Settings first");
+      show('Add a resume in Settings first');
       return;
     }
-    if (Platform.OS === "android") {
+    if (Platform.OS === 'android') {
       const seen = await kvGet(KV_KEYS.stagingExplainerSeen);
       if (!seen) {
         setStagingExplainerVisible(true);
@@ -469,7 +484,8 @@ export function useWorkspaceController(params: WorkspaceControllerParams): Works
 
   const onStagingExplainerContinue = useCallback(async () => {
     setStagingExplainerVisible(false);
-    await kvSet(KV_KEYS.stagingExplainerSeen, "true");
+    await kvSet(KV_KEYS.stagingExplainerSeen, 'true');
+    if (stateRef.current.session?.analysis.isJobPosting === false) return;
     if (recommendedResume) {
       await doStage(recommendedResume);
     }

@@ -210,6 +210,8 @@ export interface FieldMapping {
 
 /** Validated result of AI-2 analyzeJob. */
 export interface JobAnalysis {
+  /** False for login/sign-up pages, search results, home pages, articles; true for job posts (D-008). */
+  isJobPosting: boolean;
   companyName: string;
   roleTitle: string;
   eligibility: Eligibility;

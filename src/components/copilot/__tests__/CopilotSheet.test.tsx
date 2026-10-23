@@ -20,10 +20,12 @@ jest.mock('lucide-react-native', () => {
     TriangleAlert: Icon,
     ShieldCheck: Icon,
     FileText: Icon,
+    FileQuestion: Icon,
   };
 });
 
 const analysis: JobAnalysis = {
+  isJobPosting: true,
   companyName: 'Acme Cloud',
   roleTitle: 'Backend engineer',
   eligibility: 'ELIGIBLE',
@@ -164,5 +166,39 @@ describe('CopilotSheet', () => {
     expect(screen.getByText('You can apply')).toBeTruthy();
     expect(screen.getByTestId(TestIds.copilot.staleNotice)).toBeTruthy();
     expect(screen.getByTestId(TestIds.copilot.reanalyze).props.accessibilityState).toEqual({ disabled: false });
+  });
+
+  it('renders only NotJobPostCard when isJobPosting is false (D-008)', async () => {
+    const notJobAnalysis: JobAnalysis = {
+      ...analysis,
+      isJobPosting: false,
+    };
+    await render(
+      <ThemeProvider>
+        <CopilotSheet
+          {...handlers}
+          isOnSourcePage={true}
+          state={state({
+            phase: 'ready',
+            session: {
+              analysis: notJobAnalysis,
+              sourceUrl: 'https://example.com/login',
+              boardName: 'LinkedIn',
+              scrapedInputCount: 0,
+              pageText: 'Please log in to continue.',
+            },
+          })}
+        />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId(TestIds.copilot.notJob)).toBeTruthy();
+    expect(screen.getByText("This doesn't look like a job post")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Open a single job and tap Analyze again. Login pages, search results and home pages can't be checked.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByTestId(TestIds.copilot.tailorButton)).toBeNull();
+    expect(screen.queryByTestId(TestIds.copilot.eligibilityBadge)).toBeNull();
   });
 });

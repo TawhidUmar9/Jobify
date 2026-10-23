@@ -61,4 +61,36 @@ describe('CopilotActions', () => {
     expect(logged.props.accessibilityState).toEqual({ disabled: true, busy: false });
     expect(screen.getByText('Logged')).toBeTruthy();
   });
+
+  it('disables all buttons when disabled is true (D-008)', async () => {
+    await render(
+      <SafeAreaProvider initialMetrics={safeMetrics}>
+        <ThemeProvider>
+          <CopilotActions
+            canAutoFill
+            filling={false}
+            staging={false}
+            logged={false}
+            logging={false}
+            disabled
+            onAutoFill={jest.fn()}
+            onStageResume={jest.fn()}
+            onLogApplication={jest.fn()}
+          />
+        </ThemeProvider>
+      </SafeAreaProvider>,
+    );
+    expect(screen.getByTestId(TestIds.copilot.autoFill).props.accessibilityState).toEqual({
+      disabled: true,
+      busy: false,
+    });
+    expect(screen.getByTestId(TestIds.copilot.stageResume).props.accessibilityState).toEqual({
+      disabled: true,
+      busy: false,
+    });
+    expect(screen.getByTestId(TestIds.copilot.logApplication).props.accessibilityState).toEqual({
+      disabled: true,
+      busy: false,
+    });
+  });
 });

@@ -18,6 +18,7 @@ const mapping = {
 function session(fieldMappings = [mapping]): AnalysisSession {
   return {
     analysis: {
+      isJobPosting: true,
       companyName: 'Acme Cloud',
       roleTitle: 'Backend engineer',
       eligibility: 'ELIGIBLE',

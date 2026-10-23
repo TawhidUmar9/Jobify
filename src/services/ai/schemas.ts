@@ -11,6 +11,10 @@ const stringArray: JsonSchema = { type: 'array', items: { type: 'string' } };
 export const JOB_ANALYSIS_SCHEMA: JsonSchema = {
   type: 'object',
   properties: {
+    isJobPosting: {
+      type: 'boolean',
+      description: 'false for login or sign-up pages, search results or lists of several jobs, company home pages, articles',
+    },
     companyName: { type: 'string' },
     roleTitle: { type: 'string' },
     eligibility: { type: 'string', enum: ['ELIGIBLE', 'NOT_ELIGIBLE', 'UNCLEAR'] },
@@ -58,6 +62,7 @@ export const JOB_ANALYSIS_SCHEMA: JsonSchema = {
     },
   },
   required: [
+    'isJobPosting',
     'companyName',
     'roleTitle',
     'eligibility',

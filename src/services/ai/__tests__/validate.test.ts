@@ -166,7 +166,25 @@ describe('validateJobAnalysis', () => {
     expect(result.value.recommendedResumeId).toBeNull();
   });
 
-  it('rejects a non-object, a missing score, and non-array field mappings', () => {
+  it('handles isJobPosting: preserves boolean false and defaults missing/non-boolean to true', () => {
+    const resFalse = validateJobAnalysis({ ...(analysisRemoteOk as Record<string, unknown>), isJobPosting: false }, inputs, [{ id: 1 }]);
+    expect(resFalse.ok).toBe(true);
+    if (resFalse.ok) expect(resFalse.value.isJobPosting).toBe(false);
+
+    const resTrue = validateJobAnalysis({ ...(analysisRemoteOk as Record<string, unknown>), isJobPosting: true }, inputs, [{ id: 1 }]);
+    expect(resTrue.ok).toBe(true);
+    if (resTrue.ok) expect(resTrue.value.isJobPosting).toBe(true);
+
+    const resMissing = validateJobAnalysis({ ...(analysisRemoteOk as Record<string, unknown>) }, inputs, [{ id: 1 }]);
+    expect(resMissing.ok).toBe(true);
+    if (resMissing.ok) expect(resMissing.value.isJobPosting).toBe(true);
+
+    const resNonBool = validateJobAnalysis({ ...(analysisRemoteOk as Record<string, unknown>), isJobPosting: 'no' }, inputs, [{ id: 1 }]);
+    expect(resNonBool.ok).toBe(true);
+    if (resNonBool.ok) expect(resNonBool.value.isJobPosting).toBe(true);
+  });
+
+    it('rejects a non-object, a missing score, and non-array field mappings', () => {
     expect(validateJobAnalysis(null, inputs, []).ok).toBe(false);
     const missingScore = clone(analysisUnclear);
     if (missingScore && typeof missingScore === 'object') {

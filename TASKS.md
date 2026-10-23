@@ -594,9 +594,9 @@ true;
 - **Goal:** D-008.
 - **Files:** `src/types/domain.ts`, `src/services/ai/{schemas,validate,prompts}.ts`, `src/constants/testIds.ts`, `src/components/copilot/{CopilotSheet,NotJobPostCard}.tsx`, `src/features/workspace/useWorkspaceController.ts`, tests.
 - **Acceptance:**
-  - [ ] validator: `isJobPosting` false kept; missing → true. Schema lists it as required boolean.
-  - [ ] not-a-job analysis → `copilot-not-job` card with the D-008 copy; Auto-fill, Stage CV, Log disabled; no tailor.
-  - [ ] Manual (mock): deep-link `not-a-job.html` → Analyze → the card. `job-remote-form.html` → normal result.
+  - [x] validator: `isJobPosting` false kept; missing → true. Schema lists it as required boolean.
+  - [x] not-a-job analysis → `copilot-not-job` card with the D-008 copy; Auto-fill, Stage CV, Log disabled; no tailor.
+  - [ ] Manual (mock): deep-link `not-a-job.html` → Analyze → the card. `job-remote-form.html` → normal result. MANUAL PENDING (tester).
 - **Verify:** `npm run verify`
 
 ### T-046d Save for later

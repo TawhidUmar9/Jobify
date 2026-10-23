@@ -40,5 +40,9 @@ describe('toGeminiSchema', () => {
     const converted = toGeminiSchema(JOB_ANALYSIS_SCHEMA);
     expectConverted(JOB_ANALYSIS_SCHEMA, converted);
     expect(converted.properties?.recommendedResumeId?.description).toBe('id from Resumes, or -1 if there are none');
+    expect(converted.properties?.isJobPosting?.type).toBe('BOOLEAN');
+    expect(converted.properties?.isJobPosting?.description).toBe(
+      'false for login or sign-up pages, search results or lists of several jobs, company home pages, articles',
+    );
   });
 });

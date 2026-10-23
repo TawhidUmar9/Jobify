@@ -98,6 +98,7 @@ export const TestIds = {
     errorAction: 'copilot-error-action',
     close: 'copilot-close',
     reanalyze: 'copilot-reanalyze',
+    notJob: 'copilot-not-job',
     staleNotice: 'copilot-stale-notice',
     eligibilityBadge: 'eligibility-badge',
     eligibilityReason: 'eligibility-reason',

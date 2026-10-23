@@ -5,9 +5,10 @@ import { buildAnalyzePrompt, buildResumeParsePrompt, buildTailorPrompt } from '.
 const ANALYZE_RULES = [
   "1. Decide eligibility using the candidate's location, timeZone and preferences (workModes, workAuthorizedCountries, openToSponsorship). Use UNCLEAR when the page does not say.",
   '2. List red flags only when the page supports them. Use BLOCKED_COMPANY if the company is in blockedCompanies, SALARY_BELOW_MINIMUM only if a salary is stated and is below minSalary, STALE_POSTING if the post is older than 60 days.',
-  '3. Score 0-100 how well the candidate matches the role and pick the best resume id (-1 if there are no resumes).',
+  '3. Score 0-100 how well the candidate matches the role and pick the best resume id (-1 if there are none).',
   '4. For each detected form input, fill a value only from the profile (source PROFILE), a saved answer to the same question (source ANSWER_BANK), or a short truthful answer you write from the profile (source GENERATED). For select inputs the value must be one of its option values. Skip inputs you cannot fill truthfully.',
   '5. Never invent contact details, employers, dates, degrees, numbers, or legal status.',
+  '6. Set isJobPosting to false when the page is not one specific job posting (a login or sign-up page, a list or search results with several jobs, a company home page, an article). When false, use eligibility UNCLEAR, matchScore 0, empty redFlags, skills and fieldMappings.',
 ];
 
 const TAILOR_RULES = [
@@ -55,6 +56,7 @@ const resume: Resume = {
 };
 
 const analysis: JobAnalysis = {
+  isJobPosting: true,
   companyName: 'Acme Cloud',
   roleTitle: 'Senior Backend Engineer',
   eligibility: 'ELIGIBLE',

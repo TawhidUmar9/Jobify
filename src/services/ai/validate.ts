@@ -83,6 +83,7 @@ function namedOrUnknown(record: Record<string, unknown>, key: string, fallback: 
 
 /**
  * validateJobAnalysis rules:
+ * - isJobPosting: boolean kept; missing or not boolean → true (lenient for models that omit it).
  * - companyName/roleTitle must be strings; empty → "Unknown company" / "Unknown role".
  * - eligibilityReason, resumeReason: strings (empty allowed); missing → SCHEMA_MISMATCH.
  * - eligibility not in ELIGIBILITIES → 'UNCLEAR'.
@@ -115,6 +116,7 @@ export function validateJobAnalysis(
     if (typeof raw.matchScore !== 'number' || !Number.isFinite(raw.matchScore)) return mismatch();
     if (!Array.isArray(raw.fieldMappings)) return mismatch();
 
+    const isJobPosting = typeof raw.isJobPosting === 'boolean' ? raw.isJobPosting : true;
     const eligibility =
       typeof raw.eligibility === 'string' && isEligibility(raw.eligibility) ? raw.eligibility : 'UNCLEAR';
     const redFlags = parseRedFlags(raw.redFlags);
@@ -124,6 +126,7 @@ export function validateJobAnalysis(
     const recommendedResumeId = matchedResume ? matchedResume.id : (resumes[0]?.id ?? null);
 
     return ok({
+      isJobPosting,
       companyName,
       roleTitle,
       eligibility,

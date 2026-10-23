@@ -85,6 +85,7 @@ describe('aiClient', () => {
       profile: EMPTY_PROFILE,
       resume: null,
       analysis: {
+        isJobPosting: true,
         companyName: 'Acme Cloud',
         roleTitle: 'Role',
         eligibility: 'UNCLEAR',

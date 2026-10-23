@@ -81,6 +81,7 @@ const board: JobBoard = {
 };
 
 const analysis: JobAnalysis = {
+  isJobPosting: true,
   companyName: 'Acme Cloud',
   roleTitle: 'Backend engineer',
   eligibility: 'ELIGIBLE',
@@ -131,6 +132,7 @@ describe('useWorkspaceController', () => {
     createProviderMock.mockReset();
     analyzeJobMock.mockReset();
     insertApplicationMock.mockReset();
+    tailorApplicationMock.mockReset();
     listAnswersMock.mockReset().mockResolvedValue([]);
     upsertAnswerMock.mockReset().mockResolvedValue({ ok: true, value: { id: 1 } });
     incrementAnswerUseMock.mockReset().mockResolvedValue(undefined);
@@ -695,5 +697,56 @@ describe('useWorkspaceController', () => {
       });
       expect(mockShow).toHaveBeenCalledWith(expectedMsg);
     }
+  });
+
+  it('guards autoFill, tailor, logApplication, and stageRecommendedResume when isJobPosting is false (D-008)', async () => {
+    await saveAiConfig({ provider: 'gemini', model: 'gemini-3.8-flash', baseUrl: 'https://generativelanguage.googleapis.com' });
+    await setApiKey('test-key');
+    createProviderMock.mockReturnValue({ kind: 'gemini' });
+    analyzeJobMock.mockResolvedValue({
+      ok: true,
+      value: { ...analysisWithMappings, isJobPosting: false, recommendedResumeId: 1 },
+    });
+    mockDb.queue('getFirstAsync', { data_json: JSON.stringify({ fullName: 'Alex Rahman' }) });
+
+    const { result } = await mount();
+    const webView = handle();
+    result.current.webViewRef.current = webView;
+    await act(async () => {
+      result.current.onAnalyzePress();
+      result.current.onBridgeMessage(pageMessage(200));
+    });
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+    (webView.injectJavaScript as jest.Mock).mockClear();
+
+    // autoFill should do nothing
+    await act(async () => {
+      result.current.autoFill();
+    });
+    expect(result.current.state.phase).toBe('ready');
+    expect(webView.injectJavaScript).not.toHaveBeenCalled();
+
+    tailorApplicationMock.mockClear();
+    // tailor should do nothing
+    await act(async () => {
+      await result.current.tailor();
+    });
+    expect(result.current.state.tailor.status).toBe('idle');
+    expect(tailorApplicationMock).not.toHaveBeenCalled();
+
+    // logApplication should do nothing
+    insertApplicationMock.mockClear();
+    await act(async () => {
+      await result.current.logApplication();
+    });
+    expect(insertApplicationMock).not.toHaveBeenCalled();
+
+    // stageRecommendedResume should do nothing
+    (stageResume as jest.Mock).mockClear();
+    await act(async () => {
+      await result.current.stageRecommendedResume();
+    });
+    expect(stageResume).not.toHaveBeenCalled();
+    expect(result.current.stagingExplainerVisible).toBe(false);
   });
 });

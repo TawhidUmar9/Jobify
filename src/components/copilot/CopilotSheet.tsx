@@ -22,6 +22,7 @@ import { CopilotActions } from './CopilotActions';
 import { EligibilityBadge } from './EligibilityBadge';
 import { FieldMappingList } from './FieldMappingList';
 import { MatchCard } from './MatchCard';
+import { NotJobPostCard } from './NotJobPostCard';
 import { RedFlagList } from './RedFlagList';
 import { SkillChips } from './SkillChips';
 import { TailorCard } from './TailorCard';
@@ -88,8 +89,9 @@ function errorCopy(error: WorkspaceError): {
  *   error → StateView error (copilot-error) with copy from UI_DIRECTIVES §6 + "Try again" (copilot-retry);
  *     NO_PROFILE and AI codes NOT_CONFIGURED/AUTH/MODEL_NOT_FOUND/BAD_REQUEST also show a secondary
  *     button (copilot-error-action): "Open profile" / "Open AI settings".
- *   ready/filling → EligibilityBadge, RedFlagList, MatchCard, SkillChips (matched, missing),
- *     TailorCard, FieldMappingList, stale notice when !isOnSourcePage; CopilotActions in BottomSheetFooter.
+ *   ready/filling → when analysis.isJobPosting is false (D-008), renders only NotJobPostCard (copilot-not-job)
+ *     and disables footer actions; when true, renders EligibilityBadge, RedFlagList, MatchCard, SkillChips
+ *     (matched, missing), TailorCard, FieldMappingList, stale notice when !isOnSourcePage; CopilotActions in footer.
  */
 export function CopilotSheet(props: CopilotSheetProps) {
   const { colors } = useTheme();
@@ -131,15 +133,17 @@ export function CopilotSheet(props: CopilotSheetProps) {
   const footer = useCallback(
     (footerProps: BottomSheetFooterProps) => {
       if (props.state.phase !== 'ready' && props.state.phase !== 'filling') return null;
+      const isJobPosting = props.state.session?.analysis.isJobPosting ?? true;
       const mappings = props.state.session?.analysis.fieldMappings.length ?? 0;
       return (
         <BottomSheetFooter {...footerProps}>
           <CopilotActions
-            canAutoFill={props.state.phase === 'ready' && props.isOnSourcePage && mappings > 0}
+            canAutoFill={isJobPosting && props.state.phase === 'ready' && props.isOnSourcePage && mappings > 0}
             filling={props.state.phase === 'filling'}
             staging={props.staging}
             logged={props.state.loggedApplicationId !== null}
             logging={props.logging}
+            disabled={!isJobPosting}
             onAutoFill={props.onAutoFill}
             onStageResume={props.onStageResume}
             onLogApplication={props.onLogApplication}
@@ -211,6 +215,13 @@ function SheetBody(props: CopilotSheetProps) {
   if (state.phase === 'error' && state.error) return <ErrorBody error={state.error} onReanalyze={props.onReanalyze} onOpenSettings={props.onOpenSettings} />;
   if ((state.phase === 'ready' || state.phase === 'filling') && state.session) {
     const { analysis } = state.session;
+    if (analysis.isJobPosting === false) {
+      return (
+        <View style={styles.sections}>
+          <NotJobPostCard />
+        </View>
+      );
+    }
     return (
       <View style={styles.sections}>
         <EligibilityBadge eligibility={analysis.eligibility} reason={analysis.eligibilityReason} />
@@ -286,8 +297,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   body: {
-    padding: spacing.md,
-    gap: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.lg,
   },
   sections: {
     gap: spacing.lg,
@@ -297,13 +308,16 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   error: {
-    gap: spacing.sm,
-    padding: spacing.md,
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.xl,
   },
   errorTitle: {
     ...typography.headline,
+    textAlign: 'center',
   },
   errorMessage: {
     ...typography.body,
+    textAlign: 'center',
   },
 });

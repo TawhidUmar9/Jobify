@@ -14,6 +14,8 @@ export interface CopilotActionsProps {
   staging: boolean;
   logged: boolean;
   logging: boolean;
+  /** Disables all footer actions when the page is not a job post (D-008). */
+  disabled?: boolean;
   onAutoFill: () => void;
   onStageResume: () => void;
   onLogApplication: () => void;
@@ -26,10 +28,10 @@ const ICON_MIN_WIDTH = 360;
  * Bottom action row inside the sheet footer. UI_DIRECTIVES.md §4.4 "Copilot actions".
  * Three buttons, equal width, gap spacing.xs, padding spacing.md, top hairline colors.border,
  * bottom padding includes safe-area inset:
- * 1. primary  "Auto-fill"   lucide Zap      TestIds.copilot.autoFill        disabled !canAutoFill, loading filling
- * 2. secondary "Stage CV"   lucide FileDown TestIds.copilot.stageResume     loading staging
+ * 1. primary  "Auto-fill"   lucide Zap      TestIds.copilot.autoFill        disabled !canAutoFill || disabled, loading filling
+ * 2. secondary "Stage CV"   lucide FileDown TestIds.copilot.stageResume     disabled disabled, loading staging
  * 3. secondary "Log" / "Logged" lucide BookmarkPlus / BookmarkCheck  TestIds.copilot.logApplication
- *    disabled when logged; loading logging.
+ *    disabled when logged or disabled; loading logging.
  * accessibilityLabels: "Auto-fill form fields", "Stage recommended resume and copy cover note",
  * "Log application to Tracker" / "Application already logged".
  * On screens < 360dp wide, labels stay; icons are dropped.
@@ -48,7 +50,7 @@ export function CopilotActions(props: CopilotActionsProps) {
           icon={showIcons ? Zap : undefined}
           testID={TestIds.copilot.autoFill}
           onPress={props.onAutoFill}
-          disabled={!props.canAutoFill}
+          disabled={!props.canAutoFill || !!props.disabled}
           loading={props.filling}
           accessibilityLabel="Auto-fill form fields"
         />
@@ -60,6 +62,7 @@ export function CopilotActions(props: CopilotActionsProps) {
           icon={showIcons ? FileDown : undefined}
           testID={TestIds.copilot.stageResume}
           onPress={props.onStageResume}
+          disabled={!!props.disabled}
           loading={props.staging}
           accessibilityLabel="Stage recommended resume and copy cover note"
         />
@@ -71,7 +74,7 @@ export function CopilotActions(props: CopilotActionsProps) {
           icon={showIcons ? (props.logged ? BookmarkCheck : BookmarkPlus) : undefined}
           testID={TestIds.copilot.logApplication}
           onPress={props.onLogApplication}
-          disabled={props.logged}
+          disabled={props.logged || !!props.disabled}
           loading={props.logging}
           accessibilityLabel={props.logged ? 'Application already logged' : 'Log application to Tracker'}
         />

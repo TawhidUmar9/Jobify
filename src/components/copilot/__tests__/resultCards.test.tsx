@@ -7,6 +7,7 @@ import { ThemeProvider } from '../../../theme/ThemeProvider';
 import type { Resume } from '../../../types/domain';
 import { EligibilityBadge } from '../EligibilityBadge';
 import { MatchCard } from '../MatchCard';
+import { NotJobPostCard } from '../NotJobPostCard';
 import { RedFlagList } from '../RedFlagList';
 import { SkillChips } from '../SkillChips';
 
@@ -21,6 +22,7 @@ jest.mock('lucide-react-native', () => {
     TriangleAlert: Icon,
     ShieldCheck: Icon,
     FileText: Icon,
+    FileQuestion: Icon,
   };
 });
 
@@ -102,5 +104,16 @@ describe('result cards', () => {
       </ThemeProvider>,
     );
     expect(screen.queryByTestId('missing')).toBeNull();
+  });
+
+  it('renders NotJobPostCard with title and explanation body (D-008)', async () => {
+    await theme(<NotJobPostCard />);
+    expect(screen.getByTestId(TestIds.copilot.notJob)).toBeTruthy();
+    expect(screen.getByText("This doesn't look like a job post")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Open a single job and tap Analyze again. Login pages, search results and home pages can't be checked.",
+      ),
+    ).toBeTruthy();
   });
 });
