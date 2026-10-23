@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "test": "jest",
-    "test:ci": "jest --ci",
+    "test:ci": "jest --ci --maxWorkers=4",
     "verify": "npm run typecheck && npm run lint && npm run test:ci",
     "doctor": "npx --yes expo-doctor@1.21.5",
     "mock:server": "node scripts/mock-server.mjs",
