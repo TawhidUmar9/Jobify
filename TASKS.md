@@ -596,7 +596,7 @@ true;
 - **Acceptance:**
   - [x] validator: `isJobPosting` false kept; missing → true. Schema lists it as required boolean.
   - [x] not-a-job analysis → `copilot-not-job` card with the D-008 copy; Auto-fill, Stage CV, Log disabled; no tailor.
-  - [ ] Manual (mock): deep-link `not-a-job.html` → Analyze → the card. `job-remote-form.html` → normal result. MANUAL PENDING (tester).
+  - [x] Manual (mock): deep-link `not-a-job.html` → Analyze → the card. `job-remote-form.html` → normal result. (passed 2026-10-23 on SM-G935F: card shown at 50%, Auto-fill/Stage CV/Log disabled; real Gemini also flags the Remote OK list page)
 - **Verify:** `npm run verify`
 
 ### T-046d Save for later
@@ -605,7 +605,7 @@ true;
 - **Acceptance:**
   - [x] repo: insert SAVED; later insert APPLIED with the same url promotes the row (status, analysis fields, status_changed_at, follow_up_at +7 d; notes and created_at kept); other duplicates still DUPLICATE; findApplicationByUrl.
   - [x] toolbar-save: BookmarkPlus/BookmarkCheck, labels, disabled while loading or on non-http pages; snackbars `Saved to Tracker` / `Already in Tracker`.
-  - [ ] Manual (mock): Fixtures board → Save → Tracker shows the page with status Saved, not counted in Insights. Open it, Analyze, Log → same row, now Applied with match score. MANUAL PENDING (tester).
+  - [x] Manual (mock): Fixtures board → Save → Tracker shows the page with status Saved, not counted in Insights. Open it, Analyze, Log → same row, now Applied with match score. (passed 2026-10-23 on SM-G935F: Saved row, not counted in Insights ("1 saved for later"), Log promotes the same row to Applied)
 - **Verify:** `npm run verify`
 
 ### T-046e Round-2 device fixes (font scale, external links)
@@ -634,7 +634,7 @@ true;
   - [x] H1 (D-010) app.json: `allowBackup: false`, three more blocked permissions.
   - [x] H2 (D-011) config plugin: cleartext allowed, `fontScale|density` in MainActivity configChanges. A Jest test (node, no device) that runs the plugin's manifest mod on a minimal manifest object and checks both attributes, including no duplicate configChanges entries.
   - [x] H3 (D-012) Workspace clears the `url` param via its own navigation; test that a `url` param calls openUrl once and clears the param without the global router.
-  - [ ] Tester: after prebuild, the merged release manifest has no SYSTEM_ALERT_WINDOW/USE_BIOMETRIC/USE_FINGERPRINT, `allowBackup="false"`, `usesCleartextTraffic="true"`; deep link after a font-size change opens the page. MANUAL PENDING (tester)
+  - [x] Tester: after prebuild, the merged release manifest has no SYSTEM_ALERT_WINDOW/USE_BIOMETRIC/USE_FINGERPRINT, `allowBackup="false"`, `usesCleartextTraffic="true"`; deep link after a font-size change opens the page. (passed 2026-10-23, release APK a123ea0: permissions INTERNET+VIBRATE only, allowBackup=false, usesCleartextTraffic=true, configChanges has fontScale|density; http page loads; deep link after a font change opens with no crash)
 - **Verify:** `npm run verify`
 
 ### T-046h Appearance & accessibility settings (D-013)
@@ -647,7 +647,7 @@ true;
   - [x] Step 4:  resolves scheme from , loads and exposes preferences live via context and .
   - [x] Step 5: Wire typography scaling,  in , reduce-motion override in CopilotSheet and modals, system bars follow resolved scheme.
   - [x] Step 6: Tests for ThemeProvider resolution, appearance screen, PortalWebView textZoom, and reduce-motion override.
-  - [ ] Device check (tester): GitHub look in both themes, every setting applies live. MANUAL PENDING (tester)
+  - [x] Device check (tester): GitHub look in both themes, every setting applies live. (passed 2026-10-23 on SM-G935F release APK: GitHub dark/light, theme switches live)
 - **Verify:** 
 > jobify@1.0.0 verify
 > npm run typecheck && npm run lint && npm run test:ci
@@ -674,8 +674,8 @@ true;
 - **Files:** components/screens (accessibility props, font caps, focus management only).
 - **Depends on:** T-046.
 - **Acceptance:**
-  - [ ] TalkBack pass over onboarding → workspace → sheet → tracker → detail → settings. MANUAL PENDING (tester).
-  - [ ] Font scale 2.0 with no clipping (`adb shell settings put system font_scale 2.0`). MANUAL PENDING (tester).
+  - [ ] TalkBack pass over onboarding → workspace → sheet → tracker → detail → settings. SKIPPED: no TalkBack on the test phone (de-Googled ROM). Substitute: uiautomator scan found no unlabelled Jobify controls on 6 screens. Needs a TalkBack device before release.
+  - [x] Font scale 2.0 with no clipping (`adb shell settings put system font_scale 2.0`). (passed 2026-10-23 on SM-G935F after T-046e/T-046f: tabs, copilot footer, tracker, detail, settings)
 - **Verify:** `npm run verify` + notes in the PR.
 
 ### T-048 Reduced motion and dark mode
@@ -684,7 +684,7 @@ true;
 - **Acceptance:**
   - [x] reduced motion → instant sheet/panels/dialogs (honours AccessibilityInfo.isReduceMotionEnabled).
   - [x] `grep -rnE "#[0-9A-Fa-f]{6}" src --include=*.tsx` → none outside `theme/tokens.ts` (0 found).
-  - [ ] `adb shell cmd uimode night yes` → every screen is readable. MANUAL PENDING (tester).
+  - [x] `adb shell cmd uimode night yes` → every screen is readable. (passed 2026-10-23: dark (default on the test phone) and light checked; GitHub palette since D-013)
 - **Verify:** `npm run verify`.
 
 ### T-049 F-Droid readiness and release build
@@ -692,9 +692,9 @@ true;
 - **Files:** `LICENSE` (owner's choice, A-40), `fastlane/metadata/android/en-US/{title.txt,short_description.txt,full_description.txt,changelogs/1.txt}`, `README.md` (build section), DECISIONS.md.
 - **Depends on:** T-048, and the owner's license choice.
 - **Acceptance:**
-  - [ ] `npx expo prebuild --platform android --clean && cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --max-workers=4 && ./gradlew --stop` succeeds (debug signing is fine for this check). PENDING (tester).
-  - [ ] `./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep -iE "gms|firebase|play-services|crashlytics"` → empty. PENDING (tester).
-  - [ ] Unzip the APK and `grep -rl "com/google/android/gms\|com/google/firebase" classes*.dex` → empty. PENDING (tester).
+  - [x] `npx expo prebuild --platform android --clean && cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --max-workers=4 && ./gradlew --stop` succeeds (debug signing is fine for this check). (passed 2026-10-23: built under a memory cap, see build-safety notes; 7–9 min)
+  - [x] `./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep -iE "gms|firebase|play-services|crashlytics"` → empty. (passed 2026-10-23: empty)
+  - [x] Unzip the APK and `grep -rl "com/google/android/gms\|com/google/firebase" classes*.dex` → empty. (passed 2026-10-23: no gms/firebase/crashlytics/sentry/mlkit in classes.dex)
   - [x] Fastlane metadata written (≤80-char short description, full description from PRODUCT_SPEC §1–3, no marketing superlatives).
   - [x] README documents the "NonFreeNet" anti-feature (user-chosen AI provider).
 - **Verify:** commands above + `npm run verify && npm run doctor`.
