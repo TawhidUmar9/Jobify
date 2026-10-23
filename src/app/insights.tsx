@@ -10,9 +10,10 @@ import { useTheme } from '../theme/ThemeProvider';
 import { spacing, typography } from '../theme/tokens';
 
 /**
- * Insights ("/insights"). UI_DIRECTIVES.md §4.7. useInsights().
- * Empty (total 0) → StateView empty (TestIds.insights.empty) "No data yet" / "Log a few applications first."
- * Ready: tiles row 1: Applications (total), Response rate (responses/applied, "8 of 42"); row 2:
+ * Insights ("/insights"). UI_DIRECTIVES.md §4.7, T-046f G4. useInsights().
+ * Empty (applied 0) → StateView empty (TestIds.insights.empty) "No data yet" / "Log a few applications first."
+ * Ready: tiles row 1: Applications (applied count, caption "N saved for later" if saved > 0),
+ * Response rate (responses/applied, "8 of 42"); row 2:
  * Interview rate, Offers. Then WeeklyBars (weekly), RateTable By resume (byResume), By job board (byBoard).
  * Footer caption: "Response = interview, offer or rejection. Calculated on this device."
  */
@@ -36,7 +37,7 @@ export default function InsightsScreen() {
     );
   }
 
-  if (summary.total === 0) {
+  if (summary.applied === 0) {
     return (
       <StateView
         kind="empty"
@@ -46,6 +47,10 @@ export default function InsightsScreen() {
       />
     );
   }
+
+  const savedCount = summary.byStatus.SAVED ?? 0;
+  const savedCaption =
+    savedCount > 0 ? `${savedCount} saved for later` : undefined;
 
   const responsePct =
     summary.applied > 0 ? `${Math.round((100 * summary.responses) / summary.applied)}%` : '0%';
@@ -67,7 +72,8 @@ export default function InsightsScreen() {
       <View style={styles.tileRow}>
         <StatTile
           label="Applications"
-          value={String(summary.total)}
+          value={String(summary.applied)}
+          caption={savedCaption}
           testID={TestIds.insights.total}
         />
         <StatTile

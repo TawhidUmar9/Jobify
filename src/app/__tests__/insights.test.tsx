@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, within } from '@testing-library/react-native';
 
 import { TestIds } from '../../constants/testIds';
 import { ThemeProvider } from '../../theme/ThemeProvider';
@@ -42,14 +42,15 @@ describe('InsightsScreen', () => {
     jest.clearAllMocks();
   });
 
-  it('renders empty state when total is 0', async () => {
+  it('renders empty state when applied is 0 even if saved jobs exist (T-046f G4)', async () => {
     mockStatus = 'ready';
     mockSummary = {
       ...fullSummary,
-      total: 0,
+      total: 1,
       applied: 0,
       responses: 0,
       interviews: 0,
+      byStatus: { ...fullSummary.byStatus, SAVED: 1, APPLIED: 0 },
     };
 
     await render(
@@ -62,7 +63,7 @@ describe('InsightsScreen', () => {
     expect(screen.getByText('No data yet')).toBeTruthy();
   });
 
-  it('renders full insights when data exists', async () => {
+  it('renders full insights when data exists, showing applied count and saved caption (T-046f G4)', async () => {
     mockStatus = 'ready';
     mockSummary = fullSummary;
 
@@ -73,7 +74,15 @@ describe('InsightsScreen', () => {
     );
 
     expect(screen.getByTestId(TestIds.insights.screen)).toBeTruthy();
-    expect(screen.getByTestId(TestIds.insights.total)).toBeTruthy();
+    const totalTile = screen.getByTestId(TestIds.insights.total);
+    expect(totalTile).toBeTruthy();
+    // Applications tile must show applied (40), not total (42)
+    expect(within(totalTile).getByText('40')).toBeTruthy();
+    expect(within(totalTile).queryByText('42')).toBeNull();
+    // Saved caption: "2 saved for later"
+    expect(within(totalTile).getByText('2 saved for later')).toBeTruthy();
+    expect(totalTile.props.accessibilityLabel).toBe('Applications: 40, 2 saved for later');
+
     expect(screen.getByTestId(TestIds.insights.responseRate)).toBeTruthy();
     expect(screen.getByTestId(TestIds.insights.interviewRate)).toBeTruthy();
     expect(screen.getByTestId(TestIds.insights.weekly)).toBeTruthy();
@@ -82,5 +91,36 @@ describe('InsightsScreen', () => {
     expect(
       screen.getByText('Response = interview, offer or rejection. Calculated on this device.'),
     ).toBeTruthy();
+  });
+
+  it('shows singular "1 saved for later" and hides caption when 0 saved (T-046f G4)', async () => {
+    mockStatus = 'ready';
+    mockSummary = {
+      ...fullSummary,
+      byStatus: { ...fullSummary.byStatus, SAVED: 1 },
+    };
+
+    const view = await render(
+      <ThemeProvider>
+        <InsightsScreen />
+      </ThemeProvider>,
+    );
+
+    const totalTile = screen.getByTestId(TestIds.insights.total);
+    expect(within(totalTile).getByText('1 saved for later')).toBeTruthy();
+    expect(totalTile.props.accessibilityLabel).toBe('Applications: 40, 1 saved for later');
+
+    mockSummary = {
+      ...fullSummary,
+      byStatus: { ...fullSummary.byStatus, SAVED: 0 },
+    };
+
+    await view.rerender(
+      <ThemeProvider>
+        <InsightsScreen />
+      </ThemeProvider>,
+    );
+
+    expect(screen.queryByText(/saved for later/)).toBeNull();
   });
 });
