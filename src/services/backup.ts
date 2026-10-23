@@ -1,8 +1,10 @@
 import Constants from 'expo-constants';
 import { getDocumentAsync } from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
+import { StorageAccessFramework } from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import type { SQLiteDatabase } from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 import { listAnswers } from '../db/repositories/answersRepo';
 import { listApplications } from '../db/repositories/applicationsRepo';
@@ -26,7 +28,7 @@ import {
   type ResumeContent,
   type SavedAnswer,
 } from '../types/domain';
-import { KV_KEYS, kvSet } from './kvStore';
+import { KV_KEYS, kvGet, kvRemove, kvSet } from './kvStore';
 
 /**
  * Plain-JSON backup (v1 is unencrypted; the export screen warns). CONTRACT: ARCHITECTURE.md §6.6.
@@ -51,24 +53,17 @@ export interface BackupFileV1 {
   applications: Omit<Application, 'id' | 'resumeId'>[];
 }
 
-export type ExportError = 'DB_ERROR' | 'WRITE_FAILED' | 'SHARE_UNAVAILABLE';
+export type ExportError = 'DB_ERROR' | 'WRITE_FAILED' | 'SHARE_UNAVAILABLE' | 'PERMISSION_DENIED';
 
-/**
- * Builds BackupFileV1 from the DB, writes `${Paths.cache}/jobify-backup-YYYY-MM-DD.json`
- * (2-space JSON), then Sharing.shareAsync(uri, { mimeType: 'application/json' }).
- */
-export async function exportBackup(db: SQLiteDatabase): Promise<Result<{ uri: string }, ExportError>> {
-  let isAvailable = false;
-  try {
-    isAvailable = await Sharing.isAvailableAsync();
-  } catch {
-    isAvailable = false;
-  }
-  if (!isAvailable) {
-    return err('SHARE_UNAVAILABLE');
-  }
+function getLocalDateString(): string {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
-  let backup: BackupFileV1;
+async function buildBackupJson(db: SQLiteDatabase): Promise<Result<string, 'DB_ERROR'>> {
   try {
     const profile = await getProfile(db);
     const preferences = await getPreferences(db);
@@ -84,7 +79,7 @@ export async function exportBackup(db: SQLiteDatabase): Promise<Result<{ uri: st
     const now = new Date();
     const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 
-    backup = {
+    const backup: BackupFileV1 = {
       format: BACKUP_FORMAT,
       version: BACKUP_VERSION,
       exportedAt: now.toISOString(),
@@ -96,12 +91,32 @@ export async function exportBackup(db: SQLiteDatabase): Promise<Result<{ uri: st
       answers,
       applications,
     };
+    return ok(JSON.stringify(backup, null, 2));
   } catch {
     return err('DB_ERROR');
   }
+}
 
-  const json = JSON.stringify(backup, null, 2);
-  const datePart = new Date().toISOString().slice(0, 10);
+/**
+ * Shares the backup file via system share sheet. Writes `${Paths.cache}/jobify-backup-YYYY-MM-DD.json`
+ * and invokes Sharing.shareAsync. CONTRACT: DECISIONS.md D-006.
+ */
+export async function shareBackup(db: SQLiteDatabase): Promise<Result<{ uri: string }, ExportError>> {
+  let isAvailable = false;
+  try {
+    isAvailable = await Sharing.isAvailableAsync();
+  } catch {
+    isAvailable = false;
+  }
+  if (!isAvailable) {
+    return err('SHARE_UNAVAILABLE');
+  }
+
+  const backupRes = await buildBackupJson(db);
+  if (!backupRes.ok) return backupRes;
+  const json = backupRes.value;
+
+  const datePart = getLocalDateString();
   const fileName = `jobify-backup-${datePart}.json`;
   const file = new File(Paths.cache, fileName);
 
@@ -121,6 +136,88 @@ export async function exportBackup(db: SQLiteDatabase): Promise<Result<{ uri: st
     return ok({ uri: file.uri });
   } catch {
     return err('SHARE_UNAVAILABLE');
+  }
+}
+
+/**
+ * Exports backup. CONTRACT: ARCHITECTURE.md §6.6, DECISIONS.md D-006.
+ * On Android: saves `jobify-backup-YYYY-MM-DD.json` (local date) into the SAF folder stored
+ * under KV_KEYS.androidStagingDirUri (same folder Stage CV uses; deleting any same-name file first).
+ * If no folder is stored or writing fails with permission error, requests directory permissions
+ * (initial URI: Download), stores the granted URI under the same key, and retries once.
+ * Cancelled picker → PERMISSION_DENIED.
+ * On iOS: keeps share-sheet behavior (calls shareBackup).
+ */
+export async function exportBackup(db: SQLiteDatabase): Promise<Result<{ uri: string }, ExportError>> {
+  if (Platform.OS === 'android') {
+    const backupRes = await buildBackupJson(db);
+    if (!backupRes.ok) return backupRes;
+    const json = backupRes.value;
+
+    const datePart = getLocalDateString();
+    const fileName = `jobify-backup-${datePart}.json`;
+    const baseName = `jobify-backup-${datePart}`;
+
+    let dirUri = await kvGet(KV_KEYS.androidStagingDirUri);
+    let isFromStorage = dirUri !== null;
+
+    const requestDir = async (): Promise<string | null> => {
+      const initialRoot = StorageAccessFramework.getUriForDirectoryInRoot('Download');
+      const perm = await StorageAccessFramework.requestDirectoryPermissionsAsync(initialRoot);
+      if (!perm.granted || !perm.directoryUri) {
+        return null;
+      }
+      await kvSet(KV_KEYS.androidStagingDirUri, perm.directoryUri);
+      return perm.directoryUri;
+    };
+
+    if (!dirUri) {
+      dirUri = await requestDir();
+      if (!dirUri) {
+        return err('PERMISSION_DENIED');
+      }
+      isFromStorage = false;
+    }
+
+    const tryWrite = async (targetDirUri: string): Promise<string> => {
+      const files = await StorageAccessFramework.readDirectoryAsync(targetDirUri);
+      for (const fUri of files) {
+        const decoded = decodeURIComponent(fUri);
+        if (decoded.endsWith('/' + fileName)) {
+          await StorageAccessFramework.deleteAsync(fUri);
+        }
+      }
+      const newUri = await StorageAccessFramework.createFileAsync(
+        targetDirUri,
+        baseName,
+        'application/json',
+      );
+      await StorageAccessFramework.writeAsStringAsync(newUri, json, { encoding: 'utf8' });
+      return newUri;
+    };
+
+    try {
+      const destinationUri = await tryWrite(dirUri);
+      return ok({ uri: destinationUri });
+    } catch {
+      if (isFromStorage) {
+        try {
+          await kvRemove(KV_KEYS.androidStagingDirUri);
+          dirUri = await requestDir();
+          if (!dirUri) {
+            return err('PERMISSION_DENIED');
+          }
+          const destinationUri = await tryWrite(dirUri);
+          return ok({ uri: destinationUri });
+        } catch {
+          return err('WRITE_FAILED');
+        }
+      } else {
+        return err('WRITE_FAILED');
+      }
+    }
+  } else {
+    return shareBackup(db);
   }
 }
 

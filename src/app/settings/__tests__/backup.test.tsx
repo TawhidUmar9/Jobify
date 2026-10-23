@@ -3,7 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { SnackbarProvider } from '../../../components/ui/Snackbar';
 import { TestIds } from '../../../constants/testIds';
-import { exportBackup, importBackup } from '../../../services/backup';
+import { exportBackup, importBackup, shareBackup } from '../../../services/backup';
 import { ThemeProvider } from '../../../theme/ThemeProvider';
 import { createFakeDb } from '../../../../tests/helpers/fakeDb';
 import BackupSettingsScreen from '../backup';
@@ -17,6 +17,7 @@ jest.mock('expo-sqlite', () => ({
 jest.mock('../../../services/backup', () => ({
   exportBackup: jest.fn(),
   importBackup: jest.fn(),
+  shareBackup: jest.fn(),
 }));
 
 const safeMetrics = {
@@ -46,12 +47,35 @@ describe('BackupSettingsScreen', () => {
     expect(screen.getByTestId(TestIds.backup.screen)).toBeTruthy();
     expect(screen.getByTestId(TestIds.backup.export)).toBeTruthy();
     expect(screen.getByTestId(TestIds.backup.import)).toBeTruthy();
+    expect(screen.getByTestId(TestIds.backup.share)).toBeTruthy();
     expect(
       screen.getByText(
-        'Export a JSON file with your profile, resumes (text), boards, answers and applications. Your API key and resume PDFs are not included. The file is not encrypted — store it safely.',
+        'Export a JSON file with your profile, resumes (text), boards, answers and applications. Your API key and resume PDFs are not included. The file is not encrypted — store it safely. Saves to your Jobify folder (for example Download/Jobify). The first time, Android asks you to pick it.',
       ),
     ).toBeTruthy();
     expect(screen.getByText('Replaces everything on this device.')).toBeTruthy();
+  });
+
+  it('handles share action and success/error feedback', async () => {
+    jest.mocked(shareBackup).mockResolvedValueOnce({
+      ok: true,
+      value: { uri: 'file://cache/jobify-backup.json' },
+    });
+
+    await renderScreen();
+    await fireEvent.press(screen.getByTestId(TestIds.backup.share));
+
+    expect(shareBackup).toHaveBeenCalledWith(mockDb.db);
+
+    jest.mocked(shareBackup).mockResolvedValueOnce({
+      ok: false,
+      error: 'SHARE_UNAVAILABLE',
+    });
+
+    await fireEvent.press(screen.getByTestId(TestIds.backup.share));
+    await waitFor(() => {
+      expect(screen.getByText('Sharing is not available on this device.')).toBeTruthy();
+    });
   });
 
   it('handles export action and error feedback', async () => {

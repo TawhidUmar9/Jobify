@@ -2,6 +2,7 @@ import { getDocumentAsync } from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import type { SQLiteDatabase } from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 import { getProfile, getPreferences } from '../../db/repositories/profileRepo';
 import { listResumes } from '../../db/repositories/resumesRepo';
@@ -15,6 +16,7 @@ import {
   BACKUP_VERSION,
   exportBackup,
   importBackup,
+  shareBackup,
 } from '../backup';
 import type {
   ApplicationRow,
@@ -56,6 +58,29 @@ jest.mock('expo-file-system', () => {
     __mockFiles: mockFiles,
   };
 });
+
+jest.mock('expo-file-system/legacy', () => ({
+  __esModule: true,
+  StorageAccessFramework: {
+    getUriForDirectoryInRoot: jest.fn((dir: string) => `content://root/${dir}`),
+    requestDirectoryPermissionsAsync: jest.fn(),
+    readDirectoryAsync: jest.fn(),
+    deleteAsync: jest.fn(),
+    createFileAsync: jest.fn(),
+    writeAsStringAsync: jest.fn(),
+  },
+}));
+
+const { StorageAccessFramework: mockSaf } = jest.requireMock('expo-file-system/legacy') as {
+  StorageAccessFramework: {
+    getUriForDirectoryInRoot: jest.Mock;
+    requestDirectoryPermissionsAsync: jest.Mock;
+    readDirectoryAsync: jest.Mock;
+    deleteAsync: jest.Mock;
+    createFileAsync: jest.Mock;
+    writeAsStringAsync: jest.Mock;
+  };
+};
 
 jest.mock('expo-sharing', () => ({
   isAvailableAsync: jest.fn().mockResolvedValue(true),
@@ -484,6 +509,77 @@ describe('backup service', () => {
     });
     const newerVersionRes = await importBackup(db);
     expect(newerVersionRes).toEqual({ ok: false, error: 'NEWER_VERSION' });
+  });
+
+  it('exports to Android SAF folder, re-prompts on failure, and handles permission denied (D-006)', async () => {
+    Object.defineProperty(Platform, 'OS', { value: 'android', configurable: true });
+    try {
+      const fakeKey = 'sk-gemini-secret-test-key-saf';
+      await setApiKey(fakeKey);
+
+      const db = createInMemoryDb({
+        answers: [{ id: 1, question: 'Q?', answer: 'A!', use_count: 1, updated_at: '2026-10-23 00:00:00' }],
+      });
+
+      // 1. Cancelled picker -> PERMISSION_DENIED
+      mockSaf.requestDirectoryPermissionsAsync.mockResolvedValueOnce({ granted: false, directoryUri: null });
+      const deniedRes = await exportBackup(db);
+      expect(deniedRes).toEqual({ ok: false, error: 'PERMISSION_DENIED' });
+
+      // 2. Granted picker -> saves to SAF folder and writes json
+      let writtenContent = '';
+      mockSaf.requestDirectoryPermissionsAsync.mockResolvedValueOnce({
+        granted: true,
+        directoryUri: 'content://tree/primary:Download/Jobify',
+      });
+      mockSaf.readDirectoryAsync.mockResolvedValueOnce([
+        'content://tree/primary:Download/Jobify/jobify-backup-2026-10-23.json',
+      ]);
+      mockSaf.deleteAsync.mockResolvedValueOnce(undefined);
+      mockSaf.createFileAsync.mockResolvedValueOnce(
+        'content://tree/primary:Download/Jobify/jobify-backup-new.json',
+      );
+      mockSaf.writeAsStringAsync.mockImplementationOnce(async (_uri: string, content: string) => {
+        writtenContent = content;
+      });
+
+      const exportRes = await exportBackup(db);
+      expect(exportRes.ok).toBe(true);
+      if (exportRes.ok) {
+        expect(exportRes.value.uri).toBe('content://tree/primary:Download/Jobify/jobify-backup-new.json');
+      }
+      expect(mockSaf.deleteAsync).toHaveBeenCalled();
+      expect(writtenContent).not.toContain(fakeKey);
+      expect(writtenContent).not.toMatch(/api_?key/i);
+
+      // 3. Stored folder write fails -> clears stored uri, re-prompts, succeeds
+      mockSaf.readDirectoryAsync.mockRejectedValueOnce(new Error('Permission revoked'));
+      mockSaf.requestDirectoryPermissionsAsync.mockResolvedValueOnce({
+        granted: true,
+        directoryUri: 'content://tree/primary:Download/Jobify2',
+      });
+      mockSaf.readDirectoryAsync.mockResolvedValueOnce([]);
+      mockSaf.createFileAsync.mockResolvedValueOnce('content://tree/primary:Download/Jobify2/new.json');
+      mockSaf.writeAsStringAsync.mockResolvedValueOnce(undefined);
+
+      const retryRes = await exportBackup(db);
+      expect(retryRes.ok).toBe(true);
+    } finally {
+      Object.defineProperty(Platform, 'OS', { value: 'ios', configurable: true });
+    }
+  });
+
+  it('shareBackup exports cache file and invokes share sheet directly (D-006)', async () => {
+    const db = createInMemoryDb({
+      answers: [{ id: 1, question: 'Q?', answer: 'A!', use_count: 1, updated_at: '2026-10-23 00:00:00' }],
+    });
+    const res = await shareBackup(db);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(Sharing.shareAsync).toHaveBeenCalledWith(res.value.uri, {
+        mimeType: 'application/json',
+      });
+    }
   });
 
   it('executes in one transaction and rolls back changes on database failure', async () => {

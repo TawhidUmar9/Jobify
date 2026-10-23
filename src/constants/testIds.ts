@@ -215,6 +215,7 @@ export const TestIds = {
   backup: {
     screen: 'backup-screen',
     export: 'backup-export',
+    share: 'backup-share',
     import: 'backup-import',
     confirmImport: 'backup-confirm-import',
     result: 'backup-result',

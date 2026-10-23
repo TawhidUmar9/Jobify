@@ -6,12 +6,12 @@ import { Button } from '../../components/ui/Button';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useSnackbar } from '../../components/ui/Snackbar';
 import { TestIds } from '../../constants/testIds';
-import { exportBackup, importBackup, type ImportError } from '../../services/backup';
+import { exportBackup, importBackup, shareBackup, type ImportError } from '../../services/backup';
 import { useTheme } from '../../theme/ThemeProvider';
 import { fontScaleCaps, radii, spacing, typography } from '../../theme/tokens';
 
 const EXPORT_COPY =
-  'Export a JSON file with your profile, resumes (text), boards, answers and applications. Your API key and resume PDFs are not included. The file is not encrypted — store it safely.';
+  'Export a JSON file with your profile, resumes (text), boards, answers and applications. Your API key and resume PDFs are not included. The file is not encrypted — store it safely. Saves to your Jobify folder (for example Download/Jobify). The first time, Android asks you to pick it.';
 
 const IMPORT_COPY = 'Replaces everything on this device.';
 
@@ -36,6 +36,7 @@ export default function BackupSettingsScreen() {
   const snackbar = useSnackbar();
 
   const [exporting, setExporting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
@@ -45,6 +46,27 @@ export default function BackupSettingsScreen() {
     setExporting(true);
     try {
       const outcome = await exportBackup(db);
+      if (outcome.ok) {
+        snackbar.show('Backup saved to your Jobify folder.');
+      } else {
+        if (outcome.error === 'PERMISSION_DENIED') {
+          snackbar.show('No folder chosen. The backup was not saved.');
+        } else if (outcome.error === 'SHARE_UNAVAILABLE') {
+          snackbar.show('Sharing is not available on this device.');
+        } else {
+          snackbar.show('Could not create the backup file.');
+        }
+      }
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleShare() {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const outcome = await shareBackup(db);
       if (!outcome.ok) {
         if (outcome.error === 'SHARE_UNAVAILABLE') {
           snackbar.show('Sharing is not available on this device.');
@@ -53,7 +75,7 @@ export default function BackupSettingsScreen() {
         }
       }
     } finally {
-      setExporting(false);
+      setSharing(false);
     }
   }
 
@@ -101,12 +123,21 @@ export default function BackupSettingsScreen() {
         </Text>
         <View style={styles.actionRow}>
           <Button
-            label="Export"
+            label="Export backup"
             testID={TestIds.backup.export}
             accessibilityLabel="Export backup"
             loading={exporting}
-            disabled={exporting || importing}
+            disabled={exporting || sharing || importing}
             onPress={handleExport}
+          />
+          <Button
+            label="Share…"
+            variant="ghost"
+            testID={TestIds.backup.share}
+            accessibilityLabel="Share backup"
+            loading={sharing}
+            disabled={exporting || sharing || importing}
+            onPress={handleShare}
           />
         </View>
       </View>
@@ -182,6 +213,7 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
+    gap: spacing.sm,
     marginTop: spacing.xs,
   },
   resultText: {
