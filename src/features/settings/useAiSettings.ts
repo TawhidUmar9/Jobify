@@ -21,6 +21,8 @@ export interface AiSettingsState {
   errors: { model?: string; baseUrl?: string };
   /** True when a config was previously saved. */
   hasSaved: boolean;
+  /** True when the draft differs from the saved config or the API key was edited. */
+  dirty: boolean;
 }
 
 const EMPTY_DRAFT: AiSettingsDraft = { config: AI_DEFAULTS.gemini, apiKey: '' };
@@ -41,6 +43,7 @@ export function aiSettingsFieldErrors(draft: AiSettingsDraft): { model?: string;
 export function useAiSettings(): AiSettingsState {
   const [status, setStatus] = useState<'loading' | 'ready'>('loading');
   const [draft, setDraftState] = useState<AiSettingsDraft>(EMPTY_DRAFT);
+  const [savedDraft, setSavedDraft] = useState<AiSettingsDraft | null>(null);
   const [testState, setTestState] = useState<AiSettingsState['testState']>({ status: 'idle' });
   const [showErrors, setShowErrors] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
@@ -51,8 +54,10 @@ export function useAiSettings(): AiSettingsState {
       const config = await loadAiConfig();
       const apiKey = await getApiKey();
       if (cancelled) return;
+      const initial = { config: config ?? AI_DEFAULTS.gemini, apiKey };
       setHasSaved(config !== null);
-      setDraftState({ config: config ?? AI_DEFAULTS.gemini, apiKey });
+      setDraftState(initial);
+      setSavedDraft(initial);
       setStatus('ready');
     })();
     return () => {
@@ -82,6 +87,7 @@ export function useAiSettings(): AiSettingsState {
     if (!saved) return false;
     const keySaved = await setApiKey(draft.apiKey);
     if (!keySaved) return false;
+    setSavedDraft(draft);
     setHasSaved(true);
     return true;
   }, [draft]);
@@ -89,10 +95,15 @@ export function useAiSettings(): AiSettingsState {
   const remove = useCallback(async () => {
     await clearAiConfig();
     setDraftState(EMPTY_DRAFT);
+    setSavedDraft(EMPTY_DRAFT);
     setHasSaved(false);
     setShowErrors(false);
     setTestState({ status: 'idle' });
   }, []);
+
+  const dirty =
+    savedDraft !== null &&
+    (JSON.stringify(draft.config) !== JSON.stringify(savedDraft.config) || draft.apiKey !== savedDraft.apiKey);
 
   return {
     status,
@@ -104,5 +115,6 @@ export function useAiSettings(): AiSettingsState {
     remove,
     errors: showErrors ? aiSettingsFieldErrors(draft) : {},
     hasSaved,
+    dirty,
   };
 }

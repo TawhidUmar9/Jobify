@@ -28,6 +28,7 @@ describe('useAiSettings', () => {
     expect(result.current.hasSaved).toBe(false);
     expect(result.current.draft).toEqual({ config: AI_DEFAULTS.gemini, apiKey: '' });
     expect(result.current.errors).toEqual({});
+    expect(result.current.dirty).toBe(false);
   });
 
   it('loads a saved config and key', async () => {
@@ -43,6 +44,7 @@ describe('useAiSettings', () => {
       config: { provider: 'openai_compatible', model: 'mock', baseUrl: 'http://10.0.2.2:8787/v1' },
       apiKey: 'k',
     });
+    expect(result.current.dirty).toBe(false);
   });
 
   it('shows Connected or the exact error copy from testConnection', async () => {
@@ -129,5 +131,24 @@ describe('useAiSettings', () => {
     expect(await getApiKey()).toBe('');
     expect(result.current.hasSaved).toBe(false);
     expect(result.current.draft).toEqual({ config: AI_DEFAULTS.gemini, apiKey: '' });
+  });
+
+  it('tracks dirty state when draft changes and resets on save', async () => {
+    const { result } = await renderHook(() => useAiSettings());
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    expect(result.current.dirty).toBe(false);
+
+    await act(async () => {
+      result.current.setDraft({
+        config: AI_DEFAULTS.gemini,
+        apiKey: 'new-key',
+      });
+    });
+    expect(result.current.dirty).toBe(true);
+
+    await act(async () => {
+      await result.current.save();
+    });
+    expect(result.current.dirty).toBe(false);
   });
 });
