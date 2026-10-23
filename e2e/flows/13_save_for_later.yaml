@@ -1,0 +1,58 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-33: Save job for later via toolbar-save
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fjob-remote-form.html"
+- extendedWaitUntil:
+    visible:
+      id: "toolbar-save"
+    timeout: 10000
+
+# Tap toolbar-save and assert snackbar "Saved to Tracker"
+- tapOn:
+    id: "toolbar-save"
+- assertVisible: "Saved to Tracker"
+
+# Go to Tracker, assert the row shows "Saved"
+- tapOn:
+    id: "tab-tracker"
+- extendedWaitUntil:
+    visible: "Saved"
+    timeout: 10000
+- assertVisible: "Saved"
+
+# Back to Workspace, Analyze, Log
+- tapOn:
+    id: "tab-workspace"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+- tapOn:
+    id: "analyze-fab"
+- extendedWaitUntil:
+    visible:
+      id: "action-log-application"
+    timeout: 15000
+
+- tapOn:
+    id: "action-log-application"
+- assertVisible: "Logged to Tracker"
+
+- tapOn:
+    id: "copilot-close"
+
+# Tracker row now "Applied"
+- tapOn:
+    id: "tab-tracker"
+- extendedWaitUntil:
+    visible: "Applied"
+    timeout: 10000
+- assertVisible: "Applied"

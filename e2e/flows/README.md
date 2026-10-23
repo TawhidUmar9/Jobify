@@ -55,3 +55,5 @@ maestro test e2e/flows/03_analyze.yaml
 - `11_offline.yaml`: Offline functionality of Tracker, Insights, and Settings.
 - `_airplane_mode.yaml`: Optional sub-flow for emulator-only airplane mode toggling.
 - `12_edge_cases.yaml`: Error handling for 429 rate limit, 500 server error, and invalid application IDs.
+- `13_save_for_later.yaml`: Save job for later via toolbar-save, verifying in Tracker as Saved, and promoting to Applied via Analyze & Log.
+- `14_not_a_job.yaml`: Detection of non-job pages showing the not-a-job card and disabled Log action.

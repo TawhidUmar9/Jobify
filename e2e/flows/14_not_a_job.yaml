@@ -1,0 +1,31 @@
+appId: io.github.tawhidumar9.jobify
+env:
+  BASE_URL: "http://localhost:8787"
+---
+- launchApp:
+    clearState: true
+
+- runFlow: _onboard.yaml
+
+# AT-34: Not-a-job detection on not-a-job.html
+- openLink: "jobify:///?url=http%3A%2F%2Flocalhost%3A8787%2Ffixtures%2Fnot-a-job.html"
+- extendedWaitUntil:
+    visible:
+      id: "analyze-fab"
+    timeout: 10000
+
+# Analyze
+- tapOn:
+    id: "analyze-fab"
+- extendedWaitUntil:
+    visible:
+      id: "copilot-not-job"
+    timeout: 15000
+
+# Assert copilot-not-job visible and Log disabled
+- assertVisible:
+    id: "copilot-not-job"
+- assertVisible: "This doesn't look like a job post"
+- assertVisible:
+    id: "action-log-application"
+    enabled: false
