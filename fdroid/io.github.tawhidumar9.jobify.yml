@@ -1,0 +1,56 @@
+# DRAFT fdroiddata recipe for Jobify. Copy to metadata/io.github.tawhidumar9.jobify.yml in a fork of
+# https://gitlab.com/fdroid/fdroiddata and test with `fdroid build -v -l io.github.tawhidumar9.jobify`
+# before opening the merge request. F-Droid reviewers may ask for changes (they usually do for
+# React Native / Expo apps); treat every line below as a starting point, not a verified build.
+#
+# Before submitting:
+#   1. Tag the release commit: git tag v1.0.0 && git push origin v1.0.0
+#   2. Keep app.json "version" and android versionCode in sync with the entry below.
+#   3. Description, summary and changelogs come from fastlane/metadata/android/en-US/ in the repo.
+
+Categories:
+  - Internet
+  - Office
+License: GPL-3.0-or-later
+AuthorName: Tawhid Umar
+SourceCode: https://github.com/TawhidUmar9/Jobify
+IssueTracker: https://github.com/TawhidUmar9/Jobify/issues
+
+AutoName: Jobify
+
+# The user chooses and pays for the AI provider (Gemini, OpenAI-compatible, or a local server).
+AntiFeatures:
+  NonFreeNet:
+    en-US: Analysis uses an AI service the user configures (for example Google Gemini or OpenAI). A self-hosted server such as Ollama also works.
+
+RepoType: git
+Repo: https://github.com/TawhidUmar9/Jobify.git
+
+Builds:
+  - versionName: 1.0.0
+    versionCode: 1
+    commit: v1.0.0
+    subdir: android/app
+    sudo:
+      - apt-get update
+      - apt-get install -y nodejs npm
+    init:
+      - cd ../..
+      - npm ci
+      - npx expo prebuild --platform android --clean
+    gradle:
+      - yes
+    # arm64 only for the first release; widen to all ABIs (and per-ABI versionCodes) later.
+    gradleprops:
+      - reactNativeArchitectures=arm64-v8a
+    scanignore:
+      - node_modules
+    scandelete:
+      - node_modules/**/*.jar
+      - node_modules/**/*.aar
+    ndk: r27b  # React Native 0.88 uses NDK 27.1.12297006 (r27b)
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 1.0.0
+CurrentVersionCode: 1
