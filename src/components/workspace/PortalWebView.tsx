@@ -64,7 +64,7 @@ export interface PortalWebViewProps {
  * testID TestIds.workspace.webview.
  */
 export function PortalWebView({ webViewRef, url, onNavStateChange, onLoadProgress, onMessage }: PortalWebViewProps) {
-  const { colors } = useTheme();
+  const { colors, webZoom } = useTheme();
   const ios = Platform.OS === 'ios';
   const android = Platform.OS === 'android';
 
@@ -147,6 +147,7 @@ export function PortalWebView({ webViewRef, url, onNavStateChange, onLoadProgres
       ref={webViewRef}
       testID={TestIds.workspace.webview}
       source={{ uri: crashedUrl ?? url }}
+      textZoom={webZoom}
       javaScriptEnabled
       domStorageEnabled
       originWhitelist={['*']}

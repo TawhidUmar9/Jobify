@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { AccessibilityInfo, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import { ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -24,7 +24,7 @@ const BAR_HEIGHT = 56;
  * TestIds.workspace.emptyBoards with "Add a job board in Settings").
  */
 export function BoardBar({ boards, activeBoardId, onSelect }: BoardBarProps) {
-  const { colors } = useTheme();
+  const { colors, isReduceMotion } = useTheme();
   const scroller = useRef<ScrollViewInstance | null>(null);
   const offsets = useRef<Record<number, number>>({});
 
@@ -32,16 +32,8 @@ export function BoardBar({ boards, activeBoardId, onSelect }: BoardBarProps) {
     if (activeBoardId === null) return;
     const x = offsets.current[activeBoardId];
     if (x === undefined) return;
-    const pending = AccessibilityInfo.isReduceMotionEnabled();
-    const scroll = (reduce: boolean) => {
-      scroller.current?.scrollTo({ x: Math.max(0, x - spacing.md), animated: !reduce });
-    };
-    if (typeof pending?.then === 'function') {
-      pending.then(scroll).catch(() => scroll(false));
-      return;
-    }
-    scroll(false);
-  }, [activeBoardId, boards]);
+    scroller.current?.scrollTo({ x: Math.max(0, x - spacing.md), animated: !isReduceMotion });
+  }, [activeBoardId, boards, isReduceMotion]);
 
   if (boards.length === 0) return null;
 

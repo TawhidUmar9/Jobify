@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -25,23 +25,8 @@ export interface StagingExplainerProps {
  * - onRequestClose (hardware back) → onCancel.
  */
 export function StagingExplainer({ visible, onContinue, onCancel }: StagingExplainerProps) {
-  const { colors } = useTheme();
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    const pending = AccessibilityInfo.isReduceMotionEnabled();
-    if (typeof pending?.then === 'function') {
-      pending
-        .then((enabled) => {
-          if (active) setReduceMotion(enabled);
-        })
-        .catch(() => {});
-    }
-    return () => {
-      active = false;
-    };
-  }, []);
+  const { colors, isReduceMotion } = useTheme();
+  const reduceMotion = isReduceMotion;
 
   return (
     <Modal

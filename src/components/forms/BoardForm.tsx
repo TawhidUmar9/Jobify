@@ -116,26 +116,8 @@ function BoardFormContent(props: BoardFormProps) {
  * Errors: INVALID_NAME "Use 1–16 characters"; INVALID_URL "Enter a full https:// address".
  */
 export function BoardForm(props: BoardFormProps) {
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    const pending = AccessibilityInfo.isReduceMotionEnabled();
-    if (typeof pending?.then === 'function') {
-      pending
-        .then((enabled) => {
-          if (active) setReduceMotion(enabled);
-        })
-        .catch(() => {});
-    }
-    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (enabled: boolean) => {
-      setReduceMotion(enabled);
-    });
-    return () => {
-      active = false;
-      subscription?.remove();
-    };
-  }, []);
+  const { isReduceMotion } = useTheme();
+  const reduceMotion = isReduceMotion;
 
   if (!props.visible) return null;
   const initialKey = props.initial ? `${props.initial.name}-${props.initial.url}` : 'add';

@@ -119,26 +119,8 @@ function AnswerFormContent(props: AnswerFormProps) {
  * "123 / 4000"), Cancel / Save. Errors: EMPTY "Fill in both fields"; TOO_LONG "Too long".
  */
 export function AnswerForm(props: AnswerFormProps) {
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    const pending = AccessibilityInfo.isReduceMotionEnabled();
-    if (typeof pending?.then === 'function') {
-      pending
-        .then((enabled) => {
-          if (active) setReduceMotion(enabled);
-        })
-        .catch(() => {});
-    }
-    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (enabled: boolean) => {
-      setReduceMotion(enabled);
-    });
-    return () => {
-      active = false;
-      subscription?.remove();
-    };
-  }, []);
+  const { isReduceMotion } = useTheme();
+  const reduceMotion = isReduceMotion;
 
   if (!props.visible) return null;
   const initialKey = props.initial ? `${props.initial.question}-${props.initial.answer.slice(0, 10)}` : 'add';
