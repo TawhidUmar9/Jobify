@@ -166,6 +166,7 @@ export function CopilotSheet(props: CopilotSheetProps) {
       ref={sheetRef}
       index={open ? 0 : -1}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       enablePanDownToClose
       animateOnMount={!reduceMotion}
       animationConfigs={reduceMotion ? { duration: 0 } : undefined}
@@ -298,7 +299,8 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: 96,
   },
   sections: {
     gap: spacing.lg,

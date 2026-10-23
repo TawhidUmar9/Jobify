@@ -1,3 +1,4 @@
+import BottomSheet from '@gorhom/bottom-sheet';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { TestIds } from '../../../constants/testIds';
@@ -72,6 +73,15 @@ describe('CopilotSheet', () => {
     handlers.onReanalyze.mockClear();
     handlers.onOpenSettings.mockClear();
     handlers.onClose.mockClear();
+  });
+
+  it('disables dynamic sizing so index 0 is always 50% (T-046f G1)', async () => {
+    const renderSpy = jest.spyOn(BottomSheet.prototype, 'render');
+    await renderSheet(state({ phase: 'idle' }));
+    const lastInstance = renderSpy.mock.instances[renderSpy.mock.instances.length - 1] as unknown as { props: { enableDynamicSizing: boolean; snapPoints: string[] } };
+    expect(lastInstance.props.enableDynamicSizing).toBe(false);
+    expect(lastInstance.props.snapPoints).toEqual(['50%', '92%']);
+    renderSpy.mockRestore();
   });
 
   it('shows scraping and analyzing copy and disables re-analyze while busy', async () => {
