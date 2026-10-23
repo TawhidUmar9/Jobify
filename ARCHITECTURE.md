@@ -210,7 +210,7 @@ Picker `application/pdf`, max 10 MB. Copied to `Paths.document/resumes/<id>.pdf`
 Android SAF into a user-picked folder (explainer once; persisted URI; previous same-name copy deleted; one retry with a re-prompt). iOS share sheet. The cover note (if tailored) is copied to the clipboard first. Errors: `NO_FILE`, `PERMISSION_DENIED`, `FILE_MISSING`, `WRITE_FAILED`, `SHARE_UNAVAILABLE`.
 
 ### 6.6 Backup (`backup.ts`)
-`BackupFileV1` JSON (`format: 'jobify-backup'`, `version: 1`). Export goes through `Paths.cache` and the share sheet. Import picks a JSON file, validates and normalizes it, then **replaces** all tables in one transaction and marks onboarding complete. The key and PDFs are never included.
+`BackupFileV1` JSON (`format: 'jobify-backup'`, `version: 1`). Export (Android) writes into the user-picked Jobify SAF folder (`KV_KEYS.androidStagingDirUri`, shared with resume staging; re-prompts once), with "Share…" (`shareBackup`, cache file + share sheet) as the alternative; iOS uses the share sheet (D-006). Import picks a JSON file, validates and normalizes it, then **replaces** all tables in one transaction and marks onboarding complete. The key and PDFs are never included.
 
 ### 6.7 Haptics
 Light impact on Analyze. Success on fill complete, log, stage, and save answer. Error on analysis failure. Nothing else.

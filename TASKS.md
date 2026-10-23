@@ -463,7 +463,7 @@ true;
 - **Depends on:** T-030, T-032, T-009.
 - **Acceptance:**
   - [x] `canAutoFill` rule. Stale notice. Snackbar `Filled X of Y fields`. 5 s timeout → failure snackbar. Source badges. "Save to answers" on GENERATED rows → upsert + "Saved". ANSWER_BANK mappings increment use counts after a fill.
-  - [ ] **Manual (mock):** fixture page → Auto-fill → 5 green outlines. The page's "state:" line shows the values. Save the "Why Acme Cloud?" draft → it appears in Settings → Answer bank after T-041. MANUAL PENDING (device)
+  - [x] **Manual (mock):** fixture page → Auto-fill → 5 green outlines. The page's "state:" line shows the values. Save the "Why Acme Cloud?" draft → it appears in Settings → Answer bank after T-041. (passed 2026-10-23 on SM-G935F: "Filled 5 of 5", draft saved and listed)
 - **Verify:** `npm run verify && npx jest src/features/workspace src/components/copilot src/db`
 
 ### T-034 Improve my application (tailor) + copy
@@ -489,7 +489,7 @@ true;
 - **Acceptance:**
   - [x] explainer on first Android use only. Cancel stores nothing. Snackbars per UI_DIRECTIVES §6. No resume → "Add a resume in Settings first".
 - **Manual:**
-  - [ ] Android: create `Download/Jobify`. Stage twice → exactly one file with that name. In Chrome on the device, a file input shows it first under Recent. MANUAL PENDING (device)
+  - [x] Android: create `Download/Jobify`. Stage twice → exactly one file with that name. In Chrome on the device, a file input shows it first under Recent. (passed 2026-10-23 on SM-G935F: explainer once, Cancel stores nothing, picker opens in Download, one file after two stages. Chrome "Recent" not checked: no Chrome on the test phone)
 - **Verify:** `npm run verify && npx jest src/features/workspace src/components/copilot`
 
 ### T-037 Application detail, status, follow-up, notes, delete
@@ -569,12 +569,26 @@ true;
 - **Files:** `PortalWebView.tsx`, `src/lib/url.ts`, tests.
 - **Depends on:** T-024.
 - **Acceptance:**
-  - [ ] on `external-links.html`, mailto/tel open externally while the WebView stays put, and target=_blank / window.open load in place. Airplane mode → error view → Retry recovers. Renderer kill (`adb root && adb shell pkill -f sandboxed_process` on a Google APIs emulator) → remount at the same page. MANUAL PENDING (device)
+  - [x] on `external-links.html`, mailto/tel open externally while the WebView stays put, and target=_blank / window.open load in place. Airplane mode → error view → Retry recovers. Renderer kill (`adb root && adb shell pkill -f sandboxed_process` on a Google APIs emulator) → remount at the same page. (passed 2026-10-23 on SM-G935F except: mailto had no handler on the phone (no mail app) and failed silently, see T-046b F7; renderer kill skipped, needs root or an emulator)
 - **Verify:** `npm run verify && npx jest src/lib` + manual.
 
 ---
 
 ## M6: Hardening and release
+
+### T-046b Device-test fixes (round 2)
+- **Goal:** fix what the M5 device pass found on the SM-G935F (2026-10-23). One commit per item, message `T-046b F<n>: <title>`. Contract changes are pre-approved in DECISIONS.md D-004…D-007; follow them exactly.
+- **Files:** as named per item, plus tests. `scripts/licenses.mjs` (new), `LICENSE`, `LICENSES.md`, README license section are allowed for F6.
+- **Acceptance:**
+  - [ ] F1 (D-004) Wrong Gemini key → "The AI provider rejected your API key…" (AUTH), not BAD_REQUEST. `src/services/ai/providers/gemini.ts` + tests.
+  - [ ] F2 Settings → AI provider: unsaved-changes confirm on back, same pattern and copy as `settings/profile.tsx` ("Discard changes?"). Dirty = draft differs from the saved config or the key field was edited. `src/app/settings/ai.tsx` (+ `useAiSettings.ts` if it needs a `dirty` flag) + test.
+  - [ ] F3 Bottom-panel modals with text fields stay above the keyboard. On device the keyboard covered the Add/Edit job board panel (name half hidden; URL, Save, Cancel fully hidden). Wrap the panel in `KeyboardAvoidingView` (`behavior` 'padding' on iOS, 'height' on Android, or the equivalent that works with edge-to-edge) in `src/components/forms/BoardForm.tsx`, and do the same for any other `Modal` panel containing a `TextField` (check `AnswerForm.tsx`, `FollowUpPicker.tsx`, the onboarding/AI forms). Test: the panel content is inside a KeyboardAvoidingView.
+  - [ ] F4 (D-005) Default Gemini model `gemini-3.5-flash-lite`. `src/services/ai/types.ts` + tests/copy that name the old default.
+  - [ ] F5 (D-006) Backup export saves to the Jobify folder; "Share…" secondary. `src/services/backup.ts`, `src/app/settings/backup.tsx`, `src/constants/testIds.ts` + tests.
+  - [ ] F6 (D-007) License: `LICENSE` (full GPL-3.0 text, fetched verbatim from https://www.gnu.org/licenses/gpl-3.0.txt), `LICENSES.md` from `scripts/licenses.mjs`, About shows `License: GPL-3.0-or-later`, README license section says GPL-3.0-or-later. `src/app/settings/about.tsx` + test.
+  - [ ] F7 External links with no app to handle them (mailto on a phone without a mail app) show the snackbar `No app on this phone can open this link.` instead of failing silently. `src/components/workspace/PortalWebView.tsx` (use `Linking.openURL` in try/catch; report through an `onExternalLinkFailed` callback or the existing snackbar hook, whichever fits the file's current pattern without changing exported props; if a props change is unavoidable, log it in BLOCKERS.md and skip F7).
+  - [ ] F8 Small copy/UI: Insights weekly bar accessibility label says `1 application` (singular) for 1. The application detail screen does not render an empty eligibility reason line (EligibilityBadge with `reason=""` should render no reason text).
+- **Verify:** `npm run verify`. Device re-check is done by the tester.
 
 ### T-047 Accessibility and large text
 - **Files:** components/screens (accessibility props, font caps, focus management only).

@@ -150,14 +150,14 @@ Each screen lists purpose, layout, data, and **all states**. "n/a" means the sta
 | disabled | "Import PDF" hidden when the provider can't read PDFs. "Paste" and "Import" disabled while parsing. Continue disabled while saving. |
 
 ### 4.3 Settings (`/settings-hub` and `/settings/*`)
-**Hub:** ListRows in this order: AI provider (subtitle "Gemini · gemini-3.8-flash" / "Not set up"), Profile (name), Resumes ("2 resumes"), Job preferences ("Remote · 3 roles"), Job boards ("8 boards"), Answer bank ("14 saved answers"), Backup, About.
+**Hub:** ListRows in this order: AI provider (subtitle "Gemini · gemini-3.5-flash-lite" / "Not set up"), Profile (name), Resumes ("2 resumes"), Job preferences ("Remote · 3 roles"), Job boards ("8 boards"), Answer bank ("14 saved answers"), Backup, About.
 **Sub-screens:**
 - AI provider: `AiSettingsForm` + "Save" + "Remove key and settings" (destructive, confirm).
 - Profile / Job preferences: the form + "Save". Unsaved back → confirm.
 - Resumes: rows (label, "Alex_Rahman.pdf" or "Text only", "12 skills"), Trash with confirm, "Add resume" (bottom panel with the import options). Edit resume: `ResumeContentForm` + Save.
 - Job boards: rows with ArrowUp/ArrowDown/Trash, tap to edit (BoardForm), "Add board".
 - Answer bank: rows (question 2 lines, answer 2 lines, "Used 3 times"), tap to edit (AnswerForm), Trash, "Add answer".
-- Backup: Export card + Import card (copy in the screen doc comment), result line.
+- Backup: Export card ("Export backup" saves to the Jobify folder; ghost "Share…" opens the share sheet, D-006) + Import card (copy in the screen doc comment), result line.
 - About: name, version, privacy statement (§6), "Source code", license name, "Open-source licenses".
 
 | State | What shows |
@@ -261,7 +261,7 @@ Tiles (2 per row): Applications, Response rate ("18%", caption "8 of 42"), Inter
 | Share with no link | `No link found in what you shared` |
 | Status / reminder / notes | `Status changed to ${label}` / `Reminder updated` / `Notes saved`; failures `Could not save` |
 | Application deleted | `Application deleted` |
-| Backup export ok / errors | share sheet opens / `Could not create the backup file.` / `Sharing is not available on this device.` |
+| Backup export ok / errors | `Backup saved to your Jobify folder.` / PERMISSION_DENIED `No folder chosen. The backup was not saved.` / WRITE_FAILED `Could not create the backup file.` / SHARE_UNAVAILABLE (Share…) `Sharing is not available on this device.` (D-006) |
 | Backup import ok | `Imported ${resumes} resumes, ${boards} boards, ${answers} answers, ${applications} applications` |
 | Backup import errors | UNREADABLE `This file could not be read.` · WRONG_FORMAT `This is not a Jobify backup.` · NEWER_VERSION `This backup is from a newer Jobify. Update the app first.` · DB_ERROR `Import failed. Your data was not changed.` |
 | Resume import errors | `PDF is larger than 10 MB` · `Choose a PDF file` · `A resume with this name exists` · AI messages |

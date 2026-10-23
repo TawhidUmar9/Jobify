@@ -59,4 +59,4 @@ Pick an unticked task in [TASKS.md](TASKS.md) or an item in [FUTURE.md](FUTURE.m
 - Contracts change only through DECISIONS.md.
 
 ## License
-To be decided before the first release (GPL-3.0-or-later or Apache-2.0; see PLAN_REVIEW.md A-40).
+GPL-3.0-or-later. See `LICENSE`; third-party licenses are listed in `LICENSES.md` (D-007).
