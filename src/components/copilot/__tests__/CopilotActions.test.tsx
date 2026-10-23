@@ -3,6 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { TestIds } from '../../../constants/testIds';
 import { ThemeProvider } from '../../../theme/ThemeProvider';
+import { fontScaleCaps } from '../../../theme/tokens';
 import { CopilotActions } from '../CopilotActions';
 
 jest.mock('lucide-react-native', () => {
@@ -92,5 +93,36 @@ describe('CopilotActions', () => {
       disabled: true,
       busy: false,
     });
+  });
+
+  it('caps button labels at fontScaleCaps.compact and sets numberOfLines to 1 (T-046e E3)', async () => {
+    await render(
+      <SafeAreaProvider initialMetrics={safeMetrics}>
+        <ThemeProvider>
+          <CopilotActions
+            canAutoFill
+            filling={false}
+            staging={false}
+            logged={false}
+            logging={false}
+            onAutoFill={jest.fn()}
+            onStageResume={jest.fn()}
+            onLogApplication={jest.fn()}
+          />
+        </ThemeProvider>
+      </SafeAreaProvider>,
+    );
+
+    const autoFillText = screen.getByText('Auto-fill');
+    expect(autoFillText.props.numberOfLines).toBe(1);
+    expect(autoFillText.props.maxFontSizeMultiplier).toBe(fontScaleCaps.compact);
+
+    const stageCvText = screen.getByText('Stage CV');
+    expect(stageCvText.props.numberOfLines).toBe(1);
+    expect(stageCvText.props.maxFontSizeMultiplier).toBe(fontScaleCaps.compact);
+
+    const logText = screen.getByText('Log');
+    expect(logText.props.numberOfLines).toBe(1);
+    expect(logText.props.maxFontSizeMultiplier).toBe(fontScaleCaps.compact);
   });
 });
