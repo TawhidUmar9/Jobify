@@ -637,6 +637,39 @@ true;
   - [ ] Tester: after prebuild, the merged release manifest has no SYSTEM_ALERT_WINDOW/USE_BIOMETRIC/USE_FINGERPRINT, `allowBackup="false"`, `usesCleartextTraffic="true"`; deep link after a font-size change opens the page. MANUAL PENDING (tester)
 - **Verify:** `npm run verify`
 
+### T-046h Appearance & accessibility settings (D-013)
+- **Goal:** D-013.
+- **Files:** , , , , , , , , tests.
+- **Acceptance:**
+  - [x] Step 1: GitHub (Primer) theme tokens, contrast tests passing WCAG standards.
+  - [x] Step 2: KV keys and testIDs contracts for appearance & accessibility settings.
+  - [x] Step 3: Route , titled "Appearance & accessibility", and hub row  after Job boards.
+  - [x] Step 4:  resolves scheme from , loads and exposes preferences live via context and .
+  - [x] Step 5: Wire typography scaling,  in , reduce-motion override in CopilotSheet and modals, system bars follow resolved scheme.
+  - [x] Step 6: Tests for ThemeProvider resolution, appearance screen, PortalWebView textZoom, and reduce-motion override.
+  - [ ] Device check (tester): GitHub look in both themes, every setting applies live. MANUAL PENDING (tester)
+- **Verify:** 
+> jobify@1.0.0 verify
+> npm run typecheck && npm run lint && npm run test:ci
+
+
+> jobify@1.0.0 typecheck
+> tsc --noEmit
+
+
+> jobify@1.0.0 lint
+> expo lint
+
+
+/home/tawhidumar/codes/jobify/src/app/(tabs)/__tests__/workspace.test.tsx
+  112:9  warning  React Hook React.useCallback has a missing dependency: 'real'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+✖ 1 problem (0 errors, 1 warning)
+
+
+> jobify@1.0.0 test:ci
+> jest --ci --maxWorkers=4
+
 ### T-047 Accessibility and large text
 - **Files:** components/screens (accessibility props, font caps, focus management only).
 - **Depends on:** T-046.

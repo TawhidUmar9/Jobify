@@ -3,7 +3,6 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { Trash2, X } from 'lucide-react-native';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import {
-  AccessibilityInfo,
   ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
@@ -41,7 +40,7 @@ import type { Resume } from '../../types/domain';
  */
 export default function ResumesSettingsScreen() {
   const db = useSQLiteContext();
-  const { colors } = useTheme();
+  const { colors, isReduceMotion } = useTheme();
   const snackbar = useSnackbar();
   const ai = useAiSettings();
   const importer = useResumeImport();
@@ -51,26 +50,7 @@ export default function ResumesSettingsScreen() {
   const [loading, setLoading] = useState(true);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [targetResume, setTargetResume] = useState<Resume | null>(null);
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    const pending = AccessibilityInfo.isReduceMotionEnabled();
-    if (typeof pending?.then === 'function') {
-      pending
-        .then((enabled) => {
-          if (active) setReduceMotion(enabled);
-        })
-        .catch(() => {});
-    }
-    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (enabled: boolean) => {
-      setReduceMotion(enabled);
-    });
-    return () => {
-      active = false;
-      subscription?.remove();
-    };
-  }, []);
+  const reduceMotion = isReduceMotion;
   const [panelOpen, setPanelOpen] = useState(false);
   const [newLabel, setNewLabel] = useState('Resume');
   const [pasteOpen, setPasteOpen] = useState(false);

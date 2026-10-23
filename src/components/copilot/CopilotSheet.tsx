@@ -94,31 +94,12 @@ function errorCopy(error: WorkspaceError): {
  *     (matched, missing), TailorCard, FieldMappingList, stale notice when !isOnSourcePage; CopilotActions in footer.
  */
 export function CopilotSheet(props: CopilotSheetProps) {
-  const { colors } = useTheme();
+  const { colors, isReduceMotion } = useTheme();
   const sheetRef = useRef<ComponentRef<typeof BottomSheet> | null>(null);
   const snapPoints = useMemo(() => ['50%', '92%'], []);
   const busy = props.state.phase === 'scraping' || props.state.phase === 'analyzing' || props.state.phase === 'filling';
   const open = props.state.sheetOpen;
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    const pending = AccessibilityInfo.isReduceMotionEnabled();
-    if (typeof pending?.then === 'function') {
-      pending
-        .then((enabled) => {
-          if (active) setReduceMotion(enabled);
-        })
-        .catch(() => {});
-    }
-    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (enabled: boolean) => {
-      setReduceMotion(enabled);
-    });
-    return () => {
-      active = false;
-      subscription?.remove();
-    };
-  }, []);
+  const reduceMotion = isReduceMotion;
 
   const snapOpen = useCallback(() => {
     const config = reduceMotion ? { duration: 0 } : undefined;

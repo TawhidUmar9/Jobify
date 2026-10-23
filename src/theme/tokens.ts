@@ -41,63 +41,63 @@ export interface ColorTokens {
 }
 
 export const lightColors: ColorTokens = {
-  background: '#F6F8F8',
-  surface: '#FFFFFF',
-  surfaceMuted: '#EEF2F2',
-  textPrimary: '#0F1F1E',
-  textSecondary: '#4A5A59',
-  textDisabled: '#6B7A79',
-  border: '#D5DEDD',
-  borderStrong: '#7A8A88',
-  primary: '#0F766E',
-  onPrimary: '#FFFFFF',
-  primaryPressed: '#0B5E58',
-  accent: '#C2410C',
-  onAccent: '#FFFFFF',
-  accentPressed: '#9A3412',
-  successBg: '#DCFCE7',
-  successText: '#14532D',
-  successIcon: '#15803D',
-  warningBg: '#FEF9C3',
-  warningText: '#713F12',
-  warningIcon: '#A16207',
-  dangerBg: '#FEE2E2',
-  dangerText: '#7F1D1D',
-  dangerIcon: '#B91C1C',
-  scrim: 'rgba(15, 31, 30, 0.48)',
-  inverseSurface: '#0F1F1E',
-  onInverseSurface: '#FFFFFF',
-  progress: '#0F766E',
+  background: '#ffffff',
+  surface: '#f6f8fa',
+  surfaceMuted: '#f6f8fa',
+  textPrimary: '#1f2328',
+  textSecondary: '#59636e',
+  textDisabled: '#8c959f',
+  border: '#d1d9e0',
+  borderStrong: '#818b98',
+  primary: '#0969da',
+  onPrimary: '#ffffff',
+  primaryPressed: '#0860ca',
+  accent: '#0969da',
+  onAccent: '#ffffff',
+  accentPressed: '#0860ca',
+  successBg: '#dafbe1',
+  successText: '#1a7f37',
+  successIcon: '#1a7f37',
+  warningBg: '#fff8c5',
+  warningText: '#9a6700',
+  warningIcon: '#9a6700',
+  dangerBg: '#ffebe9',
+  dangerText: '#d1242f',
+  dangerIcon: '#d1242f',
+  scrim: 'rgba(31, 35, 40, 0.5)',
+  inverseSurface: '#1f2328',
+  onInverseSurface: '#ffffff',
+  progress: '#0969da',
 };
 
 export const darkColors: ColorTokens = {
-  background: '#0B1312',
-  surface: '#121D1C',
-  surfaceMuted: '#1A2726',
-  textPrimary: '#E6EEED',
-  textSecondary: '#A3B3B1',
-  textDisabled: '#7F8F8D',
-  border: '#2A3A38',
-  borderStrong: '#6B7F7D',
-  primary: '#2DD4BF',
-  onPrimary: '#04201D',
-  primaryPressed: '#5EEAD4',
-  accent: '#FB923C',
-  onAccent: '#2A1205',
-  accentPressed: '#FDBA74',
-  successBg: '#0F2E1B',
-  successText: '#86EFAC',
-  successIcon: '#4ADE80',
-  warningBg: '#2E2708',
-  warningText: '#FDE047',
-  warningIcon: '#FACC15',
-  dangerBg: '#3A1212',
-  dangerText: '#FCA5A5',
-  dangerIcon: '#F87171',
-  scrim: 'rgba(0, 0, 0, 0.64)',
-  inverseSurface: '#E6EEED',
-  onInverseSurface: '#0F1F1E',
-  progress: '#2DD4BF',
+  background: '#0d1117',
+  surface: '#151b23',
+  surfaceMuted: '#212830',
+  textPrimary: '#f0f6fc',
+  textSecondary: '#9198a1',
+  textDisabled: '#656c76',
+  border: '#3d444d',
+  borderStrong: '#656c76',
+  primary: '#4493f8',
+  onPrimary: '#ffffff',
+  primaryPressed: '#388bfd',
+  accent: '#4493f8',
+  onAccent: '#ffffff',
+  accentPressed: '#388bfd',
+  successBg: '#04260f',
+  successText: '#3fb950',
+  successIcon: '#3fb950',
+  warningBg: '#2b1d00',
+  warningText: '#d29922',
+  warningIcon: '#d29922',
+  dangerBg: '#3c0d0d',
+  dangerText: '#f85149',
+  dangerIcon: '#f85149',
+  scrim: 'rgba(1, 4, 9, 0.8)',
+  inverseSurface: '#f0f6fc',
+  onInverseSurface: '#0d1117',
+  progress: '#4493f8',
 };
 
 /** 4-pt grid. Use only these values for padding, margin, and gap. */
@@ -132,6 +132,56 @@ export const typography = {
 } as const;
 
 export type TypographyVariant = keyof typeof typography;
+
+export type TextScale = 'system' | '0.9' | '1' | '1.15' | '1.3';
+
+export function resolveTextScaleMultiplier(scale: TextScale = 'system'): number {
+  if (scale === 'system') return 1;
+  const num = parseFloat(scale);
+  return Number.isFinite(num) && num > 0 ? num : 1;
+}
+
+export function getScaledTypography(scale: TextScale = 'system') {
+  const factor = resolveTextScaleMultiplier(scale);
+  if (factor === 1) return typography;
+  return {
+    title: {
+      ...typography.title,
+      fontSize: Math.round(typography.title.fontSize * factor),
+      lineHeight: Math.round(typography.title.lineHeight * factor),
+    },
+    headline: {
+      ...typography.headline,
+      fontSize: Math.round(typography.headline.fontSize * factor),
+      lineHeight: Math.round(typography.headline.lineHeight * factor),
+    },
+    body: {
+      ...typography.body,
+      fontSize: Math.round(typography.body.fontSize * factor),
+      lineHeight: Math.round(typography.body.lineHeight * factor),
+    },
+    bodyStrong: {
+      ...typography.bodyStrong,
+      fontSize: Math.round(typography.bodyStrong.fontSize * factor),
+      lineHeight: Math.round(typography.bodyStrong.lineHeight * factor),
+    },
+    label: {
+      ...typography.label,
+      fontSize: Math.round(typography.label.fontSize * factor),
+      lineHeight: Math.round(typography.label.lineHeight * factor),
+    },
+    caption: {
+      ...typography.caption,
+      fontSize: Math.round(typography.caption.fontSize * factor),
+      lineHeight: Math.round(typography.caption.lineHeight * factor),
+    },
+    score: {
+      ...typography.score,
+      fontSize: Math.round(typography.score.fontSize * factor),
+      lineHeight: Math.round(typography.score.lineHeight * factor),
+    },
+  };
+}
 
 /** maxFontSizeMultiplier per context (UI_DIRECTIVES.md §8). */
 export const fontScaleCaps = {

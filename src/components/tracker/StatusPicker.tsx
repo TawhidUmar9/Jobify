@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react-native';
 import { useContext, useEffect, useState } from 'react';
-import { AccessibilityInfo, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { TestIds } from '../../constants/testIds';
@@ -33,24 +33,9 @@ export interface StatusPickerProps {
  * - Selecting the current status calls onCancel (no write).
  */
 export function StatusPicker(props: StatusPickerProps) {
-  const { colors } = useTheme();
+  const { colors, isReduceMotion } = useTheme();
   const insets = useContext(SafeAreaInsetsContext);
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    const pending = AccessibilityInfo.isReduceMotionEnabled();
-    if (typeof pending?.then === 'function') {
-      pending
-        .then((enabled) => {
-          if (active) setReduceMotion(enabled);
-        })
-        .catch(() => {});
-    }
-    return () => {
-      active = false;
-    };
-  }, []);
+  const reduceMotion = isReduceMotion;
 
   const bottom = (insets?.bottom ?? 0) + spacing.md;
 

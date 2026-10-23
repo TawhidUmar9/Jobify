@@ -24,33 +24,14 @@ const SnackbarContext = createContext<SnackbarApi>({ show: () => {} });
  * - Not dismissible by swipe (auto-hide only); does not block touches outside its box.
  */
 export function SnackbarProvider({ children }: { children: ReactNode }) {
-  const { colors } = useTheme();
+  const { colors, isReduceMotion } = useTheme();
   const insets = useSafeAreaInsets();
   const [message, setMessage] = useState<string | null>(null);
-  const [reduceMotion, setReduceMotion] = useState(false);
+  const reduceMotion = isReduceMotion;
   const [opacity, setOpacity] = useState(0);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeInTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeOutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    const pending = AccessibilityInfo.isReduceMotionEnabled();
-    if (typeof pending?.then === 'function') {
-      pending
-        .then((enabled) => {
-          if (active) setReduceMotion(enabled);
-        })
-        .catch(() => {});
-    }
-    const subscription = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (enabled: boolean) => {
-      setReduceMotion(enabled);
-    });
-    return () => {
-      active = false;
-      subscription?.remove();
-    };
-  }, []);
 
   const clearTimers = useCallback(() => {
     if (hideTimer.current !== null) clearTimeout(hideTimer.current);

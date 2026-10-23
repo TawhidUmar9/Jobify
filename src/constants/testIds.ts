@@ -182,9 +182,17 @@ export const TestIds = {
     rowResumes: 'settings-resumes',
     rowPreferences: 'settings-preferences',
     rowBoards: 'settings-boards',
+    rowAppearance: 'settings-appearance',
     rowAnswers: 'settings-answers',
     rowBackup: 'settings-backup',
     rowAbout: 'settings-about',
+  },
+  appearance: {
+    screen: 'appearance-screen',
+    theme: (mode: string) => `theme-${mode}`,
+    textScale: (value: string) => `textScale-${value}`,
+    webZoom: (value: number | string) => `webZoom-${value}`,
+    reduceMotion: (mode: string) => `reduceMotion-${mode}`,
   },
   resumes: {
     screen: 'resumes-screen',

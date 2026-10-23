@@ -1,3 +1,6 @@
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
+import * as SystemUI from 'expo-system-ui';
 import { Stack } from 'expo-router';
 import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
@@ -44,6 +47,13 @@ function RootStack() {
   const { colors, scheme } = useTheme();
   const { completed } = useOnboardingStatus();
   useIncomingShare();
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      void SystemUI.setBackgroundColorAsync(colors.background);
+    }
+  }, [colors.background]);
+
   // Keep the splash background while the flag loads (no flash of the wrong stack).
   if (completed === null) return null;
   return (
