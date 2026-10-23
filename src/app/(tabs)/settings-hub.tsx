@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { Archive, Bot, Briefcase, FileText, Info, ListTodo, MessageSquareText, User } from 'lucide-react-native';
+import { Archive, Bot, Briefcase, FileText, Info, ListTodo, MessageSquareText, Palette, User } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
@@ -36,8 +36,9 @@ function formatPreferencesSubtitle(prefs: JobPreferences | null): string {
  * Settings hub ("/settings-hub"). UI_DIRECTIVES.md §4.3. One ListRow per section, in this order, each
  * pushing its screen: AI provider (/settings/ai, subtitle = "Gemini · gemini-3.5-flash-lite" or "Not set up"),
  * Profile (/settings/profile), Resumes (/settings/resumes, "N resumes"), Job preferences
- * (/settings/preferences), Job boards (/settings/boards, "N boards"), Answer bank (/settings/answers,
- * "N saved answers"), Backup (/settings/backup), About (/settings/about).
+ * (/settings/preferences), Job boards (/settings/boards, "N boards"), Appearance & accessibility
+ * (/settings/appearance), Answer bank (/settings/answers, "N saved answers"), Backup (/settings/backup),
+ * About (/settings/about).
  */
 export default function SettingsHubScreen() {
   const db = useSQLiteContext();
@@ -130,6 +131,12 @@ export default function SettingsHubScreen() {
         icon={ListTodo}
         testID={TestIds.settings.rowBoards}
         onPress={() => router.push('/settings/boards')}
+      />
+      <ListRow
+        title="Appearance & accessibility"
+        icon={Palette}
+        testID={TestIds.settings.rowAppearance}
+        onPress={() => router.push('/settings/appearance')}
       />
       <ListRow
         title="Answer bank"

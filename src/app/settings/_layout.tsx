@@ -19,6 +19,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="resume/[id]" options={{ title: 'Edit resume' }} />
       <Stack.Screen name="preferences" options={{ title: 'Job preferences' }} />
       <Stack.Screen name="boards" options={{ title: 'Job boards' }} />
+      <Stack.Screen name="appearance" options={{ title: 'Appearance & accessibility' }} />
       <Stack.Screen name="answers" options={{ title: 'Answer bank' }} />
       <Stack.Screen name="backup" options={{ title: 'Backup' }} />
       <Stack.Screen name="about" options={{ title: 'About' }} />
