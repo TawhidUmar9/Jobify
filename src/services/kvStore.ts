@@ -20,6 +20,14 @@ export const KV_KEYS = {
   androidStagingDirUri: 'jobify.android.stagingDirUri',
   /** "1" once the user has seen the Android staging explainer. */
   stagingExplainerSeen: 'jobify.stagingExplainerSeen',
+  /** Theme mode: 'system' | 'light' | 'dark'. */
+  themeMode: 'jobify.ui.themeMode',
+  /** Text scale: 'system' | '0.9' | '1' | '1.15' | '1.3'. */
+  textScale: 'jobify.ui.textScale',
+  /** In-app browser web page zoom percentage (75–200, default 100). */
+  webZoom: 'jobify.ui.webZoom',
+  /** Reduce motion: 'system' | 'on' | 'off'. */
+  reduceMotion: 'jobify.ui.reduceMotion',
 } as const;
 
 export type KvKey = (typeof KV_KEYS)[keyof typeof KV_KEYS];
