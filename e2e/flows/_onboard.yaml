@@ -71,10 +71,16 @@ env:
     timeout: 10000
 - tapOn:
     id: "resume-paste-submit"
+# The parsed profile form renders below the fold: wait for the import status, then scroll to it.
 - extendedWaitUntil:
     visible:
-      id: "profile-full-name"
+      id: "resume-import-status"
     timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "profile-full-name"
+    direction: DOWN
+    timeout: 10000
 - scrollUntilVisible:
     element:
       id: "onboarding-next"
