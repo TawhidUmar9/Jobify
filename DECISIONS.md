@@ -14,6 +14,23 @@ Template:
 
 ---
 
+## D-013 2026-10-23: GitHub (Primer) theme and appearance & accessibility settings
+- Task: T-046h
+- Change:
+  - `src/theme/tokens.ts`: replaced `lightColors` and `darkColors` values with GitHub Primer colours while preserving every token name and the `ColorTokens` interface. Added typography helpers (`getScaledTypography`, `resolveTextScaleMultiplier`).
+  - `src/services/kvStore.ts`: added `themeMode: 'jobify.ui.themeMode'`, `textScale: 'jobify.ui.textScale'`, `webZoom: 'jobify.ui.webZoom'`, `reduceMotion: 'jobify.ui.reduceMotion'` to `KV_KEYS`.
+  - `src/constants/testIds.ts`: added `settings.rowAppearance` and `appearance` group (`screen`, `theme`, `textScale`, `webZoom`, `reduceMotion`).
+  - `src/theme/ThemeProvider.tsx`: resolved scheme from `themeMode` (`system` -> `useColorScheme()`, `light` -> `light`, `dark` -> `dark`), load and persist preferences live via `kvStore`, exposed `textScale`, `webZoom`, `reduceMotion`, `isReduceMotion`, `typography`, and setting updaters.
+  - `src/features/settings/useUiPrefs.ts`: hook exposing appearance & accessibility settings and updaters.
+  - `src/app/settings/appearance.tsx`: new "Appearance & accessibility" route with segmented/radio options.
+  - `src/app/(tabs)/settings-hub.tsx`: added "Appearance & accessibility" row after Job boards.
+  - `src/components/workspace/PortalWebView.tsx`: passed `textZoom={webZoom}` to `WebView`.
+  - `src/app/_layout.tsx`: StatusBar style and Android navigation bar follow resolved scheme.
+  - Wired `reduceMotion` override into `CopilotSheet` and modals.
+- Why: on a real phone, the app looked too greenish (teal primary, green-tinted dark surfaces). The owner requested the GitHub (Primer) theme, plus in-app appearance and accessibility settings.
+- Impact: tests added for token contrast, ThemeProvider resolution, appearance settings screen, and PortalWebView textZoom.
+- Approved by: owner and architect
+
 ## D-011 2026-10-23: Release build allows cleartext HTTP and keeps the activity on font changes
 - Task: T-046g
 - Change: new local config plugin `plugins/withAndroidReleaseFixes.js` (uses `withAndroidManifest` from `expo/config-plugins`; no new dependency), listed in `app.json` `plugins`. It sets `android:usesCleartextTraffic="true"` on `<application>` and adds `fontScale|density` to MainActivity's `android:configChanges` (keeping the existing values, no duplicates).
@@ -48,7 +65,7 @@ Template:
 ## D-008 2026-10-23: Analysis says when a page is not a job post
 - Task: T-046c
 - Change:
-  - `src/types/domain.ts` `JobAnalysis`: add `isJobPosting: boolean`.
+  - `src/types/domain.ts` `JobAnalysis`: add `isJobPosting: boolean``.
   - `src/services/ai/schemas.ts` `JOB_ANALYSIS_SCHEMA`: add `isJobPosting: { type: 'boolean', description: 'false for login or sign-up pages, search results or lists of several jobs, company home pages, articles' }` and put it in `required`.
   - `src/services/ai/validate.ts` `validateJobAnalysis`: boolean → keep; missing or not boolean → `true` (lenient for models that omit it).
   - `src/services/ai/prompts.ts` analysis prompt: add the rule "Set isJobPosting to false when the page is not one specific job posting (a login or sign-up page, a list or search results with several jobs, a company home page, an article). When false, use eligibility UNCLEAR, matchScore 0, empty redFlags, skills and fieldMappings."
