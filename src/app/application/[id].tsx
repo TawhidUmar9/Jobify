@@ -22,7 +22,7 @@ import { TestIds } from '../../constants/testIds';
 import { useApplication } from '../../features/tracker/useApplication';
 import { parseDbTimestamp } from '../../lib/dates';
 import { useTheme } from '../../theme/ThemeProvider';
-import { radii, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, radii, spacing, typography } from '../../theme/tokens';
 import { APPLICATION_STATUS_LABELS, type ApplicationStatus } from '../../types/domain';
 
 /** Route params for "/application/[id]". CONTRACT: ARCHITECTURE.md §8. */
@@ -157,13 +157,13 @@ export default function ApplicationDetailScreen() {
     >
       {/* 1. Company, Role, Meta */}
       <View style={styles.section}>
-        <Text testID={TestIds.detail.company} style={[styles.company, { color: colors.textPrimary }]}>
+        <Text testID={TestIds.detail.company} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.company, { color: colors.textPrimary }]}>
           {application.companyName}
         </Text>
-        <Text testID={TestIds.detail.role} style={[styles.role, { color: colors.textPrimary }]}>
+        <Text testID={TestIds.detail.role} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.role, { color: colors.textPrimary }]}>
           {application.roleTitle}
         </Text>
-        <Text style={[styles.meta, { color: colors.textSecondary }]}>
+        <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.meta, { color: colors.textSecondary }]}>
           {`${application.boardName} · ${formatTrackerDate(application.createdAt)}`}
         </Text>
       </View>
@@ -182,6 +182,7 @@ export default function ApplicationDetailScreen() {
       {/* 3. Follow-up row */}
       <View style={[styles.row, styles.followUpRow]}>
         <Text
+          maxFontSizeMultiplier={fontScaleCaps.default}
           style={[
             styles.followUpText,
             { color: isOverdue ? colors.warningText : colors.textPrimary },
@@ -213,7 +214,7 @@ export default function ApplicationDetailScreen() {
       {/* 5. Resume & Match */}
       {application.resumeLabel || application.matchScore !== null ? (
         <View style={styles.section}>
-          <Text style={[styles.body, { color: colors.textPrimary }]}>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.body, { color: colors.textPrimary }]}>
             {application.resumeLabel ? `Resume: ${application.resumeLabel}` : ''}
             {application.resumeLabel && application.matchScore !== null ? ' · ' : ''}
             {application.matchScore !== null ? `Match ${application.matchScore}` : ''}
@@ -246,8 +247,8 @@ export default function ApplicationDetailScreen() {
       {/* 7. Cover note & Cold DM */}
       {application.coverNote ? (
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.subhead, { color: colors.textPrimary }]}>Cover note</Text>
-          <Text testID={TestIds.detail.coverNote} style={[styles.cardBody, { color: colors.textPrimary }]}>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.subhead, { color: colors.textPrimary }]}>Cover note</Text>
+          <Text testID={TestIds.detail.coverNote} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.cardBody, { color: colors.textPrimary }]}>
             {application.coverNote}
           </Text>
           <View style={styles.cardAction}>
@@ -266,8 +267,8 @@ export default function ApplicationDetailScreen() {
 
       {application.coldDm ? (
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.subhead, { color: colors.textPrimary }]}>Cold DM</Text>
-          <Text testID={TestIds.detail.coldDm} style={[styles.cardBody, { color: colors.textPrimary }]}>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.subhead, { color: colors.textPrimary }]}>Cold DM</Text>
+          <Text testID={TestIds.detail.coldDm} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.cardBody, { color: colors.textPrimary }]}>
             {application.coldDm}
           </Text>
           <View style={styles.cardAction}>

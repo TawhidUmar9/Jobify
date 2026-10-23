@@ -44,7 +44,7 @@ export function SegmentedControl<T extends string>(props: SegmentedControlProps<
 
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.label, { color: colors.textPrimary }]}>{props.label}</Text>
+      <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.label, { color: colors.textPrimary }]}>{props.label}</Text>
       <View style={styles.row}>
         {props.options.map((option) => {
           const checked = props.selected.includes(option.value);

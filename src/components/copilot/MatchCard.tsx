@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
 import { useTheme } from '../../theme/ThemeProvider';
-import { iconSizes, iconStrokeWidth, radii, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, iconSizes, iconStrokeWidth, radii, spacing, typography } from '../../theme/tokens';
 import type { Resume } from '../../types/domain';
 
 export interface MatchCardProps {
@@ -25,26 +25,27 @@ export function MatchCard({ score, resume, reason }: MatchCardProps) {
       <Text
         testID={TestIds.copilot.matchScore}
         accessibilityLabel={`Match ${score} percent`}
+        maxFontSizeMultiplier={fontScaleCaps.default}
         style={[styles.score, { color: colors.textPrimary }]}
       >
-        {score} <Text style={[styles.matchWord, { color: colors.textSecondary }]}>match</Text>
+        {score} <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.matchWord, { color: colors.textSecondary }]}>match</Text>
       </Text>
       <View testID={TestIds.copilot.recommendedResume} style={styles.resume}>
         {resume ? (
           <>
             <FileText size={iconSizes.md} strokeWidth={iconStrokeWidth} color={colors.textSecondary} accessible={false} />
             <View style={styles.resumeCopy}>
-              <Text style={[styles.resumeLabel, { color: colors.textPrimary }]}>{resume.label}</Text>
-              <Text style={[styles.fileName, { color: colors.textSecondary }]}>{resume.fileName ?? 'Text-only resume'}</Text>
+              <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.resumeLabel, { color: colors.textPrimary }]}>{resume.label}</Text>
+              <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.fileName, { color: colors.textSecondary }]}>{resume.fileName ?? 'Text-only resume'}</Text>
             </View>
           </>
         ) : (
-          <Text style={[styles.resumeLabel, { color: colors.textPrimary }]}>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.resumeLabel, { color: colors.textPrimary }]}>
             Add a resume in Settings to get a recommendation
           </Text>
         )}
       </View>
-      <Text style={[styles.reason, { color: colors.textSecondary }]}>{reason}</Text>
+      <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.reason, { color: colors.textSecondary }]}>{reason}</Text>
     </View>
   );
 }

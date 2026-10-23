@@ -593,7 +593,9 @@ true;
 ### T-047 Accessibility and large text
 - **Files:** components/screens (accessibility props, font caps, focus management only).
 - **Depends on:** T-046.
-- **Acceptance:** UI_DIRECTIVES §10 accessibility items. A TalkBack pass over onboarding → workspace → sheet → tracker → detail → settings. Font scale 2.0 with no clipping (`adb shell settings put system font_scale 2.0`).
+- **Acceptance:**
+  - [ ] TalkBack pass over onboarding → workspace → sheet → tracker → detail → settings. MANUAL PENDING (tester).
+  - [ ] Font scale 2.0 with no clipping (`adb shell settings put system font_scale 2.0`). MANUAL PENDING (tester).
 - **Verify:** `npm run verify` + notes in the PR.
 
 ### T-048 Reduced motion and dark mode

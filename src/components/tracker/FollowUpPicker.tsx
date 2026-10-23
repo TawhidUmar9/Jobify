@@ -4,7 +4,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { TestIds } from '../../constants/testIds';
 import { useTheme } from '../../theme/ThemeProvider';
-import { radii, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, radii, spacing, typography } from '../../theme/tokens';
 import { Button } from '../ui/Button';
 
 /** Quick choices instead of a date picker (no extra dependency). CONTRACT: UI_DIRECTIVES.md §4.6. */
@@ -60,21 +60,24 @@ export function FollowUpPicker(props: FollowUpPickerProps) {
       <View style={[styles.scrim, { backgroundColor: colors.scrim }]}>
         <Pressable style={styles.scrimBackdrop} onPress={props.onCancel} accessible={false} />
         <View
+          accessibilityViewIsModal
+          aria-modal={true}
           style={[
             styles.panel,
             { backgroundColor: colors.surface, paddingBottom: bottom },
           ]}
         >
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Follow-up reminder</Text>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.title, { color: colors.textPrimary }]}>Follow-up reminder</Text>
           {FOLLOW_UP_OPTIONS.map((option) => (
             <Pressable
               key={option.key}
               testID={TestIds.detail.followUpOption(option.key)}
               accessibilityRole="radio"
+              accessibilityLabel={option.label}
               style={[styles.row, { borderBottomColor: colors.border }]}
               onPress={() => props.onSelect(option.key)}
             >
-              <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>{option.label}</Text>
+              <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.rowLabel, { color: colors.textPrimary }]}>{option.label}</Text>
             </Pressable>
           ))}
           <View style={styles.cancelWrapper}>

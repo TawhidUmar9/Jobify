@@ -5,7 +5,7 @@ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { TestIds } from '../../constants/testIds';
 import { useTheme } from '../../theme/ThemeProvider';
-import { iconStrokeWidth, radii, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, iconStrokeWidth, radii, spacing, typography } from '../../theme/tokens';
 import {
   APPLICATION_STATUS_LABELS,
   APPLICATION_STATUSES,
@@ -66,12 +66,14 @@ export function StatusPicker(props: StatusPickerProps) {
         <Pressable style={styles.scrimBackdrop} onPress={props.onCancel} accessible={false} />
         <View
           testID={TestIds.statusPicker.sheet}
+          accessibilityViewIsModal
+          aria-modal={true}
           style={[
             styles.panel,
             { backgroundColor: colors.surface, paddingBottom: bottom },
           ]}
         >
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Change status</Text>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.title, { color: colors.textPrimary }]}>Change status</Text>
           {APPLICATION_STATUSES.map((status) => {
             const isChecked = status === props.current;
             return (
@@ -79,6 +81,7 @@ export function StatusPicker(props: StatusPickerProps) {
                 key={status}
                 testID={TestIds.statusPicker.option(status)}
                 accessibilityRole="radio"
+                accessibilityLabel={APPLICATION_STATUS_LABELS[status]}
                 accessibilityState={{ checked: isChecked }}
                 style={[styles.row, { borderBottomColor: colors.border }]}
                 onPress={() => {
@@ -89,7 +92,7 @@ export function StatusPicker(props: StatusPickerProps) {
                   }
                 }}
               >
-                <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>
+                <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.rowLabel, { color: colors.textPrimary }]}>
                   {APPLICATION_STATUS_LABELS[status]}
                 </Text>
                 {isChecked ? (

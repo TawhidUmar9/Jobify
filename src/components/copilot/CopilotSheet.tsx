@@ -142,6 +142,8 @@ export function CopilotSheet(props: CopilotSheetProps) {
       index={open ? 0 : -1}
       snapPoints={snapPoints}
       enablePanDownToClose
+      accessibilityViewIsModal={open}
+      aria-modal={open}
       onClose={props.onClose}
       backdropComponent={backdrop}
       onAnimate={(_from, toIndex) => {

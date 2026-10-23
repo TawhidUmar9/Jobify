@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { useTheme } from '../../theme/ThemeProvider';
-import { spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, spacing, typography } from '../../theme/tokens';
 
 export interface ToggleRowProps {
   label: string;
@@ -25,9 +25,9 @@ export function ToggleRow(props: ToggleRowProps) {
       style={[styles.row, { borderBottomColor: colors.border }]}
     >
       <View style={styles.copy}>
-        <Text style={[styles.label, { color: colors.textPrimary }]}>{props.label}</Text>
+        <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.label, { color: colors.textPrimary }]}>{props.label}</Text>
         {props.description ? (
-          <Text style={[styles.description, { color: colors.textSecondary }]}>{props.description}</Text>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.description, { color: colors.textSecondary }]}>{props.description}</Text>
         ) : null}
       </View>
       <Switch

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
 import { useTheme } from '../../theme/ThemeProvider';
-import { iconSizes, iconStrokeWidth, radii, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, iconSizes, iconStrokeWidth, radii, spacing, typography } from '../../theme/tokens';
 import type { Eligibility } from '../../types/domain';
 
 export interface EligibilityBadgeProps {
@@ -48,10 +48,10 @@ export function EligibilityBadge({ eligibility, reason }: EligibilityBadgeProps)
         style={[styles.pill, { backgroundColor: tone.bg }]}
       >
         <Icon size={iconSizes.sm} strokeWidth={iconStrokeWidth} color={tone.icon} accessible={false} />
-        <Text style={[styles.pillLabel, { color: tone.text }]}>{presentation.label}</Text>
+        <Text maxFontSizeMultiplier={fontScaleCaps.compact} style={[styles.pillLabel, { color: tone.text }]}>{presentation.label}</Text>
       </View>
       {reason.trim().length > 0 ? (
-        <Text testID={TestIds.copilot.eligibilityReason} style={[styles.reason, { color: colors.textSecondary }]}>
+        <Text testID={TestIds.copilot.eligibilityReason} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.reason, { color: colors.textSecondary }]}>
           {reason}
         </Text>
       ) : null}

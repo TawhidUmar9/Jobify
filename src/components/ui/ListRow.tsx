@@ -4,7 +4,7 @@ import { ChevronRight } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../../theme/ThemeProvider';
-import { iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
 
 export interface ListRowProps {
   title: string;
@@ -44,9 +44,9 @@ export function ListRow(props: ListRowProps) {
         />
       ) : null}
       <View style={styles.copy}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>{props.title}</Text>
+        <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.title, { color: colors.textPrimary }]}>{props.title}</Text>
         {props.subtitle ? (
-          <Text numberOfLines={2} style={[styles.subtitle, { color: colors.textSecondary }]}>
+          <Text numberOfLines={2} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.subtitle, { color: colors.textSecondary }]}>
             {props.subtitle}
           </Text>
         ) : null}

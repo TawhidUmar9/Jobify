@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { TestIds } from '../../constants/testIds';
 import { parseDbTimestamp } from '../../lib/dates';
 import { useTheme } from '../../theme/ThemeProvider';
-import { iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
 import type { Application } from '../../types/domain';
 
 export interface FollowUpsSectionProps {
@@ -53,7 +53,7 @@ export function FollowUpsSection({ due, onOpen }: FollowUpsSectionProps) {
     <View testID={TestIds.tracker.followUpsSection} style={styles.section}>
       <View style={styles.titleRow}>
         <BellRing size={iconSizes.md} strokeWidth={iconStrokeWidth} color={colors.warningIcon} accessible={false} />
-        <Text style={[styles.title, { color: colors.textPrimary }]}>{`Follow-ups due (${due.length})`}</Text>
+        <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.title, { color: colors.textPrimary }]}>{`Follow-ups due (${due.length})`}</Text>
       </View>
       {visible.map((application) => (
         <Pressable
@@ -64,14 +64,14 @@ export function FollowUpsSection({ due, onOpen }: FollowUpsSectionProps) {
           onPress={() => onOpen(application)}
           style={styles.row}
         >
-          <Text numberOfLines={1} style={[styles.role, { color: colors.textPrimary }]}>
+          <Text numberOfLines={1} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.role, { color: colors.textPrimary }]}>
             {`${application.roleTitle} · ${application.companyName}`}
           </Text>
-          <Text style={[styles.ago, { color: colors.textSecondary }]}>{appliedAgo(application.createdAt, now)}</Text>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.ago, { color: colors.textSecondary }]}>{appliedAgo(application.createdAt, now)}</Text>
         </Pressable>
       ))}
       {extra > 0 ? (
-        <Text style={[styles.more, { color: colors.textSecondary }]}>{`+${extra} more below`}</Text>
+        <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.more, { color: colors.textSecondary }]}>{`+${extra} more below`}</Text>
       ) : null}
     </View>
   );

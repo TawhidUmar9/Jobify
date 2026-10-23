@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { TestIds } from '../../constants/testIds';
 import { useTheme } from '../../theme/ThemeProvider';
-import { iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
 import type { RedFlag, RedFlagCode } from '../../types/domain';
 
 /** Short titles per code. CONTRACT: UI_DIRECTIVES.md §4.4. */
@@ -27,19 +27,19 @@ export function RedFlagList({ flags }: { flags: RedFlag[] }) {
   const { colors } = useTheme();
   return (
     <View testID={TestIds.copilot.redFlags} style={styles.section}>
-      <Text style={[styles.heading, { color: colors.textPrimary }]}>Red flags</Text>
+      <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.heading, { color: colors.textPrimary }]}>Red flags</Text>
       {flags.length === 0 ? (
         <View style={styles.row}>
           <ShieldCheck size={iconSizes.sm} strokeWidth={iconStrokeWidth} color={colors.successIcon} accessible={false} />
-          <Text style={[styles.title, { color: colors.textPrimary }]}>No red flags found</Text>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.title, { color: colors.textPrimary }]}>No red flags found</Text>
         </View>
       ) : (
         flags.map((flag, index) => (
           <View key={`${flag.code}-${index}`} testID={TestIds.copilot.redFlag(index)} style={styles.row}>
             <TriangleAlert size={iconSizes.sm} strokeWidth={iconStrokeWidth} color={colors.warningIcon} accessible={false} />
             <View style={styles.copy}>
-              <Text style={[styles.title, { color: colors.textPrimary }]}>{RED_FLAG_TITLES[flag.code]}</Text>
-              <Text style={[styles.detail, { color: colors.textSecondary }]}>{flag.detail}</Text>
+              <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.title, { color: colors.textPrimary }]}>{RED_FLAG_TITLES[flag.code]}</Text>
+              <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.detail, { color: colors.textSecondary }]}>{flag.detail}</Text>
             </View>
           </View>
         ))

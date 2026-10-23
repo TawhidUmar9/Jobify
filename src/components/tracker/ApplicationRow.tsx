@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { TestIds } from '../../constants/testIds';
 import { parseDbTimestamp } from '../../lib/dates';
 import { useTheme } from '../../theme/ThemeProvider';
-import { iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, iconSizes, iconStrokeWidth, spacing, typography } from '../../theme/tokens';
 import { APPLICATION_STATUS_LABELS, type Application, type Eligibility } from '../../types/domain';
 import { StatusChip } from './StatusChip';
 
@@ -70,21 +70,21 @@ export function ApplicationRow({ application, onPress }: ApplicationRowProps) {
       style={[styles.row, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
     >
       <View style={styles.text}>
-        <Text numberOfLines={1} style={[styles.role, { color: colors.textPrimary }]}>
+        <Text numberOfLines={1} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.role, { color: colors.textPrimary }]}>
           {application.roleTitle}
         </Text>
-        <Text numberOfLines={1} style={[styles.company, { color: colors.textSecondary }]}>
+        <Text numberOfLines={1} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.company, { color: colors.textSecondary }]}>
           {`${application.companyName} · ${application.boardName}`}
         </Text>
         <View style={styles.meta}>
-          <Text numberOfLines={1} style={[styles.caption, { color: colors.textSecondary }]}>
+          <Text numberOfLines={1} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.caption, { color: colors.textSecondary }]}>
             {`${date}${match}`}
           </Text>
           {EligibilityIcon && iconColor ? (
             <EligibilityIcon size={iconSizes.sm} strokeWidth={iconStrokeWidth} color={iconColor} accessible={false} />
           ) : null}
           {followUpDue ? (
-            <Text numberOfLines={1} style={[styles.caption, { color: colors.warningText }]}>
+            <Text numberOfLines={1} maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.caption, { color: colors.warningText }]}>
               {' · Follow up due'}
             </Text>
           ) : null}

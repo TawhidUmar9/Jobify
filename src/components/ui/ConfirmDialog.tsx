@@ -3,7 +3,7 @@ import { AccessibilityInfo, Modal, Pressable, StyleSheet, Text, View } from 'rea
 
 import { TestIds } from '../../constants/testIds';
 import { useTheme } from '../../theme/ThemeProvider';
-import { radii, spacing, touchTarget, typography } from '../../theme/tokens';
+import { fontScaleCaps, radii, spacing, touchTarget, typography } from '../../theme/tokens';
 import { Button } from './Button';
 
 export interface ConfirmDialogProps {
@@ -54,10 +54,11 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
         <View
           testID={TestIds.confirmDialog.dialog}
           accessibilityViewIsModal
+          aria-modal={true}
           style={[styles.card, { backgroundColor: colors.surface }]}
         >
-          <Text style={[styles.title, { color: colors.textPrimary }]}>{props.title}</Text>
-          <Text style={[styles.message, { color: colors.textSecondary }]}>{props.message}</Text>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.title, { color: colors.textPrimary }]}>{props.title}</Text>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.message, { color: colors.textSecondary }]}>{props.message}</Text>
           <View style={styles.actions}>
             <Button
               label="Cancel"
@@ -73,7 +74,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
                 onPress={props.onConfirm}
                 style={[styles.destructive, { backgroundColor: colors.dangerIcon }]}
               >
-                <Text style={[styles.destructiveLabel, { color: colors.onPrimary }]}>{props.confirmLabel}</Text>
+                <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.destructiveLabel, { color: colors.onPrimary }]}>{props.confirmLabel}</Text>
               </Pressable>
             ) : (
               <Button

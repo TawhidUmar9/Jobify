@@ -3,7 +3,7 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import { StyleSheet, Text, TextInput, View, type KeyboardTypeOptions } from 'react-native';
 
 import { useTheme } from '../../theme/ThemeProvider';
-import { radii, spacing, touchTarget, typography } from '../../theme/tokens';
+import { fontScaleCaps, radii, spacing, touchTarget, typography } from '../../theme/tokens';
 import { IconButton } from './IconButton';
 
 export interface TextFieldProps {
@@ -53,7 +53,7 @@ export function TextField(props: TextFieldProps) {
 
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.label, { color: colors.textPrimary }]}>{props.label}</Text>
+      <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.label, { color: colors.textPrimary }]}>{props.label}</Text>
       <View
         style={[
           styles.field,
@@ -63,6 +63,7 @@ export function TextField(props: TextFieldProps) {
       >
         <TextInput
           testID={props.testID}
+          maxFontSizeMultiplier={fontScaleCaps.default}
           accessibilityLabel={props.label}
           accessibilityHint={hasError ? error : undefined}
           value={props.value}
@@ -93,11 +94,11 @@ export function TextField(props: TextFieldProps) {
         ) : null}
       </View>
       {hasError ? (
-        <Text accessibilityLiveRegion="polite" style={[styles.support, { color: colors.dangerText }]}>
+        <Text maxFontSizeMultiplier={fontScaleCaps.default} accessibilityLiveRegion="polite" style={[styles.support, { color: colors.dangerText }]}>
           {error}
         </Text>
       ) : props.helper ? (
-        <Text style={[styles.support, { color: colors.textSecondary }]}>{props.helper}</Text>
+        <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.support, { color: colors.textSecondary }]}>{props.helper}</Text>
       ) : null}
     </View>
   );

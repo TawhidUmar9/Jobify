@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../../theme/ThemeProvider';
-import { radii, spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, radii, spacing, typography } from '../../theme/tokens';
 
 export interface SkillChipsProps {
   title: 'Matched skills' | 'Missing skills';
@@ -20,12 +20,12 @@ export function SkillChips({ title, skills, testID }: SkillChipsProps) {
   const { colors } = useTheme();
   if (skills.length === 0) return null;
   return (
-    <View testID={testID} accessibilityLabel={`${title}: ${skills.join(', ')}`} style={styles.wrap}>
-      <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
+    <View testID={testID} accessible accessibilityRole="text" accessibilityLabel={`${title}: ${skills.join(', ')}`} style={styles.wrap}>
+      <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
       <View style={styles.row}>
         {skills.map((skill) => (
           <View key={skill} style={[styles.chip, { borderColor: colors.borderStrong }]}>
-            <Text style={[styles.chipText, { color: colors.textPrimary }]}>{skill}</Text>
+            <Text maxFontSizeMultiplier={fontScaleCaps.compact} style={[styles.chipText, { color: colors.textPrimary }]}>{skill}</Text>
           </View>
         ))}
       </View>

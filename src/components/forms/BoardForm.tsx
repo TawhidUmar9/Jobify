@@ -56,7 +56,7 @@ function BoardFormContent(props: BoardFormProps) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.modalOverlay, { backgroundColor: colors.scrim }]}
     >
-      <View style={[styles.panel, { backgroundColor: colors.surface, paddingBottom: Math.max(spacing.xl, bottom) }]}>
+      <View accessibilityViewIsModal aria-modal={true} style={[styles.panel, { backgroundColor: colors.surface, paddingBottom: Math.max(spacing.xl, bottom) }]}>
         <Text
           style={[styles.panelTitle, { color: colors.textPrimary }]}
           maxFontSizeMultiplier={fontScaleCaps.default}

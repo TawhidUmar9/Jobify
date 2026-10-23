@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { AccessibilityInfo, ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../../theme/ThemeProvider';
-import { spacing, typography } from '../../theme/tokens';
+import { fontScaleCaps, spacing, typography } from '../../theme/tokens';
 import { Button } from './Button';
 
 export type StateViewProps =
@@ -49,7 +49,7 @@ export function StateView(props: StateViewProps) {
       >
         <View style={styles.column}>
           <ActivityIndicator color={colors.primary} size="large" />
-          <Text style={[styles.message, { color: colors.textSecondary }]}>{props.message}</Text>
+          <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.message, { color: colors.textSecondary }]}>{props.message}</Text>
         </View>
       </View>
     );
@@ -60,8 +60,8 @@ export function StateView(props: StateViewProps) {
   return (
     <View testID={props.testID} style={styles.wrap}>
       <View style={styles.column}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>{props.title}</Text>
-        <Text style={[styles.message, { color: colors.textSecondary }]}>{props.message}</Text>
+        <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.title, { color: colors.textPrimary }]}>{props.title}</Text>
+        <Text maxFontSizeMultiplier={fontScaleCaps.default} style={[styles.message, { color: colors.textSecondary }]}>{props.message}</Text>
         {showAction ? (
           <Button
             label={props.actionLabel ?? ''}
