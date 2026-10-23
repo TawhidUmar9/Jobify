@@ -15,6 +15,15 @@ const mockHandle = {
   stopLoading: jest.fn(),
 };
 
+const mockSnackbarShow = jest.fn();
+jest.mock('../../../components/ui/Snackbar', () => {
+  const actual = jest.requireActual('../../../components/ui/Snackbar');
+  return {
+    ...actual,
+    useSnackbar: () => ({ show: mockSnackbarShow }),
+  };
+});
+
 jest.mock('react-native-webview', () => {
   const MockReact = jest.requireActual('react') as typeof import('react');
   const MockRN = jest.requireActual('react-native') as typeof import('react-native');
@@ -31,6 +40,7 @@ describe('PortalWebView resilience (T-046)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     lastProps = {};
+    mockSnackbarShow.mockClear();
   });
 
   it('renders webview with required configuration props', async () => {
@@ -78,6 +88,27 @@ describe('PortalWebView resilience (T-046)', () => {
       const telResult = lastProps.onShouldStartLoadWithRequest({ url: 'tel:+15551234567' });
       expect(telResult).toBe(false);
       expect(openSpy).toHaveBeenCalledWith('tel:+15551234567');
+    });
+
+    it('shows snackbar when opening external link fails (T-046b F7)', async () => {
+      jest.spyOn(Linking, 'openURL').mockRejectedValueOnce(new Error('No handler'));
+      const webViewRef = createRef<WebViewHandle>();
+      await render(
+        <ThemeProvider>
+          <PortalWebView
+            webViewRef={webViewRef}
+            url="https://wellfound.com/jobs"
+            onNavStateChange={jest.fn()}
+            onLoadProgress={jest.fn()}
+            onMessage={jest.fn()}
+          />
+        </ThemeProvider>,
+      );
+
+      const mailResult = lastProps.onShouldStartLoadWithRequest({ url: 'mailto:hr@example.com' });
+      expect(mailResult).toBe(false);
+      await Promise.resolve();
+      expect(mockSnackbarShow).toHaveBeenCalledWith('No app on this phone can open this link.');
     });
 
     it('allows web, about, data, and blob schemes', async () => {

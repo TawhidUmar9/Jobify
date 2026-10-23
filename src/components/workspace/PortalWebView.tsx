@@ -10,6 +10,7 @@ import { isExternalSchemeUrl, isHttpUrl } from '../../lib/url';
 import { useTheme } from '../../theme/ThemeProvider';
 import { spacing, typography } from '../../theme/tokens';
 import { Button } from '../ui/Button';
+import { useSnackbar } from '../ui/Snackbar';
 
 /**
  * Imperative WebView methods we use. react-native-webview 14 types the component as a
@@ -68,6 +69,7 @@ export function PortalWebView({ webViewRef, url, onNavStateChange, onLoadProgres
   const android = Platform.OS === 'android';
 
   const [remountKey, setRemountKey] = useState(0);
+  const snackbar = useSnackbar();
   const [crashedUrl, setCrashedUrl] = useState<string | null>(null);
   const [prevUrl, setPrevUrl] = useState(url);
 
@@ -101,7 +103,13 @@ export function PortalWebView({ webViewRef, url, onNavStateChange, onLoadProgres
       return false;
     }
     if (isExternalSchemeUrl(reqUrl)) {
-      Linking.openURL(reqUrl).catch(() => {});
+      try {
+        Linking.openURL(reqUrl).catch(() => {
+          snackbar.show('No app on this phone can open this link.');
+        });
+      } catch {
+        snackbar.show('No app on this phone can open this link.');
+      }
       return false;
     }
     if (/^(https?|about|data|blob):/i.test(reqUrl)) {
