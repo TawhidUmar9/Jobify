@@ -19,7 +19,7 @@
     "android": {
       "package": "io.github.tawhidumar9.jobify",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0969da",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -49,9 +49,9 @@
         {
           "image": "./assets/splash-icon.png",
           "imageWidth": 160,
-          "backgroundColor": "#F6F8F8",
+          "backgroundColor": "#ffffff",
           "dark": {
-            "backgroundColor": "#0B1312"
+            "backgroundColor": "#0d1117"
           }
         }
       ],
