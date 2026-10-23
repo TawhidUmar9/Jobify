@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react';
+import { AccessibilityInfo } from 'react-native';
 
 import { kvGet, kvSet, KV_KEYS } from '../../services/kvStore';
 import type { TextScale } from '../../theme/tokens';
@@ -22,6 +23,31 @@ let prefsState: UiPrefsState = {
   reduceMotion: 'system',
 };
 
+let systemReduceMotion = false;
+let systemMotionListenerAttached = false;
+
+function ensureSystemMotionListener() {
+  if (systemMotionListenerAttached) return;
+  systemMotionListenerAttached = true;
+  try {
+    const pending = AccessibilityInfo.isReduceMotionEnabled();
+    if (typeof pending?.then === 'function') {
+      pending
+        .then((enabled) => {
+          systemReduceMotion = enabled;
+          notify();
+        })
+        .catch(() => {});
+    }
+    AccessibilityInfo.addEventListener?.('reduceMotionChanged', (enabled: boolean) => {
+      systemReduceMotion = enabled;
+      notify();
+    });
+  } catch {
+    // ignore
+  }
+}
+
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -37,6 +63,7 @@ function notify() {
 let initPromise: Promise<UiPrefsState> | null = null;
 
 export async function loadUiPrefs(): Promise<UiPrefsState> {
+  ensureSystemMotionListener();
   const [themeMode, textScale, webZoomStr, reduceMotion] = await Promise.all([
     kvGet(KV_KEYS.themeMode),
     kvGet(KV_KEYS.textScale),
@@ -79,6 +106,7 @@ export async function loadUiPrefs(): Promise<UiPrefsState> {
 }
 
 export function initUiPrefs(): Promise<UiPrefsState> {
+  ensureSystemMotionListener();
   if (!initPromise) {
     initPromise = loadUiPrefs();
   }
@@ -116,12 +144,19 @@ export function resetUiPrefsForTests(): void {
     webZoom: 100,
     reduceMotion: 'system',
   };
+  systemReduceMotion = false;
   initPromise = null;
   notify();
 }
 
 export function getUiPrefsState(): UiPrefsState {
   return prefsState;
+}
+
+export function getIsReduceMotion(): boolean {
+  if (prefsState.reduceMotion === 'on') return true;
+  if (prefsState.reduceMotion === 'off') return false;
+  return systemReduceMotion;
 }
 
 export function subscribeUiPrefs(listener: () => void): () => void {
@@ -138,8 +173,12 @@ export function useUiPrefs() {
     void initUiPrefs();
   }, []);
 
+  const isReduceMotion =
+    state.reduceMotion === 'on' ? true : state.reduceMotion === 'off' ? false : systemReduceMotion;
+
   return {
     ...state,
+    isReduceMotion,
     setThemeMode,
     setTextScale,
     setWebZoom,
